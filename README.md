@@ -1,0 +1,2 @@
+# 2026GHI_InternalEducation
+2026年GHI内定教育プロジェクト
