@@ -58,6 +58,18 @@ router.get("/", getUsers);
  *               email:
  *                 type: string
  *                 example: user@example.com
+ *               phone:
+ *                 type: string
+ *                 example: 010-1234-5678
+ *               zip_code:
+ *                 type: string
+ *                 example: 06234
+ *               address:
+ *                 type: string
+ *                 example: 서울시 강남구 테헤란로
+ *               address_detail:
+ *                 type: string
+ *                 example: 101동 202호
  *               role:
  *                 type: string
  *                 example: USER
@@ -118,6 +130,18 @@ router.delete("/:id", deleteUser);
  *               email:
  *                 type: string
  *                 example: hong@test.com
+ *               phone:
+ *                 type: string
+ *                 example: 010-1234-5678
+ *               zip_code:
+ *                 type: string
+ *                 example: 06234
+ *               address:
+ *                 type: string
+ *                 example: 서울시 강남구 테헤란로
+ *               address_detail:
+ *                 type: string
+ *                 example: 101동 202호
  *               role:
  *                 type: string
  *                 enum: [USER, ADMIN]

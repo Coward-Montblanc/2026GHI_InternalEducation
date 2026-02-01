@@ -1,11 +1,5 @@
-import * as userModel from "../models/user.model.js"; //경로에서 DB쿼리문 모델 임포트.
+import * as userModel from "../models/user.model.js";
 import bcrypt from "bcrypt";
-
-/*export async function getUsers(req, res) { //회원 조회
-  const users = await userModel.findAll(); //모델에서 findAll 쿼리문 실행
-  res.json(users); //출력
-}*/
-
 
 export async function getUsers(req, res) {
   try {
@@ -17,19 +11,25 @@ export async function getUsers(req, res) {
   }
 }
 
-export async function createUser(req, res) { //회원 추가
-  const { login_id, password, name, email, role } = req.body;
-
-  if (!login_id || !password || !name || !email) {
-    return res.status(400).json({ message: "공란이 있으면 안됩니다." });
+export async function createUser(req, res) {
+  const { login_id, password, name, email, phone, zip_code, address, address_detail, role } = req.body;
+  
+  if (!login_id || !password || !name || !email || !phone) {
+    return res.status(400).json({ message: "필수 정보(ID, 비밀번호, 이름, 이메일, 전화번호)가 누락되었습니다." });
   }
 
   try {
+    const hashedPassword = await bcrypt.hash(password, 10); // 보안을 위해 컨트롤러에서 해싱 권장
+    
     const result = await userModel.createUser({
       login_id,
-      password,
+      password: hashedPassword,
       name,
       email,
+      phone,
+      zip_code,
+      address,
+      address_detail,
       role: role || "USER",
     });
 
@@ -37,12 +37,11 @@ export async function createUser(req, res) { //회원 추가
       user_id: result.insertId,
       login_id,
       name,
-      email,
-      role: role || "USER",
+      message: "회원가입 성공"
     });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ message: "중복된 ID 또는 이메일" });
+      return res.status(409).json({ message: "중복된 ID 또는 이메일이 존재합니다." });
     }
     console.error(err);
     res.status(500).json({ message: "DB 에러" });
@@ -64,15 +63,19 @@ export async function deleteUser(req, res) { //회원 삭제
   }
 }
 
-export async function updateUser(req, res) { //회원정보 업데이트
+export async function updateUser(req, res) { //회원정보 수정
   const { id } = req.params;
-  const { login_id, name, email, role, password } = req.body;
+  const { login_id, name, email, phone, zip_code, address, address_detail, role, password } = req.body;
 
   try {
     const updateData = {
       login_id,
       name,
       email,
+      phone,
+      zip_code,
+      address,
+      address_detail,
       role: role || "USER",
     };
 
@@ -89,9 +92,12 @@ export async function updateUser(req, res) { //회원정보 업데이트
     res.json({ message: "회원 정보 수정 완료." });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ message: "중복 값이 존재합니다." });
+      return res.status(409).json({ message: "데이터베이스 내 중복 값이 존재합니다." });
     }
     console.error(err);
     res.status(500).json({ message: "DB 에러" });
   }
 }
+
+
+

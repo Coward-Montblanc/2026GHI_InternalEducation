@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import path from "path";
+import cors from "cors";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +21,8 @@ import swaggerSpec from "./swagger.js";
 
 const app = express();
 
+app.use(express.json());
+app.use(cors()); //cors 허용
 app.use(express.json());
 app.use("/api/users", userRoutes); //라우터 연결
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));//swagger 사용
