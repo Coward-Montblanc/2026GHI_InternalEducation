@@ -1,9 +1,16 @@
 import db from "../config/db.js";
 
+export async function findByLoginId(login_id) { //로그인용 아이디 찾기 함수
+  const [rows] = await db.execute(
+    `SELECT * FROM users WHERE login_id = ?`, 
+    [login_id]
+  );
+  return rows[0]; // 없으면 undefined
+}
+
 export async function findAllUsers() { //회원 조회
   const [rows] = await db.execute(
-    // 새로운 컬럼들 추가
-    `SELECT user_id, login_id, name, email, phone, zip_code, address, address_detail, role, created_at FROM users`
+    `SELECT login_id, password, name, email, phone, zip_code, address, address_detail, role, created_at FROM users`
   );
   return rows;
 }
@@ -19,32 +26,32 @@ export async function createUser({ login_id, password, name, email, phone, zip_c
   return result;
 }
 
-export async function deleteUserById(user_id) { //회원 삭제
+export async function deleteUserById(login_id) { //회원 삭제
   const [result] = await db.execute(
-    `DELETE FROM users WHERE user_id = ?`,
-    [user_id]
+    `DELETE FROM users WHERE login_id = ?`,
+    [login_id]
   );
   return result;
 }
 
 export async function updateUser( //회원정보 수정
-  user_id,
-  { login_id, name, email, phone, zip_code, address, address_detail, role, password }
+  login_id,
+  { name, email, phone, zip_code, address, address_detail, role, password }
 ) {
   let sql = `
     UPDATE users
-    SET login_id = ?, name = ?, email = ?, phone = ?, zip_code = ?, address = ?, address_detail = ?, role = ?
+    SET name = ?, email = ?, phone = ?, zip_code = ?, address = ?, address_detail = ?, role = ?
   `;
 
-  const params = [login_id, name, email, phone, zip_code, address, address_detail, role];
+  const params = [name, email, phone, zip_code, address, address_detail, role];
 
   if (password) {
     sql += `, password = ?`;
     params.push(password);
   }
 
-  sql += ` WHERE user_id = ?`;
-  params.push(user_id);
+  sql += ` WHERE login_id = ?`;
+  params.push(login_id);
 
   const [result] = await db.execute(sql, params);
   return result;

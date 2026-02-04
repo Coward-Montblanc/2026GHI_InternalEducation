@@ -19,11 +19,9 @@ export async function createUser(req, res) {
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10); // 보안을 위해 컨트롤러에서 해싱 권장
-    
     const result = await userModel.createUser({
       login_id,
-      password: hashedPassword,
+      password,
       name,
       email,
       phone,
@@ -34,7 +32,6 @@ export async function createUser(req, res) {
     });
 
     res.status(201).json({
-      user_id: result.insertId,
       login_id,
       name,
       message: "회원가입 성공"
@@ -64,12 +61,11 @@ export async function deleteUser(req, res) { //회원 삭제
 }
 
 export async function updateUser(req, res) { //회원정보 수정
-  const { id } = req.params;
-  const { login_id, name, email, phone, zip_code, address, address_detail, role, password } = req.body;
+  const { id } = req.params; // login_id
+  const { name, email, phone, zip_code, address, address_detail, role, password } = req.body;
 
   try {
     const updateData = {
-      login_id,
       name,
       email,
       phone,
@@ -80,7 +76,7 @@ export async function updateUser(req, res) { //회원정보 수정
     };
 
     if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+      updateData.password = password;
     }
 
     const result = await userModel.updateUser(id, updateData);
@@ -98,6 +94,7 @@ export async function updateUser(req, res) { //회원정보 수정
     res.status(500).json({ message: "DB 에러" });
   }
 }
+
 
 
 

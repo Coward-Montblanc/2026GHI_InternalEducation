@@ -1,16 +1,16 @@
-import Header from "../components/Header";
+import { useState } from "react";
 import Category from "../components/Category";
 import Banner from "../components/Banner";
 import ProductList from "../components/ProductList";
 import Footer from "../components/Footer";
 
 function MainPage() {
+  const [selectedCategory, setSelectedCategory] = useState(null);
   return (
     <>
-      <Header />
-      <Category />
+      <Category onCategoryChange={setSelectedCategory} />
       <Banner />
-      <ProductList />
+      <ProductList categoryId={selectedCategory} />
       <Footer />
     </>
   );

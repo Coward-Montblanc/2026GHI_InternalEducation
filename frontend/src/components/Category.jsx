@@ -3,24 +3,55 @@ import {
   Button,
   ButtonGroup,
   TextField,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import { useState } from "react";
 
-const categories = ["카테고리", "전체상품", "인기상품", "이벤트", "공지사항"];
+const categories = ["カテゴリー", "全商品", "人気商品", "イベント", "お知らせ"];
 
 function Category() {
+  const [searchText, setSearchText] = useState("");
+
+  const handleSearch = () => {
+    if (searchText.trim()) {
+      console.log("検索:", searchText);
+      // 나중에 실제 검색 기능 구현
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     
     <Box sx={{ width: "50", p: 3 }}>
-      {/* 검색창 */}
+      {/* 検索 */}
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
           size="small"
-          placeholder="상품을 검색하세요"
+          placeholder="商品を検索してください"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          onKeyDown={handleKeyPress}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={handleSearch} edge="end">
+                  <SearchIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
       </Box>
 
-      {/* 카테고리 버튼 */}
+      {/* カテゴリー */}
       <ButtonGroup
         variant="text"
         fullWidth
