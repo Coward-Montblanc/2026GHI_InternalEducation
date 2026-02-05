@@ -34,8 +34,8 @@ function ProductList({ categoryId }) {
     try {
       setLoading(true);
       const url = categoryId 
-        ? `http://localhost:3000/api/products/category/${categoryId}`
-        : `http://localhost:3000/api/products?page=${page}&limit=${itemsPerPage}`;
+        ? `http://localhost:8080/api/products/category/${categoryId}`
+        : `http://localhost:8080/api/products?page=${page}&limit=${itemsPerPage}`;
       
       const response = await fetch(url);
       if (!response.ok) throw new Error("商品読み込み失敗");
