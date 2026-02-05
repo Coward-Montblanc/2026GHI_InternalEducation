@@ -92,7 +92,7 @@ router.post("/", createUser);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *         description: 회원 ID
  */
 router.delete("/:id", deleteUser);
@@ -108,7 +108,7 @@ router.delete("/:id", deleteUser);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *         description: 회원 ID
  *     requestBody:
  *       required: true
