@@ -36,7 +36,7 @@ function LoginPage() {
             onClick={() => navigate(-1)}
             sx={{ p: 0, minWidth: "auto" }}
           >
-            뒤로
+            戻る
           </Button>
         </Box>
         <Typography
@@ -44,19 +44,19 @@ function LoginPage() {
           align="center"
           gutterBottom
         >
-          로그인
+          ログイン
         </Typography>
 
         <TextField
           fullWidth
-          label="아이디*"
+          label="ID*"
           margin="normal"
         />
 
         <TextField
           fullWidth
           type="password"
-          label="비밀번호*"
+          label="パスワード*"
           margin="normal"
         />
 
@@ -67,9 +67,9 @@ function LoginPage() {
           sx={{ mt: 3 }}
         >
 
-{/* 아이디/비밀번호 찾기 버튼 아직 없음 */}
+{/* ID/パスワード検索ボタンまだありません */}
 
-          로그인
+          ログイン
         </Button>
       </Paper>
     </Box>
