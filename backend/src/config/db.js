@@ -9,9 +9,12 @@ export const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  charset: 'utf8mb4',
+  connectTimeout: 10000,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  charsetNumber: 224 // utf8mb4_unicode_ci
 });
 
 export default db;

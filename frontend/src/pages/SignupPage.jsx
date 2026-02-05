@@ -6,7 +6,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 function SignupPage() {
   const navigate = useNavigate();
-  // 1. 입력 데이터를 저장할 상태(State) 생성
+  // 1. 入力データを保存する状態(State)生成
   const [formData, setFormData] = useState({
     login_id: "",
     password: "",
@@ -20,7 +20,7 @@ function SignupPage() {
     role: "USER"
   });
 
-  // 2. 입력 값 변경 핸들러
+  // 2. 入力値変更ハンドラー
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -28,15 +28,15 @@ function SignupPage() {
     });
   };
 
-  // 3. 가입 버튼 클릭 시 백엔드 호출
+  // 3. 登録ボタンクリック時にバックエンド呼び出し
   const handleSignup = async () => {
     if (formData.password !== formData.passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
+      alert("パスワードが一致しません。");
       return;
     }
 
     try {
-      // 백엔드 URL (본인의 서버 포트에 맞게 수정하세요. 예: 5000)
+      // バックエンドURL（ご自身のサーバーポートに合わせて修正してください。例: 5000）
       const response = await axios.post("http://localhost:3000/api/users", {
         login_id: formData.login_id,
         password: formData.password,
@@ -50,12 +50,12 @@ function SignupPage() {
       });
 
       if (response.status === 201) {
-        alert("회원가입 성공!");
-        navigate("/"); // 메인 화면으로 이동
+        alert("会員登録に成功しました。");
+        navigate("/"); // メイン画面に移動
       }
     } catch (error) {
-      console.error("회원가입 에러:", error);
-      alert(error.response?.data?.message || "서버 에러가 발생했습니다.");
+      console.error("会員登録エラー:", error);
+      alert(error.response?.data?.message || "サーバーエラーが発生しました。");
     }
   };
 
@@ -68,23 +68,23 @@ function SignupPage() {
             onClick={() => navigate(-1)}
             sx={{ p: 0, minWidth: "auto" }}
           >
-            뒤로
+            戻る
           </Button>
         </Box>
-        <Typography variant="h5" align="center" gutterBottom>회원가입</Typography>
+        <Typography variant="h5" align="center" gutterBottom>会員登録</Typography>
 
-        <TextField fullWidth label="이름*" name="name" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="아이디*" name="login_id" margin="normal" onChange={handleChange} />
-        <TextField fullWidth type="password" label="비밀번호*" name="password" margin="normal" onChange={handleChange} />
-        <TextField fullWidth type="password" label="비밀번호 확인*" name="passwordConfirm" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="이메일*" name="email" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="전화번호*" name="phone" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="우편번호" name="zip_code" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="주소" name="address" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="상세주소" name="address_detail" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="名前*" name="name" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="ID*" name="login_id" margin="normal" onChange={handleChange} />
+        <TextField fullWidth type="password" label="パスワード*" name="password" margin="normal" onChange={handleChange} />
+        <TextField fullWidth type="password" label="パスワード確認*" name="passwordConfirm" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="メール*" name="email" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="電話番号*" name="phone" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="郵便番号" name="zip_code" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="住所" name="address" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="詳細住所" name="address_detail" margin="normal" onChange={handleChange} />
 
         <Button fullWidth variant="contained" size="large" sx={{ mt: 3 }} onClick={handleSignup}>
-          가입하기
+          登録する
         </Button>
       </Paper>
     </Box>

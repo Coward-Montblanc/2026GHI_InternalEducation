@@ -24,10 +24,10 @@ function Header() {
 
         <Box>
           <Button color="inherit" onClick={() => navigate("/login")}>
-            로그인
+            ログイン
           </Button>
           <Button color="inherit" onClick={() => navigate("/signup")}>
-            회원가입
+            会員登録
           </Button>
         </Box>
       </Toolbar>
