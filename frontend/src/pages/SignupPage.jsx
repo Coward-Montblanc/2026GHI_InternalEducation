@@ -37,7 +37,7 @@ function SignupPage() {
 
     try {
       // バックエンドURL（ご自身のサーバーポートに合わせて修正してください。例: 5000）
-      const response = await axios.post("http://localhost:8080/api/users", {
+      const response = await axios.post("http://localhost:3000/api/users", {
         login_id: formData.login_id,
         password: formData.password,
         name: formData.name,

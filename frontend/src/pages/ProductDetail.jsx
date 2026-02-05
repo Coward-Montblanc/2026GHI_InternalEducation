@@ -20,7 +20,7 @@ function ProductDetail() {
 
   // 商品情報を読み込む
   useEffect(() => {
-    fetch(`http://localhost:8080/api/products/${id}`)
+    fetch(`http://localhost:3000/api/products/${id}`)
       .then(res => res.json())
       .then(data => {
         setProduct(data);
