@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
 import {
   Box,
   Typography,
   Button,
-  TextField,
+  TextField, 
   Alert,
   CircularProgress,
   Stack,
@@ -20,20 +21,21 @@ function ProductDetail() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(""); // 현재 크게 보여줄 이미지
-
+  const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
   useEffect(() => {
     // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
-    fetch(`http://localhost:3000/api/products/${id}`)
+    fetch(`${url}/api/products/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setProduct(data);
         // 첫 번째 이미지를 메인으로 설정 (보통 DB 조회 시 main_image가 먼저 오도록 쿼리)
         if (data.images && data.images.length > 0) {
-          setMainImage(`http://localhost:3000${data.images[0].image_url}`);
+          setMainImage(`${url}${data.images[0].image_url}`);
         }
       })
       .catch((err) => {
-        setError("商品を読み込めません。");
+        setError(err.message); //에러 검출
+        console.error("Error code : ",err);
       });
   }, [id]);
 
@@ -97,17 +99,17 @@ function ProductDetail() {
               {product.images?.map((img, index) => (
                 <Box
                   key={index}
-                  onClick={() => setMainImage(`http://localhost:3000${img.image_url}`)}
+                  onClick={() => setMainImage(`${url}${img.image_url}`)}
                   sx={{
                     width: "80px",
                     height: "80px",
-                    border: mainImage === `http://localhost:3000${img.image_url}` ? "2px solid #1976d2" : "1px solid #ddd",
+                    border: mainImage === `${url}${img.image_url}` ? "2px solid #1976d2" : "1px solid #ddd",
                     borderRadius: "4px",
                     cursor: "pointer",
                     overflow: "hidden"
                   }}
                 >
-                  <img src={`http://localhost:3000${img.image_url}`} alt="サムネイル" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={`${url}${img.image_url}`} alt="サムネイル" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </Box>
               ))}
             </Box>

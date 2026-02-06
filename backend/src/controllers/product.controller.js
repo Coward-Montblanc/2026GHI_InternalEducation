@@ -1,6 +1,8 @@
 import db from "../config/db.js";
 import * as productModel from "../models/product.model.js";
 
+
+
 export const createProduct = async (req, res) => {
   // 디버깅 로그
   console.log("수신된 BODY:", req.body);
@@ -9,7 +11,7 @@ export const createProduct = async (req, res) => {
   const { category_id, name, description, price, stock } = req.body;
   const files = req.files;
 
-  // 1. 데이터 검증
+  // 이미지 파일 유무 확인
   if (!files || files.length === 0) {
     return res.status(400).json({ success: false, message: "이미지 파일이 없습니다." });
   }
@@ -19,9 +21,13 @@ export const createProduct = async (req, res) => {
      return res.status(400).json({ success: false, message: "필수 정보가 누락되었습니다." });
   }
 
-  try {
-    // 2. 상품 기본 정보 저장
-    const [productResult] = await db.execute(
+  const connection = await db.getConnection(); //이미지가 없을 경우를 대비한 트랜잭션 커넥션
+
+  try { 
+    //상품 기본 정보 저장
+    await connection.beginTransaction(); //트랜잭션 시작, 
+
+    const [productResult] = await connection.execute( //DB가 아닌 트랜잭션
       `INSERT INTO products (category_id, name, description, price, stock) VALUES (?, ?, ?, ?, ?)`,
       [category_id, name, description, price, stock]
     );
@@ -29,16 +35,18 @@ export const createProduct = async (req, res) => {
     const productId = productResult.insertId;
     console.log("생성된 상품 ID:", productId);
 
-    // 3. 이미지 정보 저장 (루프를 돌며 DB에 기록)
+    // 이미지 정보 저장 (루프를 돌며 DB에 기록)
     for (let i = 0; i < files.length; i++) {
       const imageUrl = `/uploads/${files[i].filename}`;
-      const role = (i === 0) ? 'MAIN' : 'SUB'; // 첫 번째 이미지를 대표 이미지로 설정
+      const role = (i === 0) ? 'MAIN' : 'SUB'; //메인 서브 이미지 판별
 
-      await db.execute(
+      await connection.execute(
         `INSERT INTO product_images (product_id, image_url, image_order, role) VALUES (?, ?, ?, ?)`,
         [productId, imageUrl, i + 1, role]
       );
     }
+
+    await connection.commit(); //트랜잭션 끝. 모든 작업이 성공하면 DB반영
 
     // 성공 응답 (프론트엔드의 res.data.success 조건과 일치시킴)
     res.status(201).json({ 
@@ -48,7 +56,7 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("🔥 등록 에러 상세:", error);
+    console.error("등록 에러 상세:", error);
     res.status(500).json({ success: false, message: "서버 저장 중 오류가 발생했습니다." });
   }
 };
@@ -80,15 +88,6 @@ export const getProductById = async (req, res) => {
       subImages: product.images.filter(img => img.role === 'SUB').map(img => img.image_url),
       detailImages: product.images.filter(img => img.role === 'DETAIL').map(img => img.image_url)
     };
-
-    const productWithFullUrl = {
-    ...product,
-    images: product.images.map(img => ({
-      ...img,
-      // 💡 프론트에서 바로 src에 넣을 수 있게 도메인을 붙여줌
-      image_url: `http://localhost:3000${img.image_url}` 
-    }))
-  };
 
     res.json(response);
   } catch (error) {
@@ -123,7 +122,7 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-export const deleteProduct = async (req, res) => {
+/*export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const affectedRows = await productModel.deleteProduct(id);
@@ -137,4 +136,4 @@ export const deleteProduct = async (req, res) => {
     console.error("상품 삭제 오류:", error);
     res.status(500).json({ message: "상품 삭제 중 오류가 발생했습니다." });
   }
-};
+};*/

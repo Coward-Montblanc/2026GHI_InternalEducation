@@ -38,16 +38,36 @@ function ProductAddPage() {
 
   
   const handleChange = (e) => {
+    if(e.target.files){
+      const newfile = Array.from(e.target.file);
+
+    }
     setProduct({ ...product, [e.target.name]: e.target.value });
   };
 
-  // 💡 파일 선택 시 호출되는 함수
-  const handleFileChange = (e) => {
-  if (e.target.files) {
-    const newFiles = Array.from(e.target.files);
-    // 💡 기존에 선택했던 파일들 뒤에 새로 고른 파일들을 이어붙입니다.
-    setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
-  }
+  const handleFileChange = (e) => { // 파일 선택 시 호출되는 함수
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      const MAX_SIZE = 250 * 1024; // 250KB
+      const MAX_COUNT = 5;
+
+      
+      if (selectedFiles.length + newFiles.length > MAX_COUNT) { // 개수 체크
+        alert(`이미지는 최대 ${MAX_COUNT}장까지만 업로드 가능합니다.`);
+        e.target.value = ""; 
+        return;
+      }
+
+      for (let file of newFiles) { // 용량확인
+        if (file.size > MAX_SIZE) {
+          alert(`용량이 250KB를 초과합니다.`);
+          e.target.value = "";
+          return;
+        }
+      }
+      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      e.target.value = "";// 연속해서 같은 파일을 선택할 수 있도록 인풋 초기화
+    }
 };
 
   const handleSubmit = async (e) => {
@@ -55,14 +75,14 @@ function ProductAddPage() {
 
   const formData = new FormData();
   
-  // 💡 product 객체에서 각각의 값을 꺼내서 append 해야 합니다.
+  // product 객체에서 각각의 값을 꺼내서 append 해야 함
   formData.append("category_id", product.category_id);
   formData.append("name", product.name);
   formData.append("description", product.description);
   formData.append("price", product.price);
   formData.append("stock", product.stock);
 
-  // 💡 파일 추가 ('images' 이름이 라우터와 일치해야 함)
+  // 파일 추가 ('images' 이름이 라우터와 일치해야 함)
   selectedFiles.forEach((file) => {
     formData.append("images", file);
   });
@@ -123,7 +143,7 @@ function ProductAddPage() {
               상품 이미지 (첫 번째 사진이 메인 이미지가 됩니다)
             </Typography>
             <Button variant="outlined" component="label" fullWidth>
-              파일 선택 (여러 장 가능)
+              파일 선택 (최대 5장 가능, 각 250kb 제한)
               <input type="file" hidden multiple accept="image/*" onChange={handleFileChange} />
             </Button>
             

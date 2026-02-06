@@ -108,7 +108,7 @@ router.delete("/:id", deleteUser);
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *         description: 회원 ID
  *     requestBody:
  *       required: true

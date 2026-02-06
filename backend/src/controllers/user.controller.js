@@ -17,7 +17,7 @@ export async function createUser(req, res) {
   if (!login_id || !password || !name || !email || !phone) {
     return res.status(400).json({ message: "필수 정보(ID, 비밀번호, 이름, 이메일, 전화번호)가 누락되었습니다." });
   }
-  const saltRounds = 10;
+   const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
   try {
     const result = await userModel.createUser({
@@ -48,10 +48,7 @@ export async function createUser(req, res) {
 
 export async function deleteUser(req, res) { //회원 삭제
   const { id } = req.params;
-  console.log("------------------------------------------");
-  console.log("백엔드 수신 ID:", id); 
-  console.log("아이디 타입:", typeof id);
-  console.log("------------------------------------------");
+
   try {
     const result = await userModel.deleteUserById(id); 
     if (result.affectedRows === 0) {
@@ -64,20 +61,23 @@ export async function deleteUser(req, res) { //회원 삭제
   }
 }
 
-export async function updateUser(req, res) {
+export async function updateUser(req, res) { //회원정보 수정
   const { id } = req.params; // login_id
   const { name, email, phone, zip_code, address, address_detail, role, password } = req.body;
 
   try {
     const updateData = {
-      name, email, phone, zip_code, address, address_detail,
+      name,
+      email,
+      phone,
+      zip_code,
+      address,
+      address_detail,
       role: role || "USER",
     };
 
-    // 💡 비밀번호 수정 시에도 해싱 처리 필수!
     if (password) {
-      const saltRounds = 10;
-      updateData.password = await bcrypt.hash(password, saltRounds);
+      updateData.password = password;
     }
 
     const result = await userModel.updateUser(id, updateData);

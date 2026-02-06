@@ -6,11 +6,12 @@ import * as productController from "../controllers/product.controller.js";
 
 const router = express.Router();
 
-// 💡 1. Multer 설정 (이미지 업로드 필수)
+// Multer 설정 (이미지 업로드 필수)
 const uploadDir = path.join(path.resolve(), "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
@@ -20,18 +21,10 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
-
-// 💡 상품 등록 라우트 (최대 5장까지 업로드 허용)
-router.post("/", (req, res, next) => {
-  upload.array("images", 5)(req, res, (err) => {
-    if (err) {
-      console.error("Multer 에러 발생:", err);
-      return res.status(400).json({ success: false, message: "파일 업로드 에러", error: err });
-    }
-    next();
-  });
-}, productController.createProduct);
+const upload = multer({ //파일 업로드 설정
+  storage: storage, //저장 디렉토리
+  limits: {fileSize: 250 * 1024  } //250kb 제한
+});
 
 /**
  * @swagger
@@ -44,6 +37,25 @@ router.post("/", (req, res, next) => {
  *         description: 상품 목록
  */
 router.get("/", productController.getAllProducts);
+
+/**
+ * @swagger
+ * /products/category/{categoryId}:
+ *   get:
+ *     summary: 카테고리별 상품 조회
+ *     tags: [Products]
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 카테고리 ID
+ *     responses:
+ *       200:
+ *         description: 카테고리별 상품 목록
+ */
+router.get("/category/:categoryId", productController.getProductsByCategory);
 
 /**
  * @swagger
@@ -68,25 +80,6 @@ router.get("/:id", productController.getProductById);
 
 /**
  * @swagger
- * /products/category/{categoryId}:
- *   get:
- *     summary: 카테고리별 상품 조회
- *     tags: [Products]
- *     parameters:
- *       - in: path
- *         name: categoryId
- *         required: true
- *         schema:
- *           type: integer
- *         description: 카테고리 ID
- *     responses:
- *       200:
- *         description: 카테고리별 상품 목록
- */
-router.get("/category/:categoryId", productController.getProductsByCategory);
-
-/**
- * @swagger
  * /products:
  *   post:
  *     summary: 상품 생성
@@ -94,7 +87,7 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -102,6 +95,7 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *               - name
  *               - price
  *               - stock
+ *               - images
  *             properties:
  *               category_id:
  *                 type: integer
@@ -118,9 +112,11 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *               stock:
  *                 type: integer
  *                 example: 10
- *               main_image:
- *                 type: string
- *                 example: /uploads/tv.jpg
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: 상품 생성 성공
@@ -136,7 +132,30 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *                   type: integer
  *                   example: 25
  */
-router.post("/", upload.array("images", 5), productController.createProduct);
+router.post("/", (req, res, next) => {
+  // 최대 5장까지 업로드 허용 및 에러 핸들링
+  upload.array("images", 5)(req, res, (err) => {
+    if (err) { 
+      console.error("Multer 에러 발생:", err);
+      
+      // 파일 사이즈 오버(250KB 제한) 처리
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ 
+          success: false, 
+          message: "파일 크기는 250KB 이하여야 합니다." 
+        });
+      }
+      
+      // 기타 업로드 에러
+      return res.status(400).json({ 
+        success: false, 
+        message: "파일 업로드 에러", 
+        error: err.message 
+      });
+    }
+    next();
+  });
+}, productController.createProduct);
 
 /**
  * @swagger
@@ -184,25 +203,6 @@ router.post("/", upload.array("images", 5), productController.createProduct);
  */
 router.put("/:id", productController.updateProduct);
 
-/**
- * @swagger
- * /products/{id}:
- *   delete:
- *     summary: 상품 삭제
- *     tags: [Products]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: 상품 ID
- *     responses:
- *       200:
- *         description: 상품 삭제 성공
- *       404:
- *         description: 상품을 찾을 수 없음
- */
-router.delete("/:id", productController.deleteProduct);
+
 
 export default router;
