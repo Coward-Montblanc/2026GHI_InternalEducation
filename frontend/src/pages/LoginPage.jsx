@@ -69,7 +69,7 @@ function LoginPage() {
             onClick={() => navigate(-1)}
             sx={{ p: 0, minWidth: "auto", textTransform: "none" }}
           >
-            뒤로
+            戻る
           </Button>
         </Box>
 

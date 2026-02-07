@@ -22,7 +22,7 @@ export async function createUser(req, res) {
   try {
     const result = await userModel.createUser({
       login_id,
-      password: hashedPassword,
+      password,
       name,
       email,
       phone,

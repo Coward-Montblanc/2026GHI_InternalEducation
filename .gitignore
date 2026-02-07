@@ -1,2 +1,32 @@
 backend/node_modules/.bin/js-yaml.ps1
 /backend/node_modules
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables
+.env
+*.env.local
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
