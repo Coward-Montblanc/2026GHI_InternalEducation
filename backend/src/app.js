@@ -3,9 +3,11 @@ import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 import { fileURLToPath } from "url";
-import userRoutes from "./routes/user.routes.js";
-import productRoutes from "./routes/product.routes.js";
+import express from "express"; // express를 위로 올림
+import authRoutes from "./routes/auth.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
+import productRoutes from "./routes/product.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 
@@ -16,32 +18,33 @@ dotenv.config({
   path: path.resolve(__dirname, "../.env"),
 });
 
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_NAME:", process.env.DB_NAME);
-
 const app = express();
 
-app.use(express.json({ charset: 'utf-8' }));
-app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
-app.use(cors());
+// --- [순서 중요: 1. 기본 설정 미들웨어] ---
+app.use(cors()); // CORS 허용
+app.use(express.json()); // JSON 해석 (라우터보다 무조건 위!)
+app.use(express.urlencoded({ extended: true })); // FormData/URL-encoded 해석
 
-// UTF-8 인코딩 설정 (API 경로에만 적용)
-app.use('/api', (req, res, next) => {
-  const originalJson = res.json;
-  res.json = function(data) {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    return originalJson.call(this, data);
-  };
-  next();
-});
-
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes); // 추가
-app.use("/api/categories", categoryRoutes); // 추가
+// --- [순서 중요: 2. 정적 파일 및 문서] ---
+app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// --- [순서 중요: 3. API 라우터 설정] ---
+// 이제 모든 데이터가 해석된 상태에서 라우터로 들어갑니다.
+app.use("/api/auth", authRoutes); 
+app.use("/api/users", userRoutes); 
+app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes); 
 
 app.get("/", (req, res) => {
   res.send("API running");
 });
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+console.log("APP START");
 
 export default app;

@@ -1,5 +1,13 @@
 import db from "../config/db.js";
 
+export async function findByLoginId(login_id) { //로그인용 아이디 찾기 함수
+  const [rows] = await db.execute(
+    `SELECT * FROM users WHERE login_id = ?`, 
+    [login_id]
+  );
+  return rows[0]; // 없으면 undefined
+}
+
 export async function findAllUsers() { //회원 조회
   const [rows] = await db.execute(
     `SELECT login_id, password, name, email, phone, zip_code, address, address_detail, role, created_at FROM users`

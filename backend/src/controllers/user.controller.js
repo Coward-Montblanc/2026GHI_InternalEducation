@@ -17,7 +17,8 @@ export async function createUser(req, res) {
   if (!login_id || !password || !name || !email || !phone) {
     return res.status(400).json({ message: "필수 정보(ID, 비밀번호, 이름, 이메일, 전화번호)가 누락되었습니다." });
   }
-
+   const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
   try {
     const result = await userModel.createUser({
       login_id,
@@ -94,6 +95,7 @@ export async function updateUser(req, res) { //회원정보 수정
     res.status(500).json({ message: "DB 에러" });
   }
 }
+
 
 
 
