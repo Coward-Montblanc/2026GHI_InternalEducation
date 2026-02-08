@@ -30,9 +30,9 @@ function ProductDetail() {
       .then((res) => {
         if (!res.ok) {
           if (res.status === 404) { //404에러
-            throw new Error("상품을 찾을 수 없습니다.");
+            throw new Error("商品がありません。");
           } else if (res.status === 500) { //500에러
-            throw new Error("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            throw new Error("サーバーエラーが発生しました。しばらくしてからもう一度お試しください。");
           } else {
             throw new Error(`HTTP error! status: ${res.status}`);
           }
@@ -75,6 +75,9 @@ function ProductDetail() {
     );
   }
 
+  // 로그인 상태 확인
+  const isLoggedIn = !!localStorage.getItem("token");
+
   if (!product) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <CircularProgress />
@@ -101,7 +104,7 @@ function ProductDetail() {
               justifyContent: "center"
             }}>
               {mainImage ? (
-                <img src={mainImage} alt="상품 이미지" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                <img src={mainImage} alt="商品画像" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               ) : (
                 <Typography color="text.secondary">画像がありません。</Typography>
               )}
@@ -168,7 +171,7 @@ function ProductDetail() {
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!isLoggedIn) {
-                    alert("로그인 후 실행해주세요");
+                    alert("ログイン後に実行してください");
                     return;
                   }
                   alert(`${product.name} ${quantity}個をカートに追加しました。`);
@@ -185,10 +188,10 @@ function ProductDetail() {
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!isLoggedIn) {
-                    alert("로그인 후 실행해주세요");
+                    alert("ログイン後に実行してください");
                     return;
                   }
-                  alert(`구매 페이지 준비중`);
+                  alert(`구매페이지 준비중`);
                 }}
                 disabled={product.stock === 0}
               >

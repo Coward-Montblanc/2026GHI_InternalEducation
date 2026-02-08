@@ -84,7 +84,7 @@ function ProductList({ categoryId, searchText }) {
     filteredProducts = products.filter((product) => product.name.includes("人気商品"));
   }
 
-  // 로그인 상태 확인 (예시: localStorage의 token 존재 여부)
+  // 로그인 상태 확인
   const isLoggedIn = !!localStorage.getItem("token");
 
   return (
@@ -179,7 +179,7 @@ function ProductList({ categoryId, searchText }) {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isLoggedIn) {
-                        alert("로그인 후 실행해주세요");
+                        alert("ログイン後に実行してください");
                         return;
                       }
                       alert(`${product.name}をカートに追加しました。`);
@@ -194,7 +194,7 @@ function ProductList({ categoryId, searchText }) {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isLoggedIn) {
-                        alert("로그인 후 실행해주세요");
+                        alert("ログイン後に実行してください");
                         return;
                       }
                       alert(`구매 페이지 구현중`);
