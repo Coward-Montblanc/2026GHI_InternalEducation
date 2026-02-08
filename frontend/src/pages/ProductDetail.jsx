@@ -26,7 +26,15 @@ function ProductDetail() {
     // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
     fetch(`${url}/api/products/${id}`)
       .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`); //네트워크 환경에서 통용되는 에러사항 띄우기
+        if (!res.ok) {
+          if (res.status === 404) { //404에러
+            throw new Error("상품을 찾을 수 없습니다.");
+          } else if (res.status === 500) { //500에러
+            throw new Error("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+          } else {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+        }
         return res.json();
       })
       .then((data) => {
