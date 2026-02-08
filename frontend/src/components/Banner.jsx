@@ -13,7 +13,7 @@ function Banner() {
         justifyContent: "center",
       }}
     >
-      <Typography variant="h4">Banner</Typography>
+      <Typography variant="h4">배너 공간(이후 사진 첨부)</Typography>
     </Box>
   );
 }

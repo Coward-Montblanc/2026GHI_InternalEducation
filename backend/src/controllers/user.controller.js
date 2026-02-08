@@ -17,12 +17,19 @@ export async function createUser(req, res) {
   if (!login_id || !password || !name || !email || !phone) {
     return res.status(400).json({ message: "필수 정보(ID, 비밀번호, 이름, 이메일, 전화번호)가 누락되었습니다." });
   }
-   const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+  const regex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/; //영문(a-z), 숫자(0~9) 혼합 4글자 이상 제약
+  if(!regex.test(login_id)){ return res.status(400).json({ message : "아이디는 영문, 숫자 포함 4글자 이상이어야 합니다."});}
+  if(!regex.test(password)){ return res.status(400).json({ message : "비밀번호는 영문, 숫자 포함 4글자 이상이어야 합니다."});} 
+
+  if (!email.includes('@')) { return res.status(400).json({ message: "유효한 이메일 형식이 아닙니다." });}  //이메일에 @필수
+
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
   try {
     const result = await userModel.createUser({
       login_id,
-      password,
+      password: hashedPassword,
       name,
       email,
       phone,
