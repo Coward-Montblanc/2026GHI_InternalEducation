@@ -1,3 +1,5 @@
+  // 로그인 상태 확인 (localStorage의 token)
+  const isLoggedIn = !!localStorage.getItem("token");
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -163,7 +165,14 @@ function ProductDetail() {
                 variant="outlined" 
                 fullWidth 
                 size="large" 
-                onClick={() => alert(`${product.name} ${quantity}個をカートに追加しました。`)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    alert("로그인 후 실행해주세요");
+                    return;
+                  }
+                  alert(`${product.name} ${quantity}個をカートに追加しました。`);
+                }}
                 disabled={product.stock === 0}
               >
                 カート
@@ -173,8 +182,15 @@ function ProductDetail() {
                 fullWidth 
                 size="large" 
                 color="primary"
-                onClick={() => alert(`구매 페이지 준비중`)}
-                disabled={product.stock === 0} // 재고 없으면 메인화면까지 비활성화
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    alert("로그인 후 실행해주세요");
+                    return;
+                  }
+                  alert(`구매 페이지 준비중`);
+                }}
+                disabled={product.stock === 0}
               >
                 購入
               </Button>

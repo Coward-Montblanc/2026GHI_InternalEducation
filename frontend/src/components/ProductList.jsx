@@ -84,6 +84,9 @@ function ProductList({ categoryId, searchText }) {
     filteredProducts = products.filter((product) => product.name.includes("人気商品"));
   }
 
+  // 로그인 상태 확인 (예시: localStorage의 token 존재 여부)
+  const isLoggedIn = !!localStorage.getItem("token");
+
   return (
     <Box sx={{ p: 4, maxWidth: "1400px", margin: "0 auto", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -92,7 +95,7 @@ function ProductList({ categoryId, searchText }) {
         <Alert severity="info">商品がありません。</Alert>
       )}
 
-      {!error && filteredProducts.length > 0 && ( //상품이 있을 때 그리드로 표시
+      {!error && filteredProducts.length > 0 && (
         <Grid container spacing={2} justifyContent="center">
           {filteredProducts.map((product) => (
             <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={product.product_id}>
@@ -175,9 +178,13 @@ function ProductList({ categoryId, searchText }) {
                     fullWidth
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!isLoggedIn) {
+                        alert("로그인 후 실행해주세요");
+                        return;
+                      }
                       alert(`${product.name}をカートに追加しました。`);
                     }}
-                    disabled={product.stock === 0} //재고0일시 비활성화
+                    disabled={product.stock === 0}
                   >
                     カート
                   </Button>
@@ -186,9 +193,13 @@ function ProductList({ categoryId, searchText }) {
                     fullWidth
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!isLoggedIn) {
+                        alert("로그인 후 실행해주세요");
+                        return;
+                      }
                       alert(`구매 페이지 구현중`);
                     }}
-                    disabled={product.stock === 0} //재고0일시 비활성화
+                    disabled={product.stock === 0}
                   >
                     購入 
                   </Button>
