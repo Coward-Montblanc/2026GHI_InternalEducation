@@ -121,19 +121,3 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({ message: "상품 수정 중 오류가 발생했습니다." });
   }
 };
-
-/*export const deleteProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const affectedRows = await productModel.deleteProduct(id);
-
-    if (affectedRows === 0) {
-      return res.status(404).json({ message: "상품을 찾을 수 없습니다." });
-    }
-
-    res.json({ message: "상품이 삭제되었습니다." });
-  } catch (error) {
-    console.error("상품 삭제 오류:", error);
-    res.status(500).json({ message: "상품 삭제 중 오류가 발생했습니다." });
-  }
-};*/

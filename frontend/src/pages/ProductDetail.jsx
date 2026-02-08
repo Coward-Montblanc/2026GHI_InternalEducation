@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
+import axios from "axios"; // API 호출을 위해 필요
 import {
   Box,
   Typography,
   Button,
-  TextField, 
   Alert,
   CircularProgress,
   Stack,
 } from "@mui/material";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 function ProductDetail() {
@@ -22,6 +20,7 @@ function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(""); // 현재 크게 보여줄 이미지
   const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
+
   useEffect(() => {
     // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
     fetch(`${url}/api/products/${id}`)
@@ -37,7 +36,34 @@ function ProductDetail() {
         setError(err.message); //에러 검출
         console.error("Error code : ",err);
       });
-  }, [id]);
+  }, [id, url]);
+
+  const handleAddToCart = async () => { //장바구니 담기
+    const storedUser = JSON.parse(localStorage.getItem("user"));     // 로컬스토리지에서 로그인된 유저 정보 가져오기
+    
+    if (!storedUser || !storedUser.login_id) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${url}/api/cart/addcart`, {
+        login_id: storedUser.login_id,
+        product_id: id,      // 상품 ID
+        quantity: quantity,  // 현재 선택된 수량
+      });
+
+      if (response.data.success) {
+        if (window.confirm("장바구니에 담겼습니다. 장바구니 페이지로 이동하시겠습니까?")) {
+          navigate("/cart"); // 장바구니 페이지 경로
+        }
+      }
+    } catch (err) {
+      console.error("Cart error:", err);
+      alert(err.response?.data?.message || "장바구니 담기에 실패했습니다.");
+    }
+  };
 
   const formatPrice = (price) => {
     return price?.toLocaleString();
@@ -142,13 +168,13 @@ function ProductDetail() {
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography variant="h6">合計金額</Typography>
                 <Typography variant="h5" color="primary.main" sx={{ fontWeight: "bold" }}>
-                  {formatPrice(product.price * quantity)}원
+                  {formatPrice(product.price * quantity)}円
                 </Typography>
               </Box>
             </Box>
 
-            <Stack direction="row" spacing={2}>
-              <Button variant="outlined" fullWidth size="large" onClick={() => alert(`${product.name} ${quantity}個をカートに追加しました。`)}>カート</Button>
+            <Stack direction="row" spacing={2}> {/*장바구니 버튼 업데이트. 재고0일경우 구입버튼, 장바구니 버튼 다 비활성 기능 필요*/}
+              <Button variant="outlined" fullWidth size="large" onClick={handleAddToCart} disabled={product.stock === 0}> カート</Button>
               <Button variant="contained" fullWidth size="large" color="primary">購入</Button>
             </Stack>
 
