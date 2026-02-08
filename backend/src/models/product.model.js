@@ -9,7 +9,7 @@ export const getAllProducts = async (page = 1, limit = 24, search = "") => {
 
   // 전체 상품 개수 조회 (검색어 포함)
   const countQuery = `SELECT COUNT(*) as total FROM products p WHERE p.status = 0 ${searchCond}`;
-  const countParams = searchCond ? [searchValue, searchValue] : [];
+  const countParams = searchCond ? [searchValue] : []; 
   const [countRows] = await db.query(countQuery, countParams);
   const total = countRows[0].total;
 
@@ -109,8 +109,6 @@ export const softDeleteProduct = async (productId) => {
   );
   return result.affectedRows;
 };
-
-// 물리적 삭제 (Hard Delete): 실제 데이터 삭제
 
 //상품 이미지 저장 함수
 export const createProductImage = async (productId, imageUrl, role, order) => {
