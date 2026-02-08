@@ -35,12 +35,12 @@ function ProductList({ categoryId, searchText }) {
       let url = "";
       // 검색어가 있을 때 쿼리 파라미터로 전달
       if (categoryId) {
-        url = `http://localhost:3000/api/products/category/${categoryId}`;
+        url = `http://localhost:3000/api/products/category/${categoryId}`; //ip불러오기
         if (searchText) {
           url += `?search=${encodeURIComponent(searchText)}`;
         }
       } else {
-        url = `http://localhost:3000/api/products?page=${page}&limit=${itemsPerPage}`;
+        url = `http://localhost:3000/api/products?page=${page}&limit=${itemsPerPage}`; //ip불러온데다가 검색어도 지정
         if (searchText) {
           url += `&search=${encodeURIComponent(searchText)}`;
         }
@@ -78,9 +78,9 @@ function ProductList({ categoryId, searchText }) {
     </Box>
   );
 
-  // '人気商品' 버튼이 눌렸을 때만 상품명에 '人気商品'이 포함된 상품만 필터링
+  // '人気商品' 
   let filteredProducts = products;
-  if (searchText === "人気商品") {　 //서치텍스트 인기상품
+  if (searchText === "人気商品") { //서치텍스트 인기상품
     filteredProducts = products.filter((product) => product.name.includes("人気商品"));
   }
 

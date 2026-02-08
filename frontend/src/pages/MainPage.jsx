@@ -19,8 +19,8 @@ function MainPage() {
         setSelectedCategoryName={setSelectedCategoryName} //카테고리명 설정 함수
         onCategoryNameChange={setSelectedCategoryName} //카테고리명 변경 함수
       />
-      <Banner />
-      <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.7rem', margin: '25px 0' }}>
+      <Banner /> 
+      <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.7rem', margin: '25px 0' }}> {/*선택된 카테고리명 표시*/}
         {selectedCategoryName === 'カテゴリー' ? '全商品' : selectedCategoryName}
       </div>
       <ProductList categoryId={selectedCategory} searchText={searchText} />

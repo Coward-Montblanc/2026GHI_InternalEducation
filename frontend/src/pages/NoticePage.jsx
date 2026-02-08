@@ -4,7 +4,7 @@ import { CircularProgress, Box } from "@mui/material";
 
 function NoticePage() {
 	const [loading, setLoading] = useState(true);
-	const [notices, setNotices] = useState([]);
+	const [notices, setNotices] = useState([]); //아직
 
 	useEffect(() => { //로딩시간
 		setLoading(true);
