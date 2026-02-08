@@ -1,3 +1,5 @@
+  // 로그인 상태 확인 (localStorage의 token)
+  const isLoggedIn = !!localStorage.getItem("token");
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios"; // API 호출을 위해 필요
@@ -20,11 +22,21 @@ function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(""); // 현재 크게 보여줄 이미지
   const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
-
-  useEffect(() => {
+  useEffect(() => { //로딩화면
     // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
     fetch(`${url}/api/products/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          if (res.status === 404) { //404에러
+            throw new Error("商品がありません。");
+          } else if (res.status === 500) { //500에러
+            throw new Error("サーバーエラーが発生しました。しばらくしてからもう一度お試しください。");
+          } else {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+        }
+        return res.json();
+      })
       .then((data) => {
         setProduct(data);
         // 첫 번째 이미지를 메인으로 설정 (보통 DB 조회 시 main_image가 먼저 오도록 쿼리)
@@ -88,6 +100,9 @@ function ProductDetail() {
     );
   }
 
+  // 로그인 상태 확인
+  const isLoggedIn = !!localStorage.getItem("token");
+
   if (!product) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <CircularProgress />
@@ -114,7 +129,7 @@ function ProductDetail() {
               justifyContent: "center"
             }}>
               {mainImage ? (
-                <img src={mainImage} alt="상품 이미지" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                <img src={mainImage} alt="商品画像" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               ) : (
                 <Typography color="text.secondary">画像がありません。</Typography>
               )}
@@ -156,7 +171,7 @@ function ProductDetail() {
             <Typography color="success.main" sx={{ mb: 4 }}>配送料: 無料</Typography>
 
             <Box sx={{ display: "flex", alignItems: "center", mb: 4, gap: 2 }}>
-              <Typography>수량:</Typography>
+              <Typography>数量:</Typography>
               <Box sx={{ display: "flex", alignItems: "center", border: "1px solid #ddd", borderRadius: "4px" }}>
                 <Button onClick={() => changeQuantity(-1)} disabled={quantity <= 1}>-</Button>
                 <Typography sx={{ width: "40px", textAlign: "center" }}>{quantity}</Typography>
@@ -173,9 +188,40 @@ function ProductDetail() {
               </Box>
             </Box>
 
-            <Stack direction="row" spacing={2}> {/*장바구니 버튼 업데이트. 재고0일경우 구입버튼, 장바구니 버튼 다 비활성 기능 필요*/}
-              <Button variant="outlined" fullWidth size="large" onClick={handleAddToCart} disabled={product.stock === 0}> カート</Button>
-              <Button variant="contained" fullWidth size="large" color="primary">購入</Button>
+            <Stack direction="row" spacing={2}>
+              <Button 
+                variant="outlined" 
+                fullWidth 
+                size="large" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    alert("ログイン後に実行してください");
+                    return;
+                  }
+                  alert(`${product.name} ${quantity}個をカートに追加しました。`);
+                }}
+                disabled={product.stock === 0}
+              >
+                カート
+              </Button>
+              <Button 
+                variant="contained" 
+                fullWidth 
+                size="large" 
+                color="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isLoggedIn) {
+                    alert("ログイン後に実行してください");
+                    return;
+                  }
+                  alert(`구매페이지 준비중`);
+                }}
+                disabled={product.stock === 0}
+              >
+                購入
+              </Button>
             </Stack>
 
             {product.stock === 0 && <Alert severity="warning" sx={{ mt: 2 }}>現在品切れ中です。</Alert>}

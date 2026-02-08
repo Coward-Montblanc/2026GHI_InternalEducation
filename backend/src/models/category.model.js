@@ -49,11 +49,12 @@ export const updateCategory = async (categoryId, name) => {
   return result.affectedRows;
 };
 
-// 카테고리 삭제
+// 카테고리 논리삭제 (delflag = 'Y'), 실제 삭제는 없습니다.
 export const deleteCategory = async (categoryId) => {
   const [result] = await db.query(
     `
-    DELETE FROM categories
+    UPDATE categories
+    SET delflag = 'Y'
     WHERE category_id = ?
   `,
     [categoryId]

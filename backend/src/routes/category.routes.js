@@ -121,7 +121,7 @@ router.put("/:id", categoryController.updateCategory);
  * @swagger
  * /categories/{id}:
  *   delete:
- *     summary: 카테고리 삭제
+ *     summary: 카테고리 논리적 삭제
  *     tags: [Categories]
  *     parameters:
  *       - in: path
@@ -132,7 +132,7 @@ router.put("/:id", categoryController.updateCategory);
  *         description: 카테고리 ID
  *     responses:
  *       200:
- *         description: 카테고리 삭제 성공
+ *         description: 카테고리 논리적 삭제 성공
  *       404:
  *         description: 카테고리를 찾을 수 없음
  */

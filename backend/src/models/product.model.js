@@ -1,39 +1,39 @@
 import db from "../config/db.js";
 
 // 모든 상품 조회 (판매 중인 상품만)
-export const getAllProducts = async (page = 1, limit = 24) => {
+export const getAllProducts = async (page = 1, limit = 24, search = "") => {
   const offset = (page - 1) * limit;
-  
-  // 1. 전체 상품 개수 조회 (status=0인 것만)
-  const [countRows] = await db.query(
-    'SELECT COUNT(*) as total FROM products WHERE status = 0'
-  );
-  
-  // 💡 중요: countRows[0].total 로 접근해야 합니다.
-  const total = countRows[0].total; 
-  
-  // 2. 페이지별 상품 조회
-  const [rows] = await db.query(
-    `
+  // search 파라미터 추가
+  const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : ""; // 타이틀에서만 검색
+  const searchValue = search && search.trim() !== "" ? `%${search}%` : null;
+
+  // 전체 상품 개수 조회 (검색어 포함)
+  const countQuery = `SELECT COUNT(*) as total FROM products p WHERE p.status = 0 ${searchCond}`;
+  const countParams = searchCond ? [searchValue] : []; 
+  const [countRows] = await db.query(countQuery, countParams);
+  const total = countRows[0].total;
+
+  // 페이지별 상품 조회 (검색어 포함)
+  const query = `
     SELECT 
       p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
       c.name as category_name,
       (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 'MAIN' LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.status = 0
+    WHERE p.status = 0 ${searchCond}
     ORDER BY p.created_at DESC
     LIMIT ? OFFSET ?
-  `,
-    [limit, offset]
-  );
-  
+  `;
+  const params = searchCond ? [searchValue, limit, offset] : [limit, offset];
+  const [rows] = await db.query(query, params);
+
   return {
     products: rows,
     pagination: {
       page: Number(page),
       limit: Number(limit),
-      total: total, // 이제 여기서 total이 정의되어 에러가 나지 않습니다.
+      total: total,
       totalPages: Math.ceil(total / limit)
     }
   };
@@ -62,20 +62,22 @@ export const getProductById = async (productId) => {
 };
 
 // 카테고리별 상품 조회 (판매 중인 것만)
-export const getProductsByCategory = async (categoryId) => {
-  const [rows] = await db.query(
-    `
+export const getProductsByCategory = async (categoryId, search = "") => {
+  // search 파라미터 추가
+  const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : ""; //서치시 타이틀에서만 검색
+  const searchValue = search && search.trim() !== "" ? `%${search}%` : null;
+  const query = `
     SELECT 
       p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
       c.name as category_name,
       (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 'MAIN' LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.category_id = ? AND p.status = 0
+    WHERE p.category_id = ? AND p.status = 0 ${searchCond}
     ORDER BY p.created_at DESC
-  `,
-    [categoryId]
-  );
+  `;
+  const params = searchCond ? [categoryId, searchValue] : [categoryId];
+  const [rows] = await db.query(query, params);
   return rows;
 };
 
@@ -103,15 +105,6 @@ export const updateProduct = async (productId, productData) => {
 export const softDeleteProduct = async (productId) => {
   const [result] = await db.query(
     `UPDATE products SET status = 1 WHERE product_id = ?`,
-    [productId]
-  );
-  return result.affectedRows;
-};
-
-// 물리적 삭제 (Hard Delete): 실제 데이터 삭제
-export const deleteProduct = async (productId) => {
-  const [result] = await db.query(
-    `DELETE FROM products WHERE product_id = ?`,
     [productId]
   );
   return result.affectedRows;

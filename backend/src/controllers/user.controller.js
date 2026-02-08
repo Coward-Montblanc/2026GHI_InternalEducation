@@ -84,7 +84,8 @@ export async function updateUser(req, res) { //회원정보 수정
     };
 
     if (password) {
-      updateData.password = password;
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(password, saltRounds);
     }
 
     const result = await userModel.updateUser(id, updateData);

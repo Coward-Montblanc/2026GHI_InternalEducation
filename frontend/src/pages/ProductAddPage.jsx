@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Container, TextField, Button, Typography, Box, Paper, MenuItem, Stack } from "@mui/material";
+import { Container, TextField, Button, Typography, Box, Paper, MenuItem, Stack, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 //import api from "../api/axios";
@@ -17,20 +17,22 @@ function ProductAddPage() {
   });
   
   
-  // 💡 파일 상태 관리 (배열)
+  // 파일 상태 관리 (배열)
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        setLoading(true);
         const res = await axios.get("http://localhost:3000/api/categories");
         setCategories(res.data);
-        
-        // 데이터가 있으면 첫 번째 카테고리를 기본값으로 설정 (선택 사항)
         if (res.data.length > 0) {
           setProduct(prev => ({ ...prev, category_id: res.data[0].category_id }));
         }
       } catch (err) {
-        console.error("카테고리 로딩 실패:", err);
+        console.error("カテゴリー読み込み失敗:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchCategories();
@@ -100,17 +102,25 @@ function ProductAddPage() {
     }   
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Container maxWidth="sm" sx={{ mt: 5, mb: 5 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom align="center">
-          신규 상품 등록
+          新規商品登録
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField 
             select 
             fullWidth 
-            label="카테고리" 
+            label="カテゴリー" 
             name="category_id" 
             value={product.category_id || ""} 
             onChange={handleChange} 
@@ -124,26 +134,26 @@ function ProductAddPage() {
                 </MenuItem>
             ))
             ) : (
-            <MenuItem disabled value="">카테고리를 불러오는 중...</MenuItem>
+            <MenuItem disabled value="">カテゴリーを読み込み中...</MenuItem>
             )}
             
           </TextField>
 
-          <TextField fullWidth label="상품명" name="name" onChange={handleChange} required margin="normal" />
-          <TextField fullWidth label="상품 설명" name="description" multiline rows={4} onChange={handleChange} margin="normal" />
+          <TextField fullWidth label="商品名" name="name" onChange={handleChange} required margin="normal" />
+          <TextField fullWidth label="商品説明" name="description" multiline rows={4} onChange={handleChange} margin="normal" />
           
           <Stack direction="row" spacing={2}>
-            <TextField fullWidth type="number" label="가격" name="price" onChange={handleChange} required margin="normal" />
-            <TextField fullWidth type="number" label="재고" name="stock" onChange={handleChange} required margin="normal" />
+            <TextField fullWidth type="number" label="価格" name="price" onChange={handleChange} required margin="normal" />
+            <TextField fullWidth type="number" label="在庫" name="stock" onChange={handleChange} required margin="normal" />
           </Stack>
 
-          {/* 💡 파일 업로드 인풋 */}
+          {/* ファイルアップロード入力 */}
           <Box sx={{ mt: 3, mb: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
-              상품 이미지 (첫 번째 사진이 메인 이미지가 됩니다)
+              商品画像 (最初の写真がメイン画像になります)
             </Typography>
             <Button variant="outlined" component="label" fullWidth>
-              파일 선택 (최대 5장 가능, 각 250kb 제한)
+              ファイル選択 (最大5枚まで、各250KB制限)
               <input type="file" hidden multiple accept="image/*" onChange={handleFileChange} />
             </Button>
             
@@ -158,7 +168,7 @@ function ProductAddPage() {
           </Box>
 
           <Button type="submit" fullWidth variant="contained" color="primary" size="large" sx={{ mt: 2 }}>
-            상품 등록하기
+            商品登録
           </Button>
         </Box>
       </Paper>

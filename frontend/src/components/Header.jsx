@@ -80,7 +80,7 @@ function Header() {
               </IconButton>
 
               <Typography variant="body1" sx={{ mr: 2 }}>
-                <strong>{user.name || user.login_id}</strong>님 환영합니다
+                <strong>{user.name || user.login_id}</strong>様、ようこそ！
               </Typography>
               <Button color="inherit" onClick={handleLogout}>
                 ログアウト

@@ -11,36 +11,43 @@ import {
   Alert,
   Pagination,
 } from "@mui/material";
-
-function ProductList({ categoryId }) {
+// 검색어(searchText) prop 추가
+function ProductList({ categoryId, searchText }) {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 20; // 8컬럼 그리드에 맞춰 조정
+  const itemsPerPage = 24; // 8개 x 4줄
 
-  useEffect(() => {
+  useEffect(() => { //페이지 1로 초기화
     setPage(1);
-  }, [categoryId]);
+  }, [categoryId, searchText]);
 
-  useEffect(() => {
+  useEffect(() => { //카테고리 변경시 새상품 불러오기
     fetchProducts();
-  }, [page, categoryId]);
+  }, [page, categoryId, searchText]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const url = categoryId 
-        ? `http://localhost:3000/api/products/category/${categoryId}`
-        : `http://localhost:3000/api/products?page=${page}&limit=${itemsPerPage}`;
-      
+      let url = "";
+      // 검색어가 있을 때 쿼리 파라미터로 전달
+      if (categoryId) {
+        url = `http://localhost:3000/api/products/category/${categoryId}`; //ip불러오기
+        if (searchText) {
+          url += `?search=${encodeURIComponent(searchText)}`;
+        }
+      } else {
+        url = `http://localhost:3000/api/products?page=${page}&limit=${itemsPerPage}`; //ip불러온데다가 검색어도 지정
+        if (searchText) {
+          url += `&search=${encodeURIComponent(searchText)}`;
+        }
+      }
       const response = await fetch(url);
       if (!response.ok) throw new Error("商品読み込み失敗");
-      
       const data = await response.json();
-      
       if (categoryId) {
         setProducts(data);
         setTotalPages(1);
@@ -71,21 +78,31 @@ function ProductList({ categoryId }) {
     </Box>
   );
 
+  // '人気商品' 
+  let filteredProducts = products;
+  if (searchText === "人気商品") { //서치텍스트 인기상품
+    filteredProducts = products.filter((product) => product.name.includes("人気商品"));
+  }
+
+  // 로그인 상태 확인
+  const isLoggedIn = !!localStorage.getItem("token");
+
   return (
-    <Box sx={{ p: 4, maxWidth: "1400px", margin: "0 auto" }}>
+    <Box sx={{ p: 4, maxWidth: "1400px", margin: "0 auto", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {!error && products.length === 0 && (
+      {!error && filteredProducts.length === 0 && (
         <Alert severity="info">商品がありません。</Alert>
       )}
 
-      {!error && products.length > 0 && (
-        <Grid container spacing={2}>
-          {products.map((product) => (
+      {!error && filteredProducts.length > 0 && (
+        <Grid container spacing={2} justifyContent="center">
+          {filteredProducts.map((product) => (
             <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={product.product_id}>
               <Card
                 sx={{
-                  height: "100%",
+                  width: "200px",
+                  height: "350px",
                   cursor: "pointer",
                   display: "flex",
                   flexDirection: "column",
@@ -98,7 +115,7 @@ function ProductList({ categoryId }) {
                 <Box
                   sx={{
                     width: "100%",
-                    pt: "100%", // 1:1 비율
+                    height: "200px",
                     backgroundColor: "#f5f5f5",
                     position: "relative",
                     overflow: "hidden"
@@ -161,6 +178,10 @@ function ProductList({ categoryId }) {
                     fullWidth
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!isLoggedIn) {
+                        alert("ログイン後に実行してください");
+                        return;
+                      }
                       alert(`${product.name}をカートに追加しました。`);
                     }}
                     disabled={product.stock === 0}
@@ -172,11 +193,15 @@ function ProductList({ categoryId }) {
                     fullWidth
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/product/${product.product_id}`);
+                      if (!isLoggedIn) {
+                        alert("ログイン後に実行してください");
+                        return;
+                      }
+                      alert(`구매 페이지 구현중`);
                     }}
                     disabled={product.stock === 0}
                   >
-                    購入
+                    購入 
                   </Button>
                 </Box>
               </Card>

@@ -74,7 +74,7 @@ function LoginPage() {
         </Box>
 
         <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: "bold" }}>
-          로그인
+          ログイン
         </Typography>
 
         {/* 에러 발생 시 알림창 */}
@@ -87,7 +87,7 @@ function LoginPage() {
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="아이디*"
+            label="ID"
             margin="normal"
             value={loginId}
             onChange={(e) => setLoginId(e.target.value)}
@@ -97,7 +97,7 @@ function LoginPage() {
           <TextField
             fullWidth
             type="password"
-            label="비밀번호*"
+            label="パスワード"
             margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -111,15 +111,15 @@ function LoginPage() {
             size="large"
             sx={{ mt: 3, py: 1.5, fontWeight: "bold" }}
           >
-            로그인
+            ログイン
           </Button>
         </form>
 
         {/* 추가 기능 버튼들 */}
         <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 1 }}>
-          <Button variant="text" size="small" color="inherit">아이디 찾기</Button>
+          <Button variant="text" size="small" color="inherit">IDのお忘れの方</Button>
           <Typography sx={{ color: "#ccc" }}>|</Typography>
-          <Button variant="text" size="small" color="inherit">비밀번호 찾기</Button>
+          <Button variant="text" size="small" color="inherit">パスワードのお忘れの方</Button>
           <Typography sx={{ color: "#ccc" }}>|</Typography>
           <Button 
             variant="text" 
@@ -127,7 +127,7 @@ function LoginPage() {
             color="primary"
             onClick={() => navigate("/signup")} // 회원가입 페이지 이동
           >
-            회원가입
+            会員登録
           </Button>
         </Box>
       </Paper>

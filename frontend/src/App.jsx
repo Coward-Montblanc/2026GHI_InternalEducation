@@ -8,6 +8,8 @@ import SignupPage from "./pages/SignupPage";
 import Header from "./components/Header";
 import ProductAddPage from "./pages/ProductAddPage";
 import ProductDetail from "./pages/ProductDetail";
+import EventPage from "./pages/EventPage";
+import NoticePage from "./pages/NoticePage";
 import CartPage from "./pages/CartPage";
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
          <Route path="/admin/product-add" element={<ProductAddPage />} />{/* 상품 등록 버튼 */}
          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/event" element={<EventPage />} />
+          <Route path="/notice" element={<NoticePage />} />
          <Route path="/cart" element={<CartPage />} />
         </Routes>
       </AuthProvider>

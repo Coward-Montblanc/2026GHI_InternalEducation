@@ -65,9 +65,8 @@ export const getAllProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 24;
-    
-    // Model의 쿼리도 새로운 테이블 구조(BIGINT 등)를 지원해야 함
-    const result = await productModel.getAllProducts(page, limit);
+    const search = req.query.search || "";
+    const result = await productModel.getAllProducts(page, limit, search);
     res.json(result);
   } catch (error) {
     console.error("상품 조회 오류:", error);
@@ -98,7 +97,8 @@ export const getProductById = async (req, res) => {
 export const getProductsByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const products = await productModel.getProductsByCategory(categoryId);
+    const search = req.query.search || "";
+    const products = await productModel.getProductsByCategory(categoryId, search);
     res.json(products);
   } catch (error) {
     console.error("카테고리별 상품 조회 오류:", error);
