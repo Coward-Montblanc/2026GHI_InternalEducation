@@ -147,7 +147,7 @@ function ProductAddPage() {
             <TextField fullWidth type="number" label="在庫" name="stock" onChange={handleChange} required margin="normal" />
           </Stack>
 
-          {/* 💡 ファイルアップロード入力 */}
+          {/* ファイルアップロード入力 */}
           <Box sx={{ mt: 3, mb: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
               商品画像 (最初の写真がメイン画像になります)
