@@ -82,7 +82,7 @@ function ProductAddPage() {
   formData.append("price", product.price);
   formData.append("stock", product.stock);
 
-  // 파일 추가 ('images' 이름이 라우터와 일치해야 함)
+  // 파일 추가
   selectedFiles.forEach((file) => {
     formData.append("images", file);
   });
@@ -92,11 +92,11 @@ function ProductAddPage() {
   const res = await axios.post("http://localhost:3000/api/products", formData);
   
   if (res.data.success) {
-    alert("등록 성공!");
+    alert("商品が登録されました。");
     navigate("/");
   }
     } catch (err) {
-      console.error("에러 상세:", err.response?.data);
+      console.error("エラーコード:", err.response?.data);
     }   
   };
 

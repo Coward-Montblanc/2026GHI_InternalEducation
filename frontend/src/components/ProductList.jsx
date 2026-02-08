@@ -11,6 +11,7 @@ import {
   Alert,
   Pagination,
 } from "@mui/material";
+
 function ProductList({ categoryId }) {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
