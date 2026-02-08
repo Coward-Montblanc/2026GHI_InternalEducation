@@ -17,12 +17,12 @@ function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth(); // Context에서 login 함수 가져오기
 
-  // 1. 입력값을 저장할 상태(State)
+  // 입력값을 저장할 상태(State)
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(""); // 에러 메시지 상태
 
-  // 2. 로그인 버튼 클릭 핸들러
+  // 로그인 버튼 클릭 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // 에러 초기화
@@ -69,7 +69,7 @@ function LoginPage() {
             onClick={() => navigate(-1)}
             sx={{ p: 0, minWidth: "auto", textTransform: "none" }}
           >
-            戻る
+            뒤로
           </Button>
         </Box>
 

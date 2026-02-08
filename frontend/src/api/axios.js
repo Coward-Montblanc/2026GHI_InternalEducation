@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL //.env파일에서 주소를 가져옴
+  url : import.meta.env.VITE_API_URL //.env파일에서 주소를 가져옴
 });
 
 api.interceptors.request.use((config) => {

@@ -2,17 +2,15 @@
   const isLoggedIn = !!localStorage.getItem("token");
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
+import axios from "axios"; // API 호출을 위해 필요
 import {
   Box,
   Typography,
   Button,
-  TextField, 
   Alert,
   CircularProgress,
   Stack,
 } from "@mui/material";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 function ProductDetail() {
@@ -50,7 +48,34 @@ function ProductDetail() {
         setError(err.message); //에러 검출
         console.error("Error code : ",err);
       });
-  }, [id]);
+  }, [id, url]);
+
+  const handleAddToCart = async () => { //장바구니 담기
+    const storedUser = JSON.parse(localStorage.getItem("user"));     // 로컬스토리지에서 로그인된 유저 정보 가져오기
+    
+    if (!storedUser || !storedUser.login_id) {
+      alert("ログインが必要なサービスです。");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${url}/api/cart/addcart`, {
+        login_id: storedUser.login_id,
+        product_id: id,      // 상품 ID
+        quantity: quantity,  // 현재 선택된 수량
+      });
+
+      if (response.data.success) {
+        if (window.confirm("カートに入れました。ショッピングカートのページに移動しますか？")) {
+          navigate("/cart"); // 장바구니 페이지 경로
+        }
+      }
+    } catch (err) {
+      console.error("Cart error:", err);
+      alert(err.response?.data?.message || "カートに入れることができませんでした。");
+    }
+  };
 
   const formatPrice = (price) => {
     return price?.toLocaleString();
@@ -158,7 +183,7 @@ function ProductDetail() {
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography variant="h6">合計金額</Typography>
                 <Typography variant="h5" color="primary.main" sx={{ fontWeight: "bold" }}>
-                  {formatPrice(product.price * quantity)}円 {/* 수량 반영된 총액 */}
+                  {formatPrice(product.price * quantity)}円
                 </Typography>
               </Box>
             </Box>
