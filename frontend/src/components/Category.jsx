@@ -15,10 +15,11 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
 
 const menuItems = ["全商品", "人気商品", "イベント", "お知らせ"];
 
-function Category({ onCategoryChange, onSearch, selectedCategoryName, setSelectedCategoryName, onCategoryNameChange }) {
+function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCategoryNameChange }) {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [categories, setCategories] = useState([]);
@@ -30,7 +31,7 @@ function Category({ onCategoryChange, onSearch, selectedCategoryName, setSelecte
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/categories");
+        const response = await fetch(`${url}/api/categories`); 
         if (response.ok) {
           const data = await response.json();
           setCategories(data);

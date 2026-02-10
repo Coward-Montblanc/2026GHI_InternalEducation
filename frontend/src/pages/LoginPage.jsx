@@ -12,6 +12,7 @@ import {
   Alert,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ function LoginPage() {
 
     try {
       // 백엔드 로그인 API 호출 (본인의 백엔드 포트에 맞게 수정)
-      const res = await axios.post("http://localhost:3000/api/auth/login", {
+      const res = await axios.post(`${url}/api/auth/login`, {
         login_id: loginId,
         password: password,
       });
@@ -69,7 +70,7 @@ function LoginPage() {
             onClick={() => navigate(-1)}
             sx={{ p: 0, minWidth: "auto", textTransform: "none" }}
           >
-            뒤로
+            戻る
           </Button>
         </Box>
 

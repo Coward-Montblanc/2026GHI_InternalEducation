@@ -1,5 +1,3 @@
-  // 로그인 상태 확인 (localStorage의 token)
-  const isLoggedIn = !!localStorage.getItem("token");
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios"; // API 호출을 위해 필요
@@ -21,7 +19,7 @@ function ProductDetail() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(""); // 현재 크게 보여줄 이미지
-  const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
+  const url = import.meta.env.VITE_API_URL; 
   useEffect(() => { //로딩화면
     // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
     fetch(`${url}/api/products/${id}`)
@@ -50,7 +48,7 @@ function ProductDetail() {
       });
   }, [id, url]);
 
-  const handleAddToCart = async () => { //장바구니 담기
+  const handleAddToCart = async () => { //장바구니 담기 안쓰이는것같으니 물어보기
     const storedUser = JSON.parse(localStorage.getItem("user"));     // 로컬스토리지에서 로그인된 유저 정보 가져오기
     
     if (!storedUser || !storedUser.login_id) {
@@ -189,22 +187,44 @@ function ProductDetail() {
             </Box>
 
             <Stack direction="row" spacing={2}>
-              <Button 
-                variant="outlined" 
-                fullWidth 
-                size="large" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isLoggedIn) {
-                    alert("ログイン後に実行してください");
-                    return;
-                  }
-                  alert(`${product.name} ${quantity}個をカートに追加しました。`);
-                }}
-                disabled={product.stock === 0}
-              >
-                カート
-              </Button>
+                <Button 
+                  variant="outlined" 
+                  fullWidth 
+                  size="large" 
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!isLoggedIn) {
+                      alert("ログイン後に実行してください");
+                      return;
+                    }
+                    try {
+                      const user = JSON.parse(localStorage.getItem("user"));
+                      const res = await fetch(`${url}/api/cart/addcart`, {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${localStorage.getItem("token")}`
+                        },
+                        body: JSON.stringify({
+                          login_id: user.login_id,
+                          product_id: id,
+                          quantity: quantity
+                        })
+                      });
+                      const data = await res.json();
+                      if (window.confirm(`「${product.name}」${quantity}個がカートに追加されました。カートに移動しますか？`)) {
+                            navigate("/cart");
+                      } else {
+                        alert(data.message || "カート追加に失敗しました");
+                      }
+                    } catch (err) {
+                      alert("カート追加中にエラーが発生しました");
+                    }
+                  }}
+                  disabled={product.stock === 0}
+                >
+                  カート
+                </Button>
               <Button 
                 variant="contained" 
                 fullWidth 
@@ -216,7 +236,16 @@ function ProductDetail() {
                     alert("ログイン後に実行してください");
                     return;
                   }
-                  alert(`구매페이지 준비중`);
+                  // 대표이미지를 정하지 않으면 구매페이지에서 이미지가 안뜸, 첫번째 이미지를 메인으로 지정합니다.
+                  navigate("/buy", {
+                    state: {
+                      product: {
+                        ...product,
+                        main_image: product.images?.[0]?.image_url || ""
+                      },
+                      quantity
+                    }
+                  });
                 }}
                 disabled={product.stock === 0}
               >

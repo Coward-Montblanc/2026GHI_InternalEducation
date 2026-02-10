@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
 import { Box, Typography, TextField, Button, Paper, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -70,7 +71,7 @@ function SignupPage() {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/api/users", {
+      const response = await axios.post(`${url}/api/users`, {
         login_id: formData.login_id,
         password: formData.password,
         name: formData.name,
@@ -107,13 +108,29 @@ function SignupPage() {
         </Box>
         <Typography variant="h5" align="center" gutterBottom>会員登録</Typography>
 
-        <TextField fullWidth label="이름*" name="name" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="아이디* 영어(a~z) + 숫자(0~9)만 입력가능. 4글자 이상" name="login_id" margin="normal" onChange={handleChange} />
-        <TextField fullWidth type="password" label="비밀번호* 영어(a~z) + 숫자(0~9)만 입력가능. 4글자 이상" name="password" margin="normal" onChange={handleChange} />
-        <TextField fullWidth type="password" label="비밀번호 확인*" name="passwordConfirm" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="名前*" name="name" margin="normal" onChange={handleChange} />
+        <TextField
+          fullWidth
+          label="ID*"
+          name="login_id"
+          margin="normal"
+          onChange={handleChange}
+          helperText="英字(a~z)＋数字(0~9)のみ入力可・4文字以上"
+        />
+        
+        <TextField
+          fullWidth
+          type="password"
+          label="パスワード*"
+          name="password"
+          margin="normal"
+          onChange={handleChange}
+          helperText="英字(a~z)＋数字(0~9)のみ入力可・4文字以上"
+        />
+        <TextField fullWidth type="password" label="パスワード確認*" name="passwordConfirm" margin="normal" onChange={handleChange} />
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2, mb: 1 }}> {/*이메일*/}
           <TextField 
-            label="이메일*" 
+            label="メール*" 
             variant="outlined" 
             size="small" 
             sx={{ flex: 1 }} 
@@ -139,7 +156,7 @@ function SignupPage() {
           ) : (
               <Box sx={{ display: 'flex', gap: 1, flex: 1 }}>
               <TextField 
-                label="ドメイン入力*" 
+                label="メール入力*" 
                 size="small" 
                 fullWidth
                 value={customDomain}
@@ -158,10 +175,10 @@ function SignupPage() {
     </Box>
   )}
         </Box>
-        <TextField fullWidth label="전화번호*" name="phone" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="우편번호" name="zip_code" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="주소" name="address" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="상세주소" name="address_detail" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="電話番号*" name="phone" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="郵便番号" name="zip_code" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="住所" name="address" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="詳細住所" name="address_detail" margin="normal" onChange={handleChange} />
 
         <Button fullWidth variant="contained" size="large" sx={{ mt: 3 }} onClick={handleSignup}>
           登録する
