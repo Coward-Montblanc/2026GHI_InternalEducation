@@ -38,7 +38,7 @@ function Banner() {
       <img
         src={images[index]}
         alt={`배너${index + 1}`}
-        style={{ width: "100%", height: "100%", objectFit: "cover", transition: 'all 0.5s' }}
+        style={{ width: "100%", height: "100%", transition: 'all 0.5s' }} //트랜지네이션은 애니메이션 효과
       />
       <IconButton
         onClick={handlePrev}

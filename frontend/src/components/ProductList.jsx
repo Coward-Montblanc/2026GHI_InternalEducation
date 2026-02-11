@@ -20,7 +20,7 @@ function ProductList({ categoryId, searchText }) {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 24; // 8개 x 4줄
+  const itemsPerPage = 24; // 6개 x 4줄
 
   useEffect(() => { //페이지 1로 초기화
     setPage(1);
@@ -34,7 +34,7 @@ function ProductList({ categoryId, searchText }) {
     try {
       setLoading(true);
       let searchUrl = ""; //url은 기본 주소만 담고있고, searchUrl은 검색으로 인해 데이터를 가져올 때 조건문으로 붙임
-      // 검색어가 있을 때 쿼리 파라미터로 전달
+      // 구매 페이지로 넘거야하는데 ProductList에서 보낼시에 페이지네이션 유무에 따라서 url이 달라지기에 현재로서는 이렇게 처리
       if (categoryId) {
         searchUrl = `${url}/api/products/category/${categoryId}`; 
         if (searchText) {

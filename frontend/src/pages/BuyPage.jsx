@@ -105,7 +105,11 @@ function BuyPage() {
 					</Table>
 					<Box sx={{ textAlign: 'right', mt: 10 }}>
 						<Typography variant="h5">総支払金額</Typography>
-						<Typography variant="h4"><b>{cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0).toLocaleString()}円</b></Typography>
+						<Typography variant="h4"><b>{cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0).toLocaleString()}円</b></Typography> 
+						{/* for / while과 같은거, let total = 0;
+								for (const item of cartItems) {
+  								total += item.price * item.quantity;
+								}로 생각하면 됨 */}
 					</Box>
 				</Paper>
 

@@ -48,33 +48,6 @@ function ProductDetail() {
       });
   }, [id, url]);
 
-  const handleAddToCart = async () => { //장바구니 담기 안쓰이는것같으니 물어보기
-    const storedUser = JSON.parse(localStorage.getItem("user"));     // 로컬스토리지에서 로그인된 유저 정보 가져오기
-    
-    if (!storedUser || !storedUser.login_id) {
-      alert("ログインが必要なサービスです。");
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const response = await axios.post(`${url}/api/cart/addcart`, {
-        login_id: storedUser.login_id,
-        product_id: id,      // 상품 ID
-        quantity: quantity,  // 현재 선택된 수량
-      });
-
-      if (response.data.success) {
-        if (window.confirm("カートに入れました。ショッピングカートのページに移動しますか？")) {
-          navigate("/cart"); // 장바구니 페이지 경로
-        }
-      }
-    } catch (err) {
-      console.error("Cart error:", err);
-      alert(err.response?.data?.message || "カートに入れることができませんでした。");
-    }
-  };
-
   const formatPrice = (price) => {
     return price?.toLocaleString();
   };

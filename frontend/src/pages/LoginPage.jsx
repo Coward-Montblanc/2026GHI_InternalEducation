@@ -38,11 +38,11 @@ function LoginPage() {
       // 성공 시: Context의 login 함수 호출 (유저 정보와 토큰 저장)
       login(res.data.user, res.data.token);
 
-      alert(`${res.data.user.name}님, 환영합니다!`);
+      alert(`${res.data.user.name}様、ようこそ！`);
       navigate("/"); // 메인 페이지로 이동
     } catch (err) {
       // 실패 시: 에러 메시지 표시
-      const message = err.response?.data?.message || "로그인 중 오류가 발생했습니다.";
+      const message = err.response?.data?.message || "ログイン中にエラーが発生しました。";
       setError(message);
     }
   };
