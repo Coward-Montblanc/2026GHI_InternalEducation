@@ -14,12 +14,13 @@ import {
 // 검색어(searchText) prop 추가
 function ProductList({ categoryId, searchText }) {
   const navigate = useNavigate();
+  const url = import.meta.env.VITE_API_URL; //.env파일에서 가져옴
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 24; // 8개 x 4줄
+  const itemsPerPage = 24; // 6개 x 4줄
 
   useEffect(() => { //페이지 1로 초기화
     setPage(1);
@@ -32,20 +33,20 @@ function ProductList({ categoryId, searchText }) {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      let url = "";
-      // 검색어가 있을 때 쿼리 파라미터로 전달
+      let searchUrl = ""; //url은 기본 주소만 담고있고, searchUrl은 검색으로 인해 데이터를 가져올 때 조건문으로 붙임
+      // 구매 페이지로 넘거야하는데 ProductList에서 보낼시에 페이지네이션 유무에 따라서 url이 달라지기에 현재로서는 이렇게 처리
       if (categoryId) {
-        url = `http://localhost:3000/api/products/category/${categoryId}`; //ip불러오기
+        searchUrl = `${url}/api/products/category/${categoryId}`; 
         if (searchText) {
-          url += `?search=${encodeURIComponent(searchText)}`;
+          searchUrl += `?search=${encodeURIComponent(searchText)}`;
         }
       } else {
-        url = `http://localhost:3000/api/products?page=${page}&limit=${itemsPerPage}`; //ip불러온데다가 검색어도 지정
+        searchUrl = `${url}/api/products?page=${page}&limit=${itemsPerPage}`;
         if (searchText) {
-          url += `&search=${encodeURIComponent(searchText)}`;
+          searchUrl += `&search=${encodeURIComponent(searchText)}`;
         }
       }
-      const response = await fetch(url);
+      const response = await fetch(searchUrl);
       if (!response.ok) throw new Error("商品読み込み失敗");
       const data = await response.json();
       if (categoryId) {
@@ -124,7 +125,7 @@ function ProductList({ categoryId, searchText }) {
                   {product.main_image ? (
                     <Box
                       component="img"
-                      src={`http://localhost:3000${product.main_image}`}
+                      src={`${url}${product.main_image}`}
                       alt={product.name}
                       sx={{
                         position: "absolute",
@@ -176,32 +177,87 @@ function ProductList({ categoryId, searchText }) {
                   <Button
                     variant="outlined"
                     fullWidth
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
                       if (!isLoggedIn) {
                         alert("ログイン後に実行してください");
                         return;
                       }
-                      alert(`${product.name}をカートに追加しました。`);
+                      try {
+                        const user = JSON.parse(localStorage.getItem("user"));
+                        const res = await fetch(`${url}/api/cart/addcart`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("token")}`
+                          },
+                          body: JSON.stringify({
+                            login_id: user.login_id,
+                            product_id: product.product_id,
+                            quantity: 1
+                          })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          if (window.confirm(`「${product.name}」${1}個がカートに追加されました。カートに移動しますか？`)) {
+                            navigate("/cart");
+                          }
+                        } else {
+                          alert(data.message || "カート追加に失敗しました");
+                        }
+                      } catch (err) {
+                        alert(`カート追加中にエラーが発生しました`);
+                      }
                     }}
                     disabled={product.stock === 0}
                   >
                     カート
                   </Button>
-                  <Button
+                  <Button 
                     variant="contained"
                     fullWidth
-                    onClick={(e) => {
+                    size="large"
+                    color="primary"
+                    onClick={async (e) => {
                       e.stopPropagation();
                       if (!isLoggedIn) {
                         alert("ログイン後に実行してください");
                         return;
                       }
-                      alert(`구매 페이지 구현중`);
+                      try {
+                        const user = JSON.parse(localStorage.getItem("user"));
+                        const res = await fetch(`${url}/api/cart/addcart`, {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("token")}`
+                          },
+                          body: JSON.stringify({
+                            login_id: user.login_id,
+                            product_id: product.product_id,
+                            quantity: 1
+                          })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          if (window.confirm(`「${product.name}」${1}個を購入します。購入ページへ移動しますか？`)) {
+                            navigate("/buy", {
+                              state: {
+                                product,
+                                quantity: 1 //메인페이지에선 수량 선택이 불가능하기에 기본수량 1으로 넘어감
+                              }
+                            });
+                          }
+                        } else {
+                          alert(data.message || "購入に失敗しました");
+                        }
+                      } catch (err) {
+                        alert(`購入中にエラーが発生しました`);
+                      }
                     }}
                     disabled={product.stock === 0}
                   >
-                    購入 
+                    購入
                   </Button>
                 </Box>
               </Card>

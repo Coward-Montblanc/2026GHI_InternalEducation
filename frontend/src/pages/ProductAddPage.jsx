@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Container, TextField, Button, Typography, Box, Paper, MenuItem, Stack, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+const url = import.meta.env.VITE_API_URL; 
 //import api from "../api/axios";
 
 
@@ -24,7 +25,7 @@ function ProductAddPage() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:3000/api/categories");
+        const res = await axios.get(`${url}/api/categories`);
         setCategories(res.data);
         if (res.data.length > 0) {
           setProduct(prev => ({ ...prev, category_id: res.data[0].category_id }));
@@ -91,7 +92,7 @@ function ProductAddPage() {
   console.log("실제 파일 객체 확인:", selectedFiles);
   try {
   // headers 속성을 아예 빼고 보내보세요!
-  const res = await axios.post("http://localhost:3000/api/products", formData);
+  const res = await axios.post(`${url}/api/products`, formData);
   
   if (res.data.success) {
     alert("商品が登録されました。");

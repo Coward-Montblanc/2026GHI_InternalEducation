@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; //로그인
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Button, IconButton, Stack, Divider
+  TableHead, TableRow, Paper, Button, IconButton, Stack,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -122,7 +122,14 @@ function CartPage() {
             <Typography variant="h4" color="primary" sx={{ fontWeight: "bold", mb: 3 }}>
               {totalPrice.toLocaleString()}円
             </Typography>
-            <Button variant="contained" size="large" sx={{ px: 10 }}>注文</Button>
+            <Button
+              variant="contained"
+              size="large"
+              sx={{ px: 10 }}
+              onClick={() => navigate("/buy", { state: { cartItems } })} //구매 페이지로 정보값 전송
+            >
+              注文
+            </Button>
           </Box>
         </>
       )}
