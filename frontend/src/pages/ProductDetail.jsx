@@ -173,9 +173,9 @@ function ProductDetail() {
               </Box>
             </Box>
 
-            <Stack direction="row" spacing={2}> {/*장바구니 버튼 업데이트. 재고0일경우 구입버튼, 장바구니 버튼 다 비활성 기능 필요*/}
+            <Stack direction="row" spacing={2}> {/*장바구니 버튼 업데이트. 재고0일경우 구입버튼, 장바구니 버튼 다 비활성*/}
               <Button variant="outlined" fullWidth size="large" onClick={handleAddToCart} disabled={product.stock === 0}> カート</Button>
-              <Button variant="contained" fullWidth size="large" color="primary">購入</Button>
+              <Button variant="contained" fullWidth size="large" color="primary" disabled={product.stock === 0}>購入</Button>
             </Stack>
 
             {product.stock === 0 && <Alert severity="warning" sx={{ mt: 2 }}>現在品切れ中です。</Alert>}

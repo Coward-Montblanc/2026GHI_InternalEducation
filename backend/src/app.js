@@ -19,6 +19,11 @@ dotenv.config({
   path: path.resolve(__dirname, "../.env"),
 });
 
+console.log("=== 환경 변수 로드 확인 ===");
+console.log("DB_NAME:", process.env.DB_NAME);
+console.log("JWT_SECRET 존재 여부:", !!process.env.JWT_SECRET); 
+console.log("JWT_SECRET 실제값:", process.env.JWT_SECRET);
+
 const app = express();
 
 app.use(cors()); // CORS 허용

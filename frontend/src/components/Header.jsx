@@ -61,7 +61,7 @@ function Header() {
               {user.role === "ADMIN" && (
                 <Button 
                   variant="contained" 
-                  color="secondary" 
+                  color="Blue" 
                   sx={{ mr: 2 }}
                   onClick={() => navigate("/admin/product-add")}
                 >

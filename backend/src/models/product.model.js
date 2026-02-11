@@ -4,15 +4,13 @@ import db from "../config/db.js";
 export const getAllProducts = async (page = 1, limit = 24) => {
   const offset = (page - 1) * limit;
   
-  // 1. 전체 상품 개수 조회 (status=0인 것만)
   const [countRows] = await db.query(
     'SELECT COUNT(*) as total FROM products WHERE status = 0'
   );
   
-  // 💡 중요: countRows[0].total 로 접근해야 합니다.
   const total = countRows[0].total; 
-  
-  // 2. 페이지별 상품 조회
+
+  //페이지별 상품 조회
   const [rows] = await db.query(
     `
     SELECT 
@@ -33,7 +31,7 @@ export const getAllProducts = async (page = 1, limit = 24) => {
     pagination: {
       page: Number(page),
       limit: Number(limit),
-      total: total, // 이제 여기서 total이 정의되어 에러가 나지 않습니다.
+      total: total, 
       totalPages: Math.ceil(total / limit)
     }
   };
@@ -99,7 +97,7 @@ export const updateProduct = async (productId, productData) => {
   return result.affectedRows;
 };
 
-// [추가] 논리적 삭제 (Soft Delete): 상태만 변경
+// 논리적 삭제 , 상태만 변경
 export const softDeleteProduct = async (productId) => {
   const [result] = await db.query(
     `UPDATE products SET status = 1 WHERE product_id = ?`,
@@ -108,7 +106,7 @@ export const softDeleteProduct = async (productId) => {
   return result.affectedRows;
 };
 
-// 물리적 삭제 (Hard Delete): 실제 데이터 삭제
+// 물리적 삭제
 export const deleteProduct = async (productId) => {
   const [result] = await db.query(
     `DELETE FROM products WHERE product_id = ?`,
