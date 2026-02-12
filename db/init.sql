@@ -24,7 +24,7 @@ CREATE TABLE users (
   zip_code VARCHAR(10),
   address VARCHAR(255),
   address_detail VARCHAR(255),
-  role VARCHAR(20) DEFAULT 'USER',
+  role VARCHAR(20) DEFAULT 'USER', -- 일반유저 user / 관리자 admin
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -95,4 +95,10 @@ CREATE TABLE order_items (
 
 INSERT INTO categories (category_id, name) VALUES 
 (1, '冷房製品'), (2, '空調'), (3, 'キッチン家電'), (4, '洗濯'), (5, '小型生活家電'),
+<<<<<<< HEAD
 (6, 'テレビ・映像'), (7, 'PC製品'), (8, 'IT周辺機器'), (9, 'モバイル'), (10, '音響');
+=======
+(6, 'テレビ・映像'), (7, 'PC製品'), (8, 'IT周辺機器'), (9, 'モバイル'), (10, '音響');
+
+-- 샘플 데이터가 db/products_data.sql 파일에 있습니다.
+>>>>>>> main
