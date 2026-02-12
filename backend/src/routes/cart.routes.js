@@ -1,8 +1,9 @@
 import express from "express";
 import * as cartController from "../controllers/cart.controller.js"; 
-
+import { authenticateToken } from "../middlewares/auth.middleware.js"; //로그인 검증 미들웨어 임포트
 const router = express.Router();
 
+router.patch("/item/:cart_item_id/status", authenticateToken, cartController.toggleCartItemStatus);//로그인 미들웨어 검증 및 장바구니 내 상품 활성,비활성화 기능 라우트
 
 /**
  * @swagger

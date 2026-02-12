@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 import { fileURLToPath } from "url";
-//express 중복적용되어있었습니다.
 import authRoutes from "./routes/auth.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
@@ -19,6 +18,11 @@ const __dirname = path.dirname(__filename);
 dotenv.config({
   path: path.resolve(__dirname, "../.env"),
 });
+
+console.log("=== 환경 변수 로드 확인 ===");
+console.log("DB_NAME:", process.env.DB_NAME);
+console.log("JWT_SECRET 존재 여부:", !!process.env.JWT_SECRET); 
+console.log("JWT_SECRET 실제값:", process.env.JWT_SECRET);
 
 const app = express();
 

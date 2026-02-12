@@ -31,16 +31,37 @@ export async function addOrUpdateItem(cart_id, product_id, quantity) {
   }
 }
 
+//장바구니 페이지 상품 수량에 덮어쓰기
+export async function updateItemQuantity(cart_item_id, quantity) { 
+  return await db.query(
+    "UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?",
+    [quantity, cart_item_id]
+  );
+}
+
 export async function getCartItemsByLoginId(login_id) { //장바구니 조회
   const query = `
-    SELECT ci.cart_item_id, ci.quantity, p.product_id, p.name, p.price, (SELECT image_url FROM product_images WHERE product_id = p.product_id LIMIT 1) as image_url
-    FROM carts c JOIN cart_items ci ON c.cart_id = ci.cart_id JOIN products p ON ci.product_id = p.product_id WHERE c.login_id = ?`;
+    SELECT 
+        ci.cart_item_id, 
+        ci.quantity, 
+        ci.status,
+        p.product_id, 
+        p.name, 
+        p.price,
+        p.stock,
+        ci.quantity,
+        (SELECT image_url FROM product_images WHERE product_id = p.product_id LIMIT 1) as image_url
+    FROM carts c 
+    JOIN cart_items ci ON c.cart_id = ci.cart_id 
+    JOIN products p ON ci.product_id = p.product_id 
+    WHERE c.login_id = ?
+    ORDER BY ci.status ASC, ci.cart_item_id DESC`;
   const [rows] = await db.query(query, [login_id]);
   return rows;
 }
 
-export async function deleteCartItem(cart_item_id) { //장바구니 내 상품 삭제
-  const query = "DELETE FROM cart_items WHERE cart_item_id = ?";
-  const [result] = await db.query(query, [cart_item_id]);
+export async function toggleCartItem(status, cart_item_id) { //장바구니 내 상품 상태 변경 시키기
+  const query = "UPDATE cart_items SET status = ? WHERE cart_item_id = ?";
+  const [result] = await db.query(query, [status, cart_item_id]);
   return result;
 }
