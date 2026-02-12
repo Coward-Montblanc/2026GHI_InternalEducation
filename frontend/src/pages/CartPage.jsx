@@ -39,6 +39,15 @@ function CartPage() {
       fetchCartItems();
     }
   }, []);
+
+  useEffect(() => { //토큰 만료시 리다이렉트
+  const token = localStorage.getItem("token"); //토큰 여부 판별
+  if (!token) {
+    alert("로그인이 필요한 서비스입니다.");
+    navigate("/login");
+  }
+}, []);
+
  
   const handleUpdateQty = (itemId, newQty, stock) => {  //수량 변경
     //상품 현 재고 이상으로 수량을 올릴 시 에러
@@ -47,7 +56,8 @@ function CartPage() {
     updateLocalState(cartItemId, stock); // 최대 재고로 강제 설정
     return;
   }
-  //직접입력시 최대갯수 이상일 경우 재고개수로 바뀌게 해야함.
+
+  //예정)직접입력시 최대갯수 이상일 경우 재고개수로 바뀌게 해야함.
 
     if (newQty < 1) return; //1보다 작은 숫자로 내려갈려 할경우
 
@@ -68,10 +78,7 @@ function CartPage() {
 
   if (!window.confirm(confirmMsg)) return;
   try {
-    
-    const res = await axios.patch(`${url}/api/cart/item/${cartItemId}/status`, {
-      status: Status
-    },{headers: { Authorization: `Bearer ${token}` }});
+    const res = await api.patch(`/cart/item/${cartItemId}/status`, { status: Status });
     
     if (res.data.success) {
       setCartItems((prevItems) =>
@@ -84,6 +91,7 @@ function CartPage() {
     alert("상태 변경에 실패했습니다.");
   }
 };
+//예정) 상태변수만 바꾸는 것이 아닌 증가 감소 버튼, 직접입력 창, 합계금액 제외 등 기능구현
 
 
 
@@ -148,7 +156,7 @@ function CartPage() {
                     <TableCell align="center"> {/*상품 삭제 버튼*/}
                       <IconButton color={item.status === 1 ? "primary" : "error"} //활성화 상태에 따라 아이콘이 바뀜.
                                   onClick={() => handleToggleStatus(item.cart_item_id, item.status)}>
-                                    {item.status === 1 ? <ReplayIcon /> : <DeleteIcon />}
+                                    {item.status === 1 ? <ReplayIcon /> : <DeleteIcon />} //MUI
                                   </IconButton>
                     </TableCell>
                   </TableRow>
