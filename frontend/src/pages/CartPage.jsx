@@ -21,14 +21,22 @@ function CartPage() {
   const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0); //총 금액
  
   const fetchCartItems = async () => { //장바구니 데이터 불러오기
-    if (!user) return;
-    try {
-      const res = await axios.get(`${url}/api/cart/${user.login_id}`);
-      setCartItems(res.data);
-    } catch (err) {
-      console.error("장바구니 로딩 실패:", err);
-    }
-  };
+      if (!user) return;
+      const token = localStorage.getItem("token");
+      try {
+        const res = await axios.get(
+          `${url}/api/cart/${user.login_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        setCartItems(res.data);
+      } catch (err) {
+        console.error("장바구니 로딩 실패:", err);
+      }
+    };
 
   
 
@@ -68,20 +76,27 @@ function CartPage() {
     ));
   };
 
-  const handleToggleStatus = async (cartItemId, currentStatus) => {
+const handleToggleStatus = async (cartItemId, currentStatus) => {
   const token = localStorage.getItem("token");
   console.log("현재 스토리지에 있는 토큰:", token);
   if (!token) {
     alert("로그인 정보가 없습니다. 다시 로그인해 주세요.");
     return;
   }
-  const Status = currentStatus === 0 ? 1 : 0; //0과 1을 왔다 갔다하는 변수 생성
+  const Status = currentStatus === 0 ? 1 : 0;
   const confirmMsg = Status === 1 ? "상품을 삭제하시겠습니까?" : "상품을 장바구니에 다시 넣으시겠습니까?";
 
   if (!window.confirm(confirmMsg)) return;
   try {
-    const res = await api.patch(`/cart/item/${cartItemId}/status`, { status: Status });
-    
+    const res = await api.patch(
+      `/cart/item/${cartItemId}/status`,
+      { status: Status },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
     if (res.data.success) {
       setCartItems((prevItems) =>
         prevItems.map((item) =>
@@ -89,9 +104,14 @@ function CartPage() {
       );
     }
   } catch (err) {
-    console.error("상태 변경 에러:", err);
-    alert("상태 변경에 실패했습니다.");
+  console.error("상태 변경 에러:", err); // 전체 에러 객체 출력
+  if (err.response) {
+    // 서버에서 반환한 상태 코드와 메시지 출력
+    console.error("서버 응답 코드:", err.response.status);
+    console.error("서버 응답 데이터:", err.response.data);
   }
+  alert("상태 변경에 실패했습니다.");
+}
 };
 //예정) 상태변수만 바꾸는 것이 아닌 증가 감소 버튼, 직접입력 창, 합계금액 제외 등 기능구현
 
