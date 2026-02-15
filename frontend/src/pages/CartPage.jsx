@@ -44,6 +44,7 @@ function CartPage() {
 
   useEffect(() => { //토큰 만료시 리다이렉트
   const token = localStorage.getItem("token"); //토큰 여부 판별
+  console.log("토큰 이름 : ",token);
   if (!token) {
     alert("로그인이 필요한 서비스입니다.");
     navigate("/login");
@@ -52,23 +53,17 @@ function CartPage() {
 
  
   const handleUpdateQty = (itemId, newQty, stock) => {  //수량 변경
-    //상품 현 재고 이상으로 수량을 올릴 시 에러
-    if (parseInt(newQty) > stock) { 
+    if (parseInt(newQty) > stock) {  //상품 현 재고 이상으로 수량을 올릴 시 에러
     alert(`현재 재고(${stock}개)까지만 주문 가능합니다.`);
     setCartItems(items => items.map(item => 
       item.cart_item_id === itemId ? { ...item, quantity: stock } : item //최대 갯수를 재고수량으로 조정 
-    ));
-    return;
-  }
+    ));  return; }
 
-  //예정)직접입력시 최대갯수 이상일 경우 재고개수로 바뀌게 해야함.
-    console.log("현재 stock 갯수 : ",parseInt(stock));
     if (newQty < 1) return; //1보다 작은 숫자로 내려갈려 할경우
     if (newQty > stock) { newQty = stock; }
     setCartItems(items => items.map(item => 
       item.cart_item_id === itemId ? { ...item, quantity: newQty } : item //갯수 조정
     ));
-    console.log("교체 후 상품 갯수 : ",parseInt(newQty));
   };
 
 
@@ -77,8 +72,7 @@ function CartPage() {
 
   const handleToggleStatus = async (cartItemId, currentStatus) => {
   const token = localStorage.getItem("token");
-  console.log("현재 스토리지에 있는 토큰:", token);
-  if (!token) {
+  if (!token) { //토큰이 발견되지 않을 시 = undefined
     alert("로그인 정보가 없습니다. 다시 로그인해 주세요.");
     return;
   }

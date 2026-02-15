@@ -12,4 +12,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use( //토큰 불러오기.
+  (response) => response, // 불러와지면 그대로,
+  (error) => { //에러날경우 튕김
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn("토큰이 만료되었거나 유효하지 않습니다. 로그아웃합니다.");
+      localStorage.removeItem("token"); //로그아웃 로직 가져옴.
+      localStorage.removeItem("user");
+      
+      window.location.href = "/login?message=expired";  //메인화면으로 강제 이동
+      
+      alert("세션이 만료되었습니다. 다시 로그인해주세요."); //알림창
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

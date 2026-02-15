@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization']; //요청 헤더에서 토큰 꺼내기
-  console.log("헤더:", authHeader);
+  console.log("헤더:", authHeader); 
   
   const token = authHeader && authHeader.split(' ')[1];
   console.log("토큰:", token);
