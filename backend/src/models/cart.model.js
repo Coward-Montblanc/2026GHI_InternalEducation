@@ -49,7 +49,6 @@ export async function getCartItemsByLoginId(login_id) { //장바구니 조회
         p.name, 
         p.price,
         p.stock,
-        ci.quantity,
         (SELECT image_url FROM product_images WHERE product_id = p.product_id LIMIT 1) as image_url
     FROM carts c 
     JOIN cart_items ci ON c.cart_id = ci.cart_id 

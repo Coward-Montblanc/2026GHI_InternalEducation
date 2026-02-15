@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import api from "../api/axios";
+import api from "../api/axios"; //로그인 및 장바구니 확인 api
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; //로그인
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, IconButton, Stack, Divider,
@@ -17,12 +16,14 @@ function CartPage() {
   const navigate = useNavigate();
   const url = import.meta.env.VITE_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
-  const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0); //총 금액
+  const totalPrice = cartItems.reduce((acc, item) => { 
+  if (item.status === 0) { return acc + item.price * item.quantity; }
+  return acc; }, 0);// status가 0일 때만 금액을 더하고, 1이면 무시
  
   const fetchCartItems = async () => { //장바구니 데이터 불러오기
     if (!user) return;
     try {
-      const res = await axios.get(`${url}/api/cart/${user.login_id}`);
+      const res = await api.get(`/cart/${user.login_id}`); //api를 사용해서 장바구니 로딩
       setCartItems(res.data);
     } catch (err) {
       console.error("장바구니 로딩 실패:", err);
@@ -54,18 +55,25 @@ function CartPage() {
     //상품 현 재고 이상으로 수량을 올릴 시 에러
     if (parseInt(newQty) > stock) { 
     alert(`현재 재고(${stock}개)까지만 주문 가능합니다.`);
-    updateLocalState(cartItemId, stock); // 최대 재고로 강제 설정
+    setCartItems(items => items.map(item => 
+      item.cart_item_id === itemId ? { ...item, quantity: stock } : item //최대 갯수를 재고수량으로 조정 
+    ));
     return;
   }
 
   //예정)직접입력시 최대갯수 이상일 경우 재고개수로 바뀌게 해야함.
-
+    console.log("현재 stock 갯수 : ",parseInt(stock));
     if (newQty < 1) return; //1보다 작은 숫자로 내려갈려 할경우
-
+    if (newQty > stock) { newQty = stock; }
     setCartItems(items => items.map(item => 
-      item.cart_item_id === itemId ? { ...item, quantity: newQty } : item
+      item.cart_item_id === itemId ? { ...item, quantity: newQty } : item //갯수 조정
     ));
+    console.log("교체 후 상품 갯수 : ",parseInt(newQty));
   };
+
+
+
+
 
   const handleToggleStatus = async (cartItemId, currentStatus) => {
   const token = localStorage.getItem("token");
@@ -92,9 +100,6 @@ function CartPage() {
     alert("상태 변경에 실패했습니다.");
   }
 };
-//예정) 상태변수만 바꾸는 것이 아닌 증가 감소 버튼, 직접입력 창, 합계금액 제외 등 기능구현
-
-
 
   return (
     <Box sx={{ p: 5, maxWidth: "1000px", margin: "0 auto" }}>
@@ -133,7 +138,8 @@ function CartPage() {
                     </TableCell>
                     <TableCell align="center"> {/*상품 수량 늘리고 줄이기*/}
                       <Stack direction="row" justifyContent="center" alignItems="center">
-                        <IconButton size="small" onClick={() => handleUpdateQty(item.cart_item_id, item.quantity - 1, item.stock)} disabled={item.quantity <= 1}>
+                        <IconButton size="small" onClick={() => handleUpdateQty(item.cart_item_id, item.quantity - 1, item.stock)}
+                        disabled={item.quantity <= 1 || item.status === 1} > {/* status가 0인지에 따라 비활성화*/}
                           <RemoveIcon fontSize="small" />
                         </IconButton>
                         <TextField size = "small"
@@ -142,11 +148,14 @@ function CartPage() {
                                 const val = parseInt(e.target.value);
                                 if (!isNaN(val) && val >= 1) {
                                     handleUpdateQty(item.cart_item_id, val);
-                                    }
-                                }} inputProps={{ style: { textAlign: 'center', width: '40px', padding: '5px' }, type: 'number' }}
+                                    } }} 
+                                onBlur={(e) => {handleUpdateQty(item.cart_item_id, e.target.value, item.stock); }} //마우스를 다른 곳에 클릭했을 시 함수 실행.
+                                inputProps={{ style: { textAlign: 'center', width: '40px', padding: '5px' }, type: 'number' }}
                                 //증가 감소 화살표 없애기
-                                sx={{ "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": { WebkitAppearance: "none", margin: 0, } }} />
-                        <IconButton size="small" onClick={() => handleUpdateQty(item.cart_item_id, item.quantity + 1, item.stock)}>
+                                sx={{ "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": { WebkitAppearance: "none", margin: 0, } }} 
+                                disabled={item.status === 1} />{/*status가 0인지에 따라 비활성화*/}
+                        <IconButton size="small" onClick={() => handleUpdateQty(item.cart_item_id, item.quantity + 1, item.stock)}
+                        disabled={item.status === 1}>{/*status가 0인지에 따라 비활성화*/}
                           <AddIcon fontSize="small" />
                         </IconButton>
                       </Stack>
