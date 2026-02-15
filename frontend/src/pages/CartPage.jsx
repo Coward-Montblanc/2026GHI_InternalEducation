@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; //로그인
+import { cartItemsToItems, goToBuyPage } from '../services/BuyService.js';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, IconButton, Stack, Divider,
@@ -171,7 +172,18 @@ function CartPage() {
             <Typography variant="h4" color="primary" sx={{ fontWeight: "bold", mb: 3 }}>
               {totalPrice.toLocaleString()}円
             </Typography>
-            <Button variant="contained" size="large" sx={{ px: 10 }}>注文</Button>
+            <Button 
+              variant="contained" 
+              size="large" 
+              sx={{ px: 10 }}
+              onClick={() => {
+                const items = cartItemsToItems(cartItems);
+                goToBuyPage(navigate, items);
+              }}
+              disabled={cartItems.length === 0}
+            >
+              注文
+            </Button>
           </Box>
         </>
       )}

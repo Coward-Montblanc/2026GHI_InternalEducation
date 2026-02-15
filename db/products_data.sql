@@ -1,4 +1,3 @@
-
 INSERT INTO products (category_id, name, description, price, stock, status) VALUES
 
 -- 冷房製品 (category_id: 1)

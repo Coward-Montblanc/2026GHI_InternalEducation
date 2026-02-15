@@ -2,6 +2,29 @@ import db from "../config/db.js";
 import * as productModel from "../models/product.model.js";
 
 
+// 인기상품 조회 (view 10 이상) 프론트엔드로는 아직 미구현
+export const getRankProducts = async (req, res) => {
+  try {
+    const products = await productModel.getRankProducts();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "인기상품 조회 오류" });
+  }
+};
+
+// 상품 상세 조회 시 view 증가, 프론트+백 터미널이 동시에 켜져서인지 상세조회 시 view가 2씩 증가하는 현상 발생. 추후 수정 필요
+export const getProductViewUp = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await productModel.incrementView(id);
+    const product = await productModel.getProductById(id);
+    if (!product) return res.status(404).json({ message: "상품을 찾을 수 없음" });
+    res.json(product);
+  } catch (error) {
+    console.error("상세조회 에러:", error); 
+    res.status(500).json({ message: "상품 상세 조회 오류" });
+  }
+};
 
 export const createProduct = async (req, res) => {
   // 디버깅 로그
@@ -82,10 +105,11 @@ export const getProductById = async (req, res) => {
     if (!product) return res.status(404).json({ message: "상품 없음" });
 
     const response = {
-      ...product,
+      product,
       mainImage: product.images.find(img => img.role === 'MAIN')?.image_url || null,
       subImages: product.images.filter(img => img.role === 'SUB').map(img => img.image_url),
-      detailImages: product.images.filter(img => img.role === 'DETAIL').map(img => img.image_url)
+      detailImages: product.images.filter(img => img.role === 'DETAIL').map(img => img.image_url),
+      view: product.view // 조회수 추가
     };
 
     res.json(response);
