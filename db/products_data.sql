@@ -1,7 +1,3 @@
--- 가전제품 임시 데이터 파일입니다. 사진은 없습니다.
--- 1. 인기상품 태그 (카테고리에서 인기상품만 분류될 수 있도록)
--- 2. 재고가 0인 상품 (재고가 0인 상품은 구매 불가 상태로 표시하기위해)
--- 컨테이너 이름 확인 후 docker exec -i appliance-shop-mysql mysql -u root -p appliance_shop < db/products_data.sql로 데이터 파일을 넣습니다.
 
 INSERT INTO products (category_id, name, description, price, stock, status) VALUES
 
