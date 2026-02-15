@@ -11,24 +11,16 @@ import {
 	InputLabel, Select,
 	MenuItem
 } from "@mui/material";
-
-//정보값 저장은 아직 안됩니다. Order데이터 모델 구현 후 백엔드와 연동 필요
+import api from "../api/axios";
+import { useAuth } from "../contexts/AuthContext";
 
 function BuyPage() {
 	const navigate = useNavigate();
 	const location = useLocation();
-	// 메인에서는 단일상품만 받아오고, 장바구니에서는 여러 상품을 받아오다보니 오류가 나는 경우가 있어 합칩니다.
-	let { cartItems, product, quantity } = location.state || {};
-
-	if ((!cartItems || cartItems.length === 0) && product && quantity) {
-		cartItems = [{
-			cart_item_id: product._id || product.id || 'single',
-			image_url: product.image_url || product.main_image || '',
-			name: product.name,
-			quantity: quantity,
-			price: product.price
-		}];
-	}
+	const { user } = useAuth();
+	
+	// BuyService에서 항상 items 배열로 넘기도록 통일
+	const { items = [] } = location.state || {};
 	
 	const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
 	const [error, setError] = useState("");
@@ -36,10 +28,56 @@ function BuyPage() {
 	const [deliveryRequest, setDeliveryRequest] = useState("");
 	const [deliveryRequestText, setDeliveryRequestText] = useState("");
 
-	// 실제 기능 추가 전, 성공 처리만 하기 위해 두는 함수
-	const handleOrder = (e) => {
-		e.preventDefault(); //submit 방지
-		setSuccess(true); //결제 성공으로만 바꿔줌
+	const handleOrder = async (e) => {
+		e.preventDefault();
+		setError("");
+		setSuccess(false);
+
+		// 구매 데이터
+		const formData = new FormData(e.target);
+		const receiver_name = formData.get("receiver_name");
+		const address = formData.get("address");
+		const address_detail = formData.get("address_detail");
+		const phone = formData.get("phone");
+		const delivery_request = deliveryRequest === "直接入力" ? deliveryRequestText : deliveryRequest;
+		const payment_method = paymentMethod;
+
+		if (!user) {
+			setError("ログインが必要です。");
+			return;
+		}
+		if (!receiver_name || !address || !phone || !payment_method) {
+			setError("必須情報をすべて入力してください。");
+			return;
+		}
+
+		const total_price = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+		try {
+			const res = await api.post("/orders", {
+				login_id: user.login_id || user.id || user.username,
+				items: items.map(item => ({
+					product_id: item.product_id,
+					price: item.price,
+					quantity: item.quantity
+				})),
+				total_price,
+				receiver_name,
+				address,
+				address_detail,
+				phone,
+				delivery_request,
+				payment_method
+			});
+			if (res.data.success) {
+				setSuccess(true);
+				setTimeout(() => navigate("/"), 10000); //10초 뒤에 홈으로 이동
+			} else {
+				setError("注文に失敗しました。もう一度お試しください。");
+			}
+		} catch (err) {
+			setError(err.response?.data?.message || "注文処理中にエラーが発生しました。");
+		}
 	};
 
 	const deliveryOptions = [
@@ -63,17 +101,18 @@ function BuyPage() {
 	];
 	const [paymentMethod, setPaymentMethod] = useState("");
 
-	// 서버상 재고가 사라지면 뜨는 창
-	if (!cartItems || cartItems.length === 0) {
-		return (
-			<Box sx={{ p: 5, maxWidth: 500, margin: "40px auto" }}>
-				<Paper sx={{ p: 4 }} elevation={3}>
-					<Typography variant="h5" sx={{ mb: 2 }}>申し訳ございません。在庫切れです。</Typography>
-					<Button variant="contained" onClick={() => navigate(-1)}>前へ</Button>
-				</Paper>
-			</Box>
-		);
-	}
+	// 서버상 재고가 사라지면 뜨는 창, 현재 오류 남. 수정 예정. 구매 직전에 프론트상에서도 실시간 재고확인 기능을 넣어야합니다. 
+	// const isOutOfStock = !items || items.length === 0 || items.some(item => !item.stock || item.quantity > item.stock);
+	// if (isOutOfStock) {
+	// 	return (
+	// 		<Box sx={{ p: 5, maxWidth: 500, margin: "40px auto" }}>
+	// 			<Paper sx={{ p: 4 }} elevation={3}>
+	// 				<Typography variant="h5" sx={{ mb: 2 }}>申し訳ございません。在庫切れの商品があります。</Typography>
+	// 				<Button variant="contained" onClick={() => navigate(-1)}>前へ</Button>
+	// 			</Paper>
+	// 		</Box>
+	// 	);
+	// }
 
 	return (
 		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto" }}>
@@ -91,8 +130,8 @@ function BuyPage() {
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{cartItems.map((item) => (
-								<TableRow key={item.cart_item_id}>
+							{items.map((item) => (
+								<TableRow key={item.cart_item_id || item.product_id}>
 									<TableCell align="center">
 										<img src={`${url}${item.image_url}`} alt={item.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
 									</TableCell>
@@ -105,11 +144,7 @@ function BuyPage() {
 					</Table>
 					<Box sx={{ textAlign: 'right', mt: 10 }}>
 						<Typography variant="h5">総支払金額</Typography>
-						<Typography variant="h4"><b>{cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0).toLocaleString()}円</b></Typography> 
-						{/* for / while과 같은거, let total = 0;
-								for (const item of cartItems) {
-  								total += item.price * item.quantity;
-								}로 생각하면 됨 */}
+						<Typography variant="h4"><b>{items.reduce((acc, item) => acc + item.price * item.quantity, 0).toLocaleString()}円</b></Typography> 
 					</Box>
 				</Paper>
 
@@ -122,7 +157,7 @@ function BuyPage() {
 							<Stack spacing={2}>
 								<TextField
 									label="名前"
-									name="name"
+									name="receiver_name"
 									required
 									fullWidth
 								/>
@@ -202,7 +237,7 @@ function BuyPage() {
 							支払い
 						</Button>
 						
-						{success && <Alert severity="success" sx={{ mb: 2 }}>注文が完了しました！</Alert>}
+						{success && <Alert severity="success" sx={{ mb: 2 }}>注文が完了しました！もうすぐホームに戻ります。</Alert>}
 					</Stack>
 				</form>
 			</Stack>
