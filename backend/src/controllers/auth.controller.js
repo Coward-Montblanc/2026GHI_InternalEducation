@@ -38,4 +38,14 @@ export const login = async (req, res) => {
     console.error("로그인 에러:", error);
     res.status(500).json({ success: false, message: "로그인 처리 중 서버 에러 발생" });
   }
+
+  //토큰 시간지정
+  const token = jwt.sign( 
+    { id: user.id, login_id: user.login_id }, 
+    process.env.JWT_SECRET, //env파일에서 키 가져옴
+    { expiresIn: "1m" } // 토큰 지속 시간
+  );
+
+  res.json({ user, token });
+  
 };

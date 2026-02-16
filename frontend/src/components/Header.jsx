@@ -1,14 +1,10 @@
 // Header.jsx
 import { useState, useEffect } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Badge,      // 장바구니 버튼용 추가
-  IconButton,
-  Stack
+  AppBar, Toolbar,
+  Typography, Button,
+  Box, Badge,      // 장바구니 버튼용 추가
+  IconButton
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart"; // 추가
 import { useNavigate, useLocation } from "react-router-dom"; // useLocation 추가
@@ -61,7 +57,7 @@ function Header() {
               {user.role === "ADMIN" && (
                 <Button 
                   variant="contained" 
-                  color="secondary" 
+                  color="blue" 
                   sx={{ mr: 2 }}
                   onClick={() => navigate("/admin/product-add")}
                 >

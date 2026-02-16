@@ -41,6 +41,7 @@ CREATE TABLE products (
   description TEXT,
   price INT NOT NULL,
   stock INT NOT NULL,
+  view INT DEFAULT 0, /* 조회수 컬럼 추가 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status TINYINT DEFAULT 0 COMMENT '0: 판매중, 1: 판매중지, 2: 품절',
   CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES categories(category_id)
@@ -77,6 +78,11 @@ CREATE TABLE orders (
   order_id BIGINT AUTO_INCREMENT PRIMARY KEY,
   login_id VARCHAR(50) NOT NULL,
   total_price INT NOT NULL,
+  receiver_name VARCHAR(20) NOT NULL, /* 수령인 이름 추가 */
+  address VARCHAR(200) NOT NULL, /* 배송지 주소 추가 */
+  phone VARCHAR(20) NOT NULL, /* 연락처 추가 */
+  address_detail VARCHAR(200) DEFAULT NULL, /* 배송지 상세주소 추가(빈칸 ok) */
+  delivery_request VARCHAR(200) DEFAULT NULL, /* 배송 요청사항 추가(빈칸 ok) */
   status VARCHAR(20) DEFAULT 'ORDERED',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_order_user FOREIGN KEY (login_id) REFERENCES users(login_id)
@@ -92,9 +98,17 @@ CREATE TABLE order_items (
   CONSTRAINT fk_order_item_product FOREIGN KEY (product_id) REFERENCES products(product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE notices ( /* 공지사항 테이블 추가 */
+  notice_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(100) NOT NULL,
+  content TEXT NOT NULL,
+  is_pinned TINYINT DEFAULT 0 COMMENT '0: 일반, 1: 상단고정',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO categories (category_id, name) VALUES 
 (1, '冷房製品'), (2, '空調'), (3, 'キッチン家電'), (4, '洗濯'), (5, '小型生活家電'),
 (6, 'テレビ・映像'), (7, 'PC製品'), (8, 'IT周辺機器'), (9, 'モバイル'), (10, '音響');
 
--- 샘플 데이터가 db/products_data.sql 파일에 있습니다.
+-- 샘플 데이터가 db/products_data.sql 파일에 있습니다.(한번 수정 예정)

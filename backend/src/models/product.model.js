@@ -1,8 +1,21 @@
 import db from "../config/db.js";
 
-// 모든 상품 조회 (판매 중인 상품만)
+
+  // 인기상품 조회 (view 10 이상)
+export const getRankProducts = async () => {
+  const [rows] = await db.query("SELECT * FROM products WHERE view >= 10 AND status = 0 ORDER BY view DESC");
+  return rows;
+};
+
+  // 상품 상세 조회 시 view 증가
+export const incrementView = async (productId) => {
+  await db.query("UPDATE products SET view = view + 1 WHERE product_id = ?", [productId]);
+};
+
+  // 모든 상품 조회 (판매 중인 상품만)
 export const getAllProducts = async (page = 1, limit = 24, search = "") => {
   const offset = (page - 1) * limit;
+
   // search 파라미터 추가
   const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : ""; // 타이틀에서만 검색
   const searchValue = search && search.trim() !== "" ? `%${search}%` : null;

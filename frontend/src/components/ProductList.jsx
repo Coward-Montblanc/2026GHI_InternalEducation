@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Grid,
-  Card,
+  Grid, Card,
   CardContent,
   Typography,
-  Button,
-  Box,
-  CircularProgress,
-  Alert,
-  Pagination,
+  Button, Box,
+  Alert,Pagination,
 } from "@mui/material";
-// 검색어(searchText) prop 추가
-function ProductList({ categoryId, searchText }) {
+import axios from '../api/axios';
+import { singleProductToItems, goToBuyPage } from '../services/BuyService.js';
+function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop 추가
   const navigate = useNavigate();
   const url = import.meta.env.VITE_API_URL; //.env파일에서 가져옴
   const [products, setProducts] = useState([]);
@@ -35,24 +32,21 @@ function ProductList({ categoryId, searchText }) {
       setLoading(true);
       let searchUrl = ""; //url은 기본 주소만 담고있고, searchUrl은 검색으로 인해 데이터를 가져올 때 조건문으로 붙임
       // 구매 페이지로 넘거야하는데 ProductList에서 보낼시에 페이지네이션 유무에 따라서 url이 달라지기에 현재로서는 이렇게 처리
+      
       if (categoryId) {
-        searchUrl = `${url}/api/products/category/${categoryId}`; 
+        searchUrl = `${url}/api/products/category/${categoryId}`;
         if (searchText) {
           searchUrl += `?search=${encodeURIComponent(searchText)}`;
         }
+        const { data } = await axios.get(searchUrl);
+        setProducts(data);
+        setTotalPages(1);
       } else {
         searchUrl = `${url}/api/products?page=${page}&limit=${itemsPerPage}`;
         if (searchText) {
           searchUrl += `&search=${encodeURIComponent(searchText)}`;
         }
-      }
-      const response = await fetch(searchUrl);
-      if (!response.ok) throw new Error("商品読み込み失敗");
-      const data = await response.json();
-      if (categoryId) {
-        setProducts(data);
-        setTotalPages(1);
-      } else {
+        const { data } = await axios.get(searchUrl);
         setProducts(data.products);
         setTotalPages(data.pagination.totalPages);
       }
@@ -64,26 +58,31 @@ function ProductList({ categoryId, searchText }) {
     }
   };
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const formatPrice = (price) => {
     return new Intl.NumberFormat("ko-KR").format(price);
   };
 
-  if (loading) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', p: 10 }}>
-      <CircularProgress />
-    </Box>
-  );
+  // 서치텍스트 인기상품
+  useEffect(() => {
+    if (searchText === "人気商品") {
+      (async () => {
+        try {
+          setLoading(true);
+          // 인기상품만 불러오기
+          const { data } = await axios.get(`${url}/api/products/popular`);
+          setProducts(data);
+          setTotalPages(1);
+          setError(null);
+        } catch (err) {
+          setError("인기상품 불러오기 실패");
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [searchText]);
 
-  // '人気商品' 
   let filteredProducts = products;
-  if (searchText === "人気商品") { //서치텍스트 인기상품
-    filteredProducts = products.filter((product) => product.name.includes("人気商品"));
-  }
 
   // 로그인 상태 확인
   const isLoggedIn = !!localStorage.getItem("token");
@@ -185,19 +184,20 @@ function ProductList({ categoryId, searchText }) {
                       }
                       try {
                         const user = JSON.parse(localStorage.getItem("user"));
-                        const res = await fetch(`${url}/api/cart/addcart`, {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem("token")}`
-                          },
-                          body: JSON.stringify({
+                        const { data } = await axios.post(
+                          `${url}/api/cart/addcart`,
+                          {
                             login_id: user.login_id,
                             product_id: product.product_id,
                             quantity: 1
-                          })
-                        });
-                        const data = await res.json();
+                          },
+                          {
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${localStorage.getItem("token")}`
+                            }
+                          }
+                        );
                         if (data.success) {
                           if (window.confirm(`「${product.name}」${1}個がカートに追加されました。カートに移動しますか？`)) {
                             navigate("/cart");
@@ -218,42 +218,15 @@ function ProductList({ categoryId, searchText }) {
                     fullWidth
                     size="large"
                     color="primary"
-                    onClick={async (e) => {
+                    onClick={(e) => {
                       e.stopPropagation();
                       if (!isLoggedIn) {
                         alert("ログイン後に実行してください");
                         return;
                       }
-                      try {
-                        const user = JSON.parse(localStorage.getItem("user"));
-                        const res = await fetch(`${url}/api/cart/addcart`, {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem("token")}`
-                          },
-                          body: JSON.stringify({
-                            login_id: user.login_id,
-                            product_id: product.product_id,
-                            quantity: 1
-                          })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                          if (window.confirm(`「${product.name}」${1}個を購入します。購入ページへ移動しますか？`)) {
-                            navigate("/buy", {
-                              state: {
-                                product,
-                                quantity: 1 //메인페이지에선 수량 선택이 불가능하기에 기본수량 1으로 넘어감
-                              }
-                            });
-                          }
-                        } else {
-                          alert(data.message || "購入に失敗しました");
-                        }
-                      } catch (err) {
-                        alert(`購入中にエラーが発生しました`);
-                      }
+                      alert(`「${product.name}」1個を購入します。購入ページへ移動します。`);
+                      const items = singleProductToItems(product, 1); //메인리스트에서는 상품 1개만 불러옵니다.
+                      goToBuyPage(navigate, items);
                     }}
                     disabled={product.stock === 0}
                   >
