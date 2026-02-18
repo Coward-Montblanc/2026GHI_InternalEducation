@@ -10,12 +10,12 @@ import {
   Collapse,
   Paper,
 } from "@mui/material";
+import api from "../api/axios"; //로그인 및 장바구니 확인 api
 import SearchIcon from "@mui/icons-material/Search";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
 
 const menuItems = ["全商品", "人気商品", "イベント", "お知らせ"];
 
@@ -31,11 +31,8 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${url}/api/categories`); 
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
+        const res = await api.get(`/categories/${user.login_id}`); //api를 사용해서 로딩
+        setCategories(res.data);
       } catch (error) {
         console.error("カテゴリー取得エラー:", error);
       }
@@ -81,8 +78,7 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
       onCategoryChange(null);
     }
   };
-
-  // 이전에는 콘솔에만 떴음. 검색 버튼 클릭 또는 엔터 시 상위로 검색어 전달
+ 
   const handleSearch = () => {
     if (onSearch) {
       onSearch(searchText.trim());
@@ -98,8 +94,8 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   return (
     <Box sx={{ width: "100%", p: 3 }}>
       {/* 検索 */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
-        <Box sx={{ width: '95%'}}>
+      <Box sx={{ mb: 5, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ width: '50%'}}>
           <TextField
             fullWidth
             size="small"
@@ -137,7 +133,7 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
         {/* 인기상품 버튼 */}
         <Button sx={{ flex: 1 }} onClick={() => {
           if (onCategoryNameChange) onCategoryNameChange("人気商品");
-          setSelectedTab(-1);
+          setSelectedTab(0); // 인기상품 클릭 시 탭을 전체상품(0)으로 고정
           if (onCategoryChange) onCategoryChange(null); // 카테고리 해제를
           if (onSearch) onSearch("人気商品"); // sql에서 인기상품으로 검색
         }}>人気商品</Button>

@@ -26,7 +26,7 @@ router.patch("/item/:cart_item_id/status", authenticateToken, cartController.tog
  *       500:
  *         description: 데이터베이스 연결 오류
  */
-router.get("/:login_id", cartController.getCartItems); 
+router.get("/:login_id", authenticateToken, cartController.getCartItems); 
 
 /**
  * @swagger
@@ -43,9 +43,9 @@ router.get("/:login_id", cartController.getCartItems);
  *         description: 상품 아이디
  * 
  */
-router.delete("/item/:cart_item_id", cartController.removeCartItem);
+router.delete("/item/:cart_item_id", authenticateToken, cartController.removeCartItem);
 
-router.post("/addcart", cartController.addToCart);
+router.post("/addcart", authenticateToken, cartController.addToCart);
 
 
 

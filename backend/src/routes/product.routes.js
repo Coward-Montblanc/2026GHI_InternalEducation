@@ -1,10 +1,16 @@
+import * as productController from "../controllers/product.controller.js";
 import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import * as productController from "../controllers/product.controller.js";
 
 const router = express.Router();
+
+// 인기상품 조회
+router.get("/popular", productController.getRankProducts);
+
+// 상품 상세 조회 (view 증가 포함)
+router.get("/:id", productController.getProductViewUp);
 
 // Multer 설정 (이미지 업로드 필수)
 const uploadDir = path.join(path.resolve(), "uploads");
@@ -75,7 +81,7 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *       404:
  *         description: 상품을 찾을 수 없음
  */
-router.get("/:id", productController.getProductById);
+
 
 /**
  * @swagger
@@ -201,10 +207,6 @@ router.post("/", (req, res, next) => {
  *         description: 상품을 찾을 수 없음
  */
 router.put("/:id", productController.updateProduct);
-
-
-
-
 
 
 export default router;

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext"; // AuthContext 임포트
-import api from "../api/axios";// API 호출
+import api from "../api/axios"; //api
 import {
   Box,
   Typography,
@@ -27,16 +27,21 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // 에러 초기화
+
     try {
-      const res = await api.post("/auth/login", { login_id: loginId, password }); // 백엔드 로그인 API 호출
-      // 성공 시: api에서 함수 호출 (유저 정보와 토큰 저장)
+      // 백엔드 로그인 API 호출 (본인의 백엔드 포트에 맞게 수정)
+      const res = await api.post(`/auth/login`, {
+        login_id: loginId,
+        password: password,
+      });
+
+      // 성공 시: Context의 login 함수 호출 (유저 정보와 토큰 저장)
       login(res.data.user, res.data.token);
 
       alert(`${res.data.user.name}様、ようこそ！`);
       navigate("/"); // 메인 페이지로 이동
     } catch (err) {
       // 실패 시: 에러 메시지 표시
-      
       const message = err.response?.data?.message || "ログイン中にエラーが発生しました。";
       setError(message);
     }

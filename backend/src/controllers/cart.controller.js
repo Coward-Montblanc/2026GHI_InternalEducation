@@ -16,8 +16,6 @@ export const getCartItems = async (req, res) => {
 };
 
 export const addToCart = async (req, res) => { 
-  // 수량이 문자열일경우 또는 상품아이디가 없을 리퀘스트, 로그인하지않은 유저가 임의 유저ID로 불러오는걸 방지
-  // 파라미터 공격을 검증하는 것 추가. JWT나 세션을 사용하기
   const { login_id, product_id, quantity } = req.body;
 
   try {

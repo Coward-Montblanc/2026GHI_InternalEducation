@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import axios from "axios";
+import api from "../api/axios"; //로그인 및 장바구니 확인 api
+
 
 function Login() {
   const [loginId, setLoginId] = useState("");
@@ -12,7 +13,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/auth/login", {
+      const res = await api.post("http://localhost:5000/auth/login", {
         login_id: loginId,
         password: password
       });

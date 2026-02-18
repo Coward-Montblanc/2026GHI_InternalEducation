@@ -71,7 +71,7 @@ export const updateCategory = async (req, res) => {
   }
 };
 
-// 카테고리 삭제
+// 카테고리 논리 삭제
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
@@ -81,9 +81,9 @@ export const deleteCategory = async (req, res) => {
       return res.status(404).json({ message: "카테고리를 찾을 수 없습니다." });
     }
 
-    res.json({ message: "카테고리가 삭제되었습니다." });
+    res.json({ message: "카테고리가 비공개되었습니다." });
   } catch (error) {
-    console.error("카테고리 삭제 오류:", error);
-    res.status(500).json({ message: "카테고리 삭제 중 오류가 발생했습니다." });
+    console.error("카테고리 비공개 오류:", error);
+    res.status(500).json({ message: "카테고리 비공개 중 오류가 발생했습니다." });
   }
 };

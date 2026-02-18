@@ -1,19 +1,15 @@
 // Header.jsx
 import { useState, useEffect } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Badge,      // 장바구니 버튼용 추가
-  IconButton,
-  Stack
+  AppBar, Toolbar,
+  Typography, Button,
+  Box, Badge,      // 장바구니 버튼용 추가
+  IconButton
 } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart"; // 추가
 import { useNavigate, useLocation } from "react-router-dom"; // useLocation 추가
 import { useAuth } from "../contexts/AuthContext"; // 로그인 상태를 가져옴
-import axios from "axios";
+import api from "../api/axios"; //로그인 및 장바구니 확인 api
 
 
 function Header() {
@@ -21,12 +17,11 @@ function Header() {
   const location = useLocation();
   const { user, logout } = useAuth(); // 유저 정보, 로그아웃 함수 호출
   const [cartCount, setCartCount] = useState(0);
-  const url = import.meta.env.VITE_API_URL;
 
   const fetchCartCount = async () => { //장바구니 버튼 + 숫자표시
     if (user?.login_id) {
       try {
-        const res = await axios.get(`${url}/api/cart/${user.login_id}`);
+        const res = await api.get(`/cart/${user.login_id}`); //api를 사용해서 장바구니 로딩
         setCartCount(res.data.length);
       } catch (err) {
         console.error("Cart error:", err);
@@ -61,7 +56,7 @@ function Header() {
               {user.role === "ADMIN" && (
                 <Button 
                   variant="contained" 
-                  color="secondary" 
+                  color="blue" 
                   sx={{ mr: 2 }}
                   onClick={() => navigate("/admin/product-add")}
                 >
