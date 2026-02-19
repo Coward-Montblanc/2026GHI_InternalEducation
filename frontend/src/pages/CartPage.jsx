@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
-import api from "../api/axios"; //로그인 및 장바구니 확인 api
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
-import { useNavigate } from "react-router-dom";
-import axios from "axios"; //로그인
-import { cartItemsToItems, goToBuyPage } from '../services/BuyService.js';
+import { getCart, updateCartItemStatus } from "../services/CartService";
+import { goToBuyPage } from '../services/OrderService.js';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Button, IconButton, Stack, Divider,
-  TextField
+  TableHead, TableRow, Paper, Button, IconButton, Stack, TextField
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -29,28 +25,12 @@ function CartPage() {
   const fetchCartItems = async () => { //장바구니 데이터 불러오기
     if (!user) return;
     try {
-      const res = await api.get(`/cart/${user.login_id}`); //api를 사용해서 장바구니 로딩
-      setCartItems(res.data);
+      const data = await getCart(user.login_id);
+      setCartItems(data);
     } catch (err) {
       console.error("장바구니 로딩 실패:", err);
     }
   };
-      if (!user) return;
-      const token = localStorage.getItem("token");
-      try {
-        const res = await axios.get(
-          `${url}/api/cart/${user.login_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-        setCartItems(res.data);
-      } catch (err) {
-        console.error("장바구니 로딩 실패:", err);
-      }
-    };
 
   
 
@@ -98,30 +78,21 @@ const handleToggleStatus = async (cartItemId, currentStatus) => {
 
   if (!window.confirm(confirmMsg)) return;
   try {
-    const res = await api.patch(
-      `/cart/item/${cartItemId}/status`,
-      { status: Status },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-    if (res.data.success) {
+    const res = await updateCartItemStatus(cartItemId, Status);
+    if (res.success) {
       setCartItems((prevItems) =>
         prevItems.map((item) =>
           item.cart_item_id === cartItemId ? { ...item, status: Status } : item )
       );
     }
   } catch (err) {
-  console.error("상태 변경 에러:", err); // 전체 에러 객체 출력
-  if (err.response) {
-    // 서버에서 반환한 상태 코드와 메시지 출력
-    console.error("서버 응답 코드:", err.response.status);
-    console.error("서버 응답 데이터:", err.response.data);
+    console.error("상태 변경 에러:", err);
+    if (err.response) {
+      console.error("서버 응답 코드:", err.response.status);
+      console.error("서버 응답 데이터:", err.response.data);
+    }
+    alert("상태 변경에 실패했습니다.");
   }
-  alert("상태 변경에 실패했습니다.");
-}
 };
 
 
@@ -207,10 +178,7 @@ const handleToggleStatus = async (cartItemId, currentStatus) => {
               variant="contained" 
               size="large" 
               sx={{ px: 10 }}
-              onClick={() => {
-                const items = cartItemsToItems(cartItems);
-                goToBuyPage(navigate, items);
-              }}
+              onClick={() => goToBuyPage(navigate, cartItems)}
               disabled={cartItems.length === 0}
             >
               注文
@@ -221,5 +189,6 @@ const handleToggleStatus = async (cartItemId, currentStatus) => {
     </Box>
   );
 }
+
 
 export default CartPage;

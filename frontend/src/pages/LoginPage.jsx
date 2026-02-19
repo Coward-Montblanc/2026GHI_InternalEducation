@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext"; // AuthContext 임포트
-import axios from "axios"; // API 호출을 위해 필요
+import { login as loginApi } from "../services/LoginService"; //login 동일 변수가 있어서 loginApi로 이름 변경
 import {
   Box,
   Typography,
@@ -12,7 +12,6 @@ import {
   Alert,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -29,16 +28,9 @@ function LoginPage() {
     setError(""); // 에러 초기화
 
     try {
-      // 백엔드 로그인 API 호출 (본인의 백엔드 포트에 맞게 수정)
-      const res = await axios.post(`${url}/api/auth/login`, {
-        login_id: loginId,
-        password: password,
-      });
-
-      // 성공 시: Context의 login 함수 호출 (유저 정보와 토큰 저장)
-      login(res.data.user, res.data.token);
-
-      alert(`${res.data.user.name}様、ようこそ！`);
+      const res = await loginApi(loginId, password);
+      login(res.user, res.token);
+      alert(`${res.user.name}様、ようこそ！`);
       navigate("/"); // 메인 페이지로 이동
     } catch (err) {
       // 실패 시: 에러 메시지 표시

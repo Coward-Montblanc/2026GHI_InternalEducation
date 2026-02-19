@@ -10,13 +10,12 @@ import {
   Collapse,
   Paper,
 } from "@mui/material";
-import axios from '../api/axios';
 import SearchIcon from "@mui/icons-material/Search";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
+import { getCategories } from "../services/CategoryService";
 
 const menuItems = ["全商品", "人気商品", "イベント", "お知らせ"];
 
@@ -32,8 +31,8 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${url}/api/categories`);
-        setCategories(response.data);
+        const data = await getCategories();
+        setCategories(data);
       } catch (error) {
         console.error("カテゴリー取得エラー:", error);
       }

@@ -42,10 +42,14 @@ export const getOrder = async (req, res) => {
   try {
     const { order_id } = req.params;
     const order = await orderModel.getOrderWithItems(order_id);
-    if (!order) return res.status(404).json({ success: false, message: "주문 없음" });
+    // order가 없거나, order.items가 없거나, 빈 배열이면, 범위를 더 넓혀서 404 반환
+    if (!order || !order.items || order.items.length === 0) {
+      return res.status(404).json({ success: false, message: "주문 없음" });
+    }
     res.json({ success: true, order });
   } catch (err) {
     console.error("주문 상세 조회 에러:", err);
+    res.status(500).json({ success: false, message: "서버 오류" });
   }
 };
 

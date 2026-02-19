@@ -9,21 +9,19 @@ import {
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart"; // 추가
 import { useNavigate, useLocation } from "react-router-dom"; // useLocation 추가
 import { useAuth } from "../contexts/AuthContext"; // 로그인 상태를 가져옴
-import axios from "axios";
-
+import { getCartCount } from "../services/CartService";
 
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth(); // 유저 정보, 로그아웃 함수 호출
   const [cartCount, setCartCount] = useState(0);
-  const url = import.meta.env.VITE_API_URL;
 
   const fetchCartCount = async () => { //장바구니 버튼 + 숫자표시
     if (user?.login_id) {
       try {
-        const res = await axios.get(`${url}/api/cart/${user.login_id}`);
-        setCartCount(res.data.length);
+        const count = await getCartCount(user.login_id);
+        setCartCount(count);
       } catch (err) {
         console.error("Cart error:", err);
       }

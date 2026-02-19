@@ -12,11 +12,14 @@ export const getRankProducts = async (req, res) => {
   }
 };
 
-// 상품 상세 조회 시 view 증가, 프론트+백 터미널이 동시에 켜져서인지 상세조회 시 view가 2씩 증가하는 현상 발생. 추후 수정 필요
+// 상품 상세 조회 시 view 증가
 export const getProductViewUp = async (req, res) => {
   try {
     const { id } = req.params;
-    await productModel.incrementView(id);
+    // GET 요청일 때만 조회수 증가 Options에서 확인과정에서 조회수가 한번 더 증가하고있었음. GET 요청이 아닐 때는 증가하지 않도록 조건 추가
+    if (req.method === "GET") {
+      await productModel.incrementView(id);
+    }
     const product = await productModel.getProductById(id);
     if (!product) return res.status(404).json({ message: "상품을 찾을 수 없음" });
     res.json(product);

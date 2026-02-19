@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios"; // API 호출을 위해 필요
-import { singleProductToItems, goToBuyPage } from '../services/BuyService.js';
+import { getProductById } from "../services/ProductService";
+import { addToCart } from "../services/CartService";
+import { singleProductToItems, goToBuyPage } from '../services/OrderService.js';
 import {
   Box, Typography,
   Button, Alert,
@@ -19,13 +20,12 @@ function ProductDetail() {
   const [mainImage, setMainImage] = useState(""); // 현재 크게 보여줄 이미지
   const url = import.meta.env.VITE_API_URL; 
   useEffect(() => { //로딩화면
-    // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
+        // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
     const getProductDetail = async () => {
       try {
-        const res = await axios.get(`${url}/api/products/${id}`);
-        const data = res.data;
+        const data = await getProductById(id);
         setProduct(data);
-        // 첫 번째 이미지를 메인으로 설정 (보통 DB 조회 시 main_image가 먼저 오도록 쿼리)
+                // 첫 번째 이미지를 메인으로 설정 (보통 DB 조회 시 main_image가 먼저 오도록 쿼리)
         if (data.images && data.images.length > 0) {
           setMainImage(`${url}${data.images[0].image_url}`);
         }
@@ -36,7 +36,7 @@ function ProductDetail() {
           } else if (err.response.status === 500) {
             setError("サーバーエラーが発生しました。しばらくしてからもう一度お試しください。");
           } else {
-            setError(`HTTP error! status: ${err.response.status}`); //axios의 경우 catch에서 에러를 처리
+            setError(`HTTP error! status: ${err.response.status}`);
           }
         } else {
           setError(err.message);
@@ -175,22 +175,11 @@ function ProductDetail() {
                     }
                     try {
                       const user = JSON.parse(localStorage.getItem("user"));
-                      const { data } = await axios.post(
-                        `${url}/api/cart/addcart`,
-                        {
-                          login_id: user.login_id,
-                          product_id: id,
-                          quantity: quantity
-                        },
-                        {
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem("token")}`
-                          }
+                      const data = await addToCart(user.login_id, id, quantity);
+                      if (data.success) {
+                        if (window.confirm(`「${product.name}」${quantity}個がカートに追加されました。カートに移動しますか？`)) {
+                          navigate("/cart");
                         }
-                      );
-                      if (window.confirm(`「${product.name}」${quantity}個がカートに追加されました。カートに移動しますか？`)) {
-                        navigate("/cart");
                       } else {
                         alert(data.message || "カート追加に失敗しました");
                       }
@@ -214,7 +203,7 @@ function ProductDetail() {
                     return;
                   }
                   alert(`「${product.name}」${quantity}個を購入します。購入ページへ移動します。`);
-                  const items = singleProductToItems(product, quantity); //buyservice에서 상품과 수량을 받아 items 형태로 바꿔주는 함수입니다.
+                  const items = singleProductToItems(product, quantity);
                   goToBuyPage(navigate, items);
                 }}
                 disabled={product.stock === 0}
