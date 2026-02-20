@@ -9,7 +9,7 @@ import {
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart"; // 추가
 import { useNavigate, useLocation } from "react-router-dom"; // useLocation 추가
 import { useAuth } from "../contexts/AuthContext"; // 로그인 상태를 가져옴
-import { getCartCount } from "../services/CartService";
+import { getCart } from "../services/CartService";
 
 function Header() {
   const navigate = useNavigate();
@@ -20,11 +20,14 @@ function Header() {
   const fetchCartCount = async () => { //장바구니 버튼 + 숫자표시
     if (user?.login_id) {
       try {
-        const count = await getCartCount(user.login_id);
-        setCartCount(count);
+        const cart = await getCart(user.login_id);
+        setCartCount(Array.isArray(cart) ? cart.length : 0);
       } catch (err) {
         console.error("Cart error:", err);
+        setCartCount(0);
       }
+    } else {
+      setCartCount(0);
     }
   };
 

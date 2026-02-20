@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../services/ProductService";
 import { addToCart } from "../services/CartService";
-import { singleProductToItems, goToBuyPage } from '../services/OrderService.js';
+import { singleProductToItems } from '../services/OrderService.js';
 import {
   Box, Typography,
   Button, Alert,
@@ -204,7 +204,7 @@ function ProductDetail() {
                   }
                   alert(`「${product.name}」${quantity}個を購入します。購入ページへ移動します。`);
                   const items = singleProductToItems(product, quantity);
-                  goToBuyPage(navigate, items);
+                  navigate("/buy", { state: { items } });
                 }}
                 disabled={product.stock === 0}
               >

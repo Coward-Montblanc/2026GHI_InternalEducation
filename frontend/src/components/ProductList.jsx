@@ -7,7 +7,7 @@ import {
   Button, Box,
   Alert, Pagination, CircularProgress,
 } from "@mui/material";
-import { singleProductToItems, goToBuyPage } from '../services/OrderService.js';
+import { singleProductToItems} from '../services/OrderService.js';
 import { getProducts, getProductsByCategory, getPopularProducts } from "../services/ProductService";
 import { addToCart } from "../services/CartService";
 function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop 추가
@@ -194,7 +194,7 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
                           }
                           alert(`「${product.name}」1個を購入します。購入ページへ移動します。`);
                           const items = singleProductToItems(product, 1); //메인리스트에서는 상품 1개만 불러옵니다.
-                          goToBuyPage(navigate, items);
+                          navigate("/buy", { state: { items } });
                         }}
                         disabled={product.stock === 0}
                       >

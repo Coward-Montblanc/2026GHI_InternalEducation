@@ -2,13 +2,18 @@ import api from "../api/axios";
 
 //단일(갯수 상관x 한 상품) 상품저장
 export function singleProductToItems(product, quantity) {
-  return [{
-    product_id: product.product_id,
-    name: product.name,
-    price: product.price,
-    quantity,
-    image_url: product.images?.[0]?.image_url || ""
-  }];
+  try {
+    return [{
+      product_id: product.product_id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      image_url: product.images?.[0]?.image_url || ""
+    }];
+  } catch (error) {
+    console.error("SingleOrderタイプエラー:", error);
+    return [];
+  }
 }
 
   // //장바구니나 다수 상품들을 구매 페이지로 이동 CartService로 이동시켜뒀기에 미사용
@@ -24,13 +29,14 @@ export function singleProductToItems(product, quantity) {
   //     }));
   // }
 
-//상품 이동 담당
-export function goToBuyPage(navigate, items) {
-  navigate("/buy", { state: { items } });
-}
 
 //주문 생성 
 export async function createOrder(orderData) {
-  const { data } = await api.post("/orders", orderData);
-  return data;
+  try {
+    const { data } = await api.post("/orders", orderData);
+    return data;
+  } catch (error) {
+    console.error("注文作成中にエラー:", error);
+    throw error;
+  }
 }

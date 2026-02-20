@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCart, updateCartItemStatus } from "../services/CartService";
-import { goToBuyPage } from '../services/OrderService.js';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, IconButton, Stack, TextField
@@ -178,7 +177,7 @@ const handleToggleStatus = async (cartItemId, currentStatus) => {
               variant="contained" 
               size="large" 
               sx={{ px: 10 }}
-              onClick={() => goToBuyPage(navigate, cartItems)}
+              onClick={() => navigate("/buy", { state: { items: cartItems } })}
               disabled={cartItems.length === 0}
             >
               注文
