@@ -10,8 +10,8 @@ export const getCartItems = async (req, res) => {
     const items = await cartModel.getCartItemsByLoginId(login_id);
     res.status(200).json(items);
   } catch (err) {
-    console.error("장바구니 조회 에러:", err);
-    res.status(500).json({ message: "데이터베이스 조회 오류" });
+    console.error("カート取得エラー:", err);
+    res.status(500).json({ message: "データベース取得中にエラーが発生しました。" });
   }
 };
 
@@ -25,8 +25,8 @@ export const addToCart = async (req, res) => {
     
     res.status(200).json({ success: true, message: "カートに追加されました。" });
   } catch (err) {
-    console.error("Cart Controller Error:", err);
-    res.status(500).json({ success: false, message: "서버 에러" });
+    console.error("カート追加エラー:", err);
+    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
   }
 };
 
@@ -37,15 +37,15 @@ export const removeCartItem = async (req, res) => { //장바구니 내 상품 �
     [cart_item_id]
   );
   if (item.login_id !== current_user) { //일치하지 않을 경우
-    return res.status(403).send("상품과 유저 아이디가 일치하지않음");
+    return res.status(403).send("商品とユーザーIDが一致しません");
   }
 
   try {
     await cartModel.deleteCartItem(cart_item_id);
     res.status(200).json({ success: true, message: "商品が削除されました。" });
   } catch (err) {
-    console.error("삭제 에러:", err);
-    res.status(500).json({ success: false, message: "삭제 중 서버 에러 발생" });
+    console.error("削除エラー:", err);
+    res.status(500).json({ success: false, message: "削除中にサーバーエラーが発生しました。" });
   }
 };
 
@@ -72,14 +72,14 @@ export const toggleCartItemStatus = async (req, res) => {
     console.log("두 값이 일치하나?:", rows[0].login_id === currentUser);
 
     if (rows[0].login_id !== currentUser) { //회원이 일치하지 않을경우
-      return res.status(403).json({ success: false, message: "본인의 장바구니 상품만 수정할 수 있습니다." });
+      return res.status(403).json({ success: false, message: "本人のカート商品だけを修正できます。" });
     }
 
     await cartModel.toggleCartItem(status, cart_item_id);
     
-    res.json({ success: true, message: status === 1 ? "비활성화되었습니다." : "활성화되었습니다." });
+    res.json({ success: true, message: status === 1 ? "非活性化されました。" : "活性化されました。" });
   } catch (error) {
-    console.error("서버 에러 :", error);
+    console.error("サーバーエラー :", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

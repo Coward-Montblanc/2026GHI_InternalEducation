@@ -71,7 +71,7 @@ function BuyPage() {
 			});
 			if (res.success) {
 				setSuccess(true);
-				setTimeout(() => navigate("/"), 10000); //10초 뒤에 홈으로 이동
+				setTimeout(() => navigate("/"), 5000); // 5초 뒤에 홈으로 이동
 			} else {
 				setError("注文に失敗しました。もう一度お試しください。");
 			}

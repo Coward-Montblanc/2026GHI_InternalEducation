@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { login as loginApi } from "../services/LoginService"; //login 동일 변수가 있어서 loginApi로 이름 변경
+import { loginApi } from "../services/LoginService"; 
 
 function Login() {
   const [loginId, setLoginId] = useState("");

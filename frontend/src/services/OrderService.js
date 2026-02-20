@@ -11,7 +11,7 @@ export function singleProductToItems(product, quantity) {
   }];
 }
 
-  // //장바구니나 다수 상품들을 구매 페이지로 이동 CartService로 이동시켜서 미사용
+  // //장바구니나 다수 상품들을 구매 페이지로 이동 CartService로 이동시켜뒀기에 미사용
   // export function cartItemsToItems(cartItems) {
   //   return cartItems
   //     .filter(item => item.status !== 1)

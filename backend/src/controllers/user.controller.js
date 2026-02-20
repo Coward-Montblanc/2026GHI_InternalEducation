@@ -6,8 +6,8 @@ export async function getUsers(req, res) {
     const users = await userModel.findAllUsers();
     res.json(users);
   } catch (err) {
-    console.error("에러코드:", err);
-    res.status(500).json({ message: "DB 에러" });
+    console.error("ユーザー取得エラー:", err);
+    res.status(500).json({ message: "DB エラーが発生しました。" });
   }
 }
 
@@ -15,14 +15,14 @@ export async function createUser(req, res) {
   const { login_id, password, name, email, phone, zip_code, address, address_detail, role } = req.body;
   
   if (!login_id || !password || !name || !email || !phone) {
-    return res.status(400).json({ message: "필수 정보(ID, 비밀번호, 이름, 이메일, 전화번호)가 누락되었습니다." });
+    return res.status(400).json({ message: "必須情報(ID、パスワード、名前、メール、電話番号)が不足しています。" });
   }
 
   const regex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/; //영문(a-z), 숫자(0~9) 혼합 4글자 이상 제약
-  if(!regex.test(login_id)){ return res.status(400).json({ message : "아이디는 영문, 숫자 포함 4글자 이상이어야 합니다."});}
-  if(!regex.test(password)){ return res.status(400).json({ message : "비밀번호는 영문, 숫자 포함 4글자 이상이어야 합니다."});} 
+  if(!regex.test(login_id)){ return res.status(400).json({ message : "IDは英字と数字を含む4文字以上である必要があります。"});}
+  if(!regex.test(password)){ return res.status(400).json({ message : "パスワードは英字と数字を含む4文字以上である必要があります。"});}
 
-  if (!email.includes('@')) { return res.status(400).json({ message: "유효한 이메일 형식이 아닙니다." });}  //이메일에 @필수
+  if (!email.includes('@')) { return res.status(400).json({ message: "有効なメール形式ではありません。" });}  //이메일에 @필수
 
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -42,14 +42,14 @@ export async function createUser(req, res) {
     res.status(201).json({
       login_id,
       name,
-      message: "회원가입 성공"
+      message: "会員登録成功"
     });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ message: "중복된 ID 또는 이메일이 존재합니다." });
+      return res.status(409).json({ message: "重複したIDまたはメールが存在します。" });
     }
     console.error(err);
-    res.status(500).json({ message: "DB 에러" });
+    res.status(500).json({ message: "DB エラーが発生しました。" });
   }
 }
 
@@ -59,12 +59,12 @@ export async function deleteUser(req, res) { //회원 삭제
   try {
     const result = await userModel.deleteUserById(id); 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "회원 없음" });
+      return res.status(404).json({ message: "会員が存在しません。" });
     }
     res.status(204).send();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "DB 에러" });
+    res.status(500).json({ message: "DB エラーが発生しました。" });
   }
 }
 
@@ -91,16 +91,16 @@ export async function updateUser(req, res) { //회원정보 수정
     const result = await userModel.updateUser(id, updateData);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "등록된 회원이 없습니다." });
+      return res.status(404).json({ message: "登録された会員が存在しません。" });
     }
 
-    res.json({ message: "회원 정보 수정 완료." });
+    res.json({ message: "会員情報の修正が完了しました。" });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ message: "데이터베이스 내 중복 값이 존재합니다." });
+      return res.status(409).json({ message: "データベース内に重複する値が存在します。" });
     }
     console.error(err);
-    res.status(500).json({ message: "DB 에러" });
+    res.status(500).json({ message: "DB エラーが発生しました。" });
   }
 }
 

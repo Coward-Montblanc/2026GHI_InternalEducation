@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signup} from "../services/LoginService";
+import { signupApi} from "../services/LoginService";
 import { Box, Typography, TextField, Button, Paper, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -70,7 +70,7 @@ function SignupPage() {
     }
 
     try {
-      const response = await signup({
+      const response = await signupApi({
         login_id: formData.login_id,
         password: formData.password,
         name: formData.name,
