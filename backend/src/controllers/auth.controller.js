@@ -10,13 +10,13 @@ export const login = async (req, res) => {
     const user = await userModel.findByLoginId(login_id);
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "아이디 또는 비밀번호가 일치하지 않습니다." });
+      return res.status(401).json({ success: false, message: "IDまたはパスワードが一致しません。" });
     }
 
     // 2. 비밀번호 검증
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "아이디 또는 비밀번호가 일치하지 않습니다." });
+      return res.status(401).json({ success: false, message: "IDまたはパスワードが一致しません。" });
     }
 
     // 3. JWT 토큰 발급
@@ -35,8 +35,8 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("로그인 에러:", error);
-    res.status(500).json({ success: false, message: "로그인 처리 중 서버 에러 발생" });
+    console.error("ログインエラー:", error);
+    res.status(500).json({ success: false, message: "ログイン処理中にサーバーエラーが発生しました。" });
   }
 
   //토큰 시간지정

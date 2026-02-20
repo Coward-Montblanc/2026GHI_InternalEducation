@@ -11,8 +11,8 @@ import {
 	InputLabel, Select,
 	MenuItem
 } from "@mui/material";
-import api from "../api/axios";
 import { useAuth } from "../contexts/AuthContext";
+import { createOrder } from "../services/OrderService";
 
 function BuyPage() {
 	const navigate = useNavigate();
@@ -54,7 +54,7 @@ function BuyPage() {
 		const total_price = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
 		try {
-			const res = await api.post("/orders", {
+			const res = await createOrder({
 				login_id: user.login_id || user.id || user.username,
 				items: items.map(item => ({
 					product_id: item.product_id,
@@ -69,9 +69,9 @@ function BuyPage() {
 				delivery_request,
 				payment_method
 			});
-			if (res.data.success) {
+			if (res.success) {
 				setSuccess(true);
-				setTimeout(() => navigate("/"), 10000); //10초 뒤에 홈으로 이동
+				setTimeout(() => navigate("/"), 5000); // 5초 뒤에 홈으로 이동
 			} else {
 				setError("注文に失敗しました。もう一度お試しください。");
 			}
@@ -100,19 +100,6 @@ function BuyPage() {
 		"楽天ペイ"
 	];
 	const [paymentMethod, setPaymentMethod] = useState("");
-
-	// 서버상 재고가 사라지면 뜨는 창, 현재 오류 남. 수정 예정. 구매 직전에 프론트상에서도 실시간 재고확인 기능을 넣어야합니다. 
-	// const isOutOfStock = !items || items.length === 0 || items.some(item => !item.stock || item.quantity > item.stock);
-	// if (isOutOfStock) {
-	// 	return (
-	// 		<Box sx={{ p: 5, maxWidth: 500, margin: "40px auto" }}>
-	// 			<Paper sx={{ p: 4 }} elevation={3}>
-	// 				<Typography variant="h5" sx={{ mb: 2 }}>申し訳ございません。在庫切れの商品があります。</Typography>
-	// 				<Button variant="contained" onClick={() => navigate(-1)}>前へ</Button>
-	// 			</Paper>
-	// 		</Box>
-	// 	);
-	// }
 
 	return (
 		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto" }}>

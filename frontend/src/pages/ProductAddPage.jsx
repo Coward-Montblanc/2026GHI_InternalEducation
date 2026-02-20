@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Container, TextField, Button, Typography, Box, Paper, MenuItem, Stack, CircularProgress } from "@mui/material";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-const url = import.meta.env.VITE_API_URL; 
-//import api from "../api/axios";
+import { getCategories } from "../services/CategoryService";
+import { createProduct } from "../services/ProductService";
 
 
 function ProductAddPage() {
@@ -25,10 +24,10 @@ function ProductAddPage() {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${url}/api/categories`);
-        setCategories(res.data);
-        if (res.data.length > 0) {
-          setProduct(prev => ({ ...prev, category_id: res.data[0].category_id }));
+        const data = await getCategories();
+        setCategories(data);
+        if (data.length > 0) {
+          setProduct(prev => ({ ...prev, category_id: data[0].category_id }));
         }
       } catch (err) {
         console.error("カテゴリー読み込み失敗:", err);
@@ -91,16 +90,14 @@ function ProductAddPage() {
   });
   console.log("실제 파일 객체 확인:", selectedFiles);
   try {
-  // headers 속성을 아예 빼고 보내보세요!
-  const res = await axios.post(`${url}/api/products`, formData);
-  
-  if (res.data.success) {
-    alert("商品が登録されました。");
-    navigate("/");
+    const res = await createProduct(formData);
+    if (res.success) {
+      alert("商品が登録されました。");
+      navigate("/");
+    }
+  } catch (err) {
+    console.error("エラーコード:", err.response?.data);
   }
-    } catch (err) {
-      console.error("エラーコード:", err.response?.data);
-    }   
   };
 
   if (loading) {

@@ -6,8 +6,8 @@ export const getAllCategories = async (req, res) => {
     const categories = await categoryModel.getAllCategories();
     res.json(categories);
   } catch (error) {
-    console.error("카테고리 조회 오류:", error);
-    res.status(500).json({ message: "카테고리 조회 중 오류가 발생했습니다." });
+    console.error("カテゴリー取得エラー:", error);
+    res.status(500).json({ message: "カテゴリー取得中にエラーが発生しました。" });
   }
 };
 
@@ -18,13 +18,13 @@ export const getCategoryById = async (req, res) => {
     const category = await categoryModel.getCategoryById(id);
 
     if (!category) {
-      return res.status(404).json({ message: "카테고리를 찾을 수 없습니다." });
+      return res.status(404).json({ message: "カテゴリーが存在しません。" });
     }
 
     res.json(category);
   } catch (error) {
-    console.error("카테고리 상세 조회 오류:", error);
-    res.status(500).json({ message: "카테고리 조회 중 오류가 발생했습니다." });
+    console.error("カテゴリー詳細取得エラー:", error);
+    res.status(500).json({ message: "カテゴリー詳細取得中にエラーが発生しました。" });
   }
 };
 
@@ -34,17 +34,17 @@ export const createCategory = async (req, res) => {
     const { name } = req.body;
     
     if (!name) {
-      return res.status(400).json({ message: "카테고리 이름은 필수입니다." });
+      return res.status(400).json({ message: "カテゴリー名は必須です。" });
     }
 
     const categoryId = await categoryModel.createCategory(name);
     res.status(201).json({
-      message: "카테고리가 생성되었습니다.",
+      message: "カテゴリーが作成されました。",
       category_id: categoryId,
     });
   } catch (error) {
-    console.error("카테고리 생성 오류:", error);
-    res.status(500).json({ message: "카테고리 생성 중 오류가 발생했습니다." });
+    console.error("カテゴリー作成エラー:", error);
+    res.status(500).json({ message: "カテゴリー作成中にエラーが発生しました。" });
   }
 };
 
@@ -55,19 +55,19 @@ export const updateCategory = async (req, res) => {
     const { name } = req.body;
 
     if (!name) {
-      return res.status(400).json({ message: "카테고리 이름은 필수입니다." });
+      return res.status(400).json({ message: "カテゴリー名は必須です。" });
     }
 
     const affectedRows = await categoryModel.updateCategory(id, name);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "카테고리를 찾을 수 없습니다." });
+      return res.status(404).json({ message: "カテゴリーが存在しません。" });
     }
 
-    res.json({ message: "카테고리가 수정되었습니다." });
+    res.json({ message: "カテゴリーが修正されました。" });
   } catch (error) {
-    console.error("카테고리 수정 오류:", error);
-    res.status(500).json({ message: "카테고리 수정 중 오류가 발생했습니다." });
+    console.error("カテゴリー修正エラー:", error);
+    res.status(500).json({ message: "カテゴリー修正中にエラーが発生しました。" });
   }
 };
 
@@ -78,12 +78,12 @@ export const deleteCategory = async (req, res) => {
     const affectedRows = await categoryModel.deleteCategory(id);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "카테고리를 찾을 수 없습니다." });
+      return res.status(404).json({ message: "カテゴリーが存在しません。" });
     }
 
-    res.json({ message: "카테고리가 비공개되었습니다." });
+    res.json({ message: "カテゴリーが非公開になりました。" });
   } catch (error) {
-    console.error("카테고리 비공개 오류:", error);
-    res.status(500).json({ message: "카테고리 비공개 중 오류가 발생했습니다." });
+    console.error("カテゴリー非公開エラー:", error);
+    res.status(500).json({ message: "カテゴリー非公開中にエラーが発生しました。" });
   }
 };

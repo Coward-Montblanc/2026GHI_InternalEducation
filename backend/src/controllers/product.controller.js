@@ -8,40 +8,44 @@ export const getRankProducts = async (req, res) => {
     const products = await productModel.getRankProducts();
     res.json(products);
   } catch (err) {
-    res.status(500).json({ message: "인기상품 조회 오류" });
+    res.status(500).json({ message: "人気商品取得エラー" });
   }
 };
 
-// 상품 상세 조회 시 view 증가, 프론트+백 터미널이 동시에 켜져서인지 상세조회 시 view가 2씩 증가하는 현상 발생. 추후 수정 필요
+// 상품 상세 조회 시 view 증가
 export const getProductViewUp = async (req, res) => {
   try {
     const { id } = req.params;
-    await productModel.incrementView(id);
+    // GET 요청일 때만 조회수 증가 Options에서 확인과정에서 조회수가 한번 더 증가하기도 함. GET 요청이 아닐 때는 증가하지 않도록 조건 추가
+    // +2이었던 원인 자체는 main.tsx에 있습니다. 
+    if (req.method === "GET") {
+      await productModel.incrementView(id);
+    }
     const product = await productModel.getProductById(id);
-    if (!product) return res.status(404).json({ message: "상품을 찾을 수 없음" });
+    if (!product) return res.status(404).json({ message: "商品が存在しません。" });
     res.json(product);
   } catch (error) {
-    console.error("상세조회 에러:", error); 
-    res.status(500).json({ message: "상품 상세 조회 오류" });
+    console.error("商品詳細取得エラー:", error); 
+    res.status(500).json({ message: "商品詳細取得エラーが発生しました。" });
   }
 };
 
 export const createProduct = async (req, res) => {
-  // 디버깅 로그
-  console.log("수신된 BODY:", req.body);
-  console.log("수신된 FILES:", req.files);
+  // デバッグログ
+  console.log("受信したBODY:", req.body);
+  console.log("受信したFILES:", req.files);
 
   const { category_id, name, description, price, stock } = req.body;
   const files = req.files;
 
   // 이미지 파일 유무 확인
   if (!files || files.length === 0) {
-    return res.status(400).json({ success: false, message: "이미지 파일이 없습니다." });
+    return res.status(400).json({ success: false, message: "画像ファイルがありません。" });
   }
 
   // 필수 텍스트 데이터가 비어있는지 확인
   if (!category_id || !name || !price) {
-     return res.status(400).json({ success: false, message: "필수 정보가 누락되었습니다." });
+     return res.status(400).json({ success: false, message: "必須情報が不足しています。" });
   }
 
   const connection = await db.getConnection(); //이미지가 없을 경우를 대비한 트랜잭션 커넥션
@@ -56,7 +60,7 @@ export const createProduct = async (req, res) => {
     );
 
     const productId = productResult.insertId;
-    console.log("생성된 상품 ID:", productId);
+    console.log("生成された商品ID:", productId);
 
     // 이미지 정보 저장 (루프를 돌며 DB에 기록)
     for (let i = 0; i < files.length; i++) {
@@ -74,13 +78,13 @@ export const createProduct = async (req, res) => {
     // 성공 응답 (프론트엔드의 res.data.success 조건과 일치시킴)
     res.status(201).json({ 
       success: true, 
-      message: "상품이 성공적으로 등록되었습니다!",
+      message: "商品が正常に登録されました。",
       productId: productId 
     });
 
   } catch (error) {
-    console.error("등록 에러 상세:", error);
-    res.status(500).json({ success: false, message: "서버 저장 중 오류가 발생했습니다." });
+    console.error("登録エラー詳細:", error);
+    res.status(500).json({ success: false, message: "サーバー保存中にエラーが発生しました。" });
   }
 };
 
@@ -92,8 +96,8 @@ export const getAllProducts = async (req, res) => {
     const result = await productModel.getAllProducts(page, limit, search);
     res.json(result);
   } catch (error) {
-    console.error("상품 조회 오류:", error);
-    res.status(500).json({ message: "상품 조회 중 오류가 발생했습니다." });
+    console.error("商品取得エラー:", error);
+    res.status(500).json({ message: "商品取得中にエラーが発生しました。" });
   }
 };
 
@@ -102,7 +106,7 @@ export const getProductById = async (req, res) => {
     const { id } = req.params;
     const product = await productModel.getProductById(id); // 모델에서 이미지를 가져옴
     
-    if (!product) return res.status(404).json({ message: "상품 없음" });
+    if (!product) return res.status(404).json({ message: "商品が存在しません。" });
 
     const response = {
       product,
@@ -114,7 +118,8 @@ export const getProductById = async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    res.status(500).json({ message: "조회 중 오류" });
+    console.error("商品詳細取得エラー:", error);
+    res.status(500).json({ message: "商品詳細取得中にエラーが発生しました。" });
   }
 };
 
@@ -125,8 +130,8 @@ export const getProductsByCategory = async (req, res) => {
     const products = await productModel.getProductsByCategory(categoryId, search);
     res.json(products);
   } catch (error) {
-    console.error("카테고리별 상품 조회 오류:", error);
-    res.status(500).json({ message: "상품 조회 중 오류가 발생했습니다." });
+    console.error("カテゴリ別商品取得エラー:", error);
+    res.status(500).json({ message: "商品取得中にエラーが発生しました。" });
   }
 };
 
@@ -136,13 +141,13 @@ export const updateProduct = async (req, res) => {
     const affectedRows = await productModel.updateProduct(id, req.body);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "상품을 찾을 수 없습니다." });
+      return res.status(404).json({ message: "商品が存在しません。" });
     }
 
-    res.json({ message: "상품이 수정되었습니다." });
+    res.json({ message: "商品が修正されました。" });
   } catch (error) {
-    console.error("상품 수정 오류:", error);
-    res.status(500).json({ message: "상품 수정 중 오류가 발생했습니다." });
+    console.error("商品修正エラー:", error);
+    res.status(500).json({ message: "商品修正中にエラーが発生しました。" });
   }
 };
 
@@ -153,12 +158,12 @@ export const updateProduct = async (req, res) => {
     const affectedRows = await productModel.deleteProduct(id);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "상품을 찾을 수 없습니다." });
+      return res.status(404).json({ message: "商品が存在しません。" });
     }
 
-    res.json({ message: "상품이 삭제되었습니다." });
+    res.json({ message: "商品が削除されました。" });
   } catch (error) {
-    console.error("상품 삭제 오류:", error);
-    res.status(500).json({ message: "상품 삭제 중 오류가 발생했습니다." });
+    console.error("商品削除エラー:", error);
+    res.status(500).json({ message: "商品削除中にエラーが発生しました。" });
   }
 };*/

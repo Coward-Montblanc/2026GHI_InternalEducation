@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
+import { signupApi} from "../services/LoginService";
 import { Box, Typography, TextField, Button, Paper, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -71,7 +70,7 @@ function SignupPage() {
     }
 
     try {
-      const response = await axios.post(`${url}/api/users`, {
+      const response = await signupApi({
         login_id: formData.login_id,
         password: formData.password,
         name: formData.name,
