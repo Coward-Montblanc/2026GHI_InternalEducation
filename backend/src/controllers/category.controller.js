@@ -1,4 +1,5 @@
 import * as categoryModel from "../models/category.model.js";
+import response from "../utils/response.js";
 
 // 모든 카테고리 조회
 export const getAllCategories = async (req, res) => {
@@ -7,7 +8,7 @@ export const getAllCategories = async (req, res) => {
     res.json(categories);
   } catch (error) {
     console.error("カテゴリー取得エラー:", error);
-    res.status(500).json({ message: "カテゴリー取得中にエラーが発生しました。" });
+    return response.error(res, "カテゴリー取得中にエラーが発生しました。", 500);
   }
 };
 
@@ -18,13 +19,13 @@ export const getCategoryById = async (req, res) => {
     const category = await categoryModel.getCategoryById(id);
 
     if (!category) {
-      return res.status(404).json({ message: "カテゴリーが存在しません。" });
+      return response.error(res, "カテゴリーが存在しません。", 404);
     }
 
     res.json(category);
   } catch (error) {
     console.error("カテゴリー詳細取得エラー:", error);
-    res.status(500).json({ message: "カテゴリー詳細取得中にエラーが発生しました。" });
+    return response.error(res, "カテゴリー詳細取得中にエラーが発生しました。", 500);
   }
 };
 
@@ -44,7 +45,7 @@ export const createCategory = async (req, res) => {
     });
   } catch (error) {
     console.error("カテゴリー作成エラー:", error);
-    res.status(500).json({ message: "カテゴリー作成中にエラーが発生しました。" });
+    return response.error(res, "カテゴリー作成中にエラーが発生しました。", 500);
   }
 };
 
@@ -55,19 +56,19 @@ export const updateCategory = async (req, res) => {
     const { name } = req.body;
 
     if (!name) {
-      return res.status(400).json({ message: "カテゴリー名は必須です。" });
+      return response.error(res, "カテゴリー名は必須です。", 400);
     }
 
     const affectedRows = await categoryModel.updateCategory(id, name);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "カテゴリーが存在しません。" });
+      return response.error(res, "カテゴリーが存在しません。", 404);
     }
 
     res.json({ message: "カテゴリーが修正されました。" });
   } catch (error) {
     console.error("カテゴリー修正エラー:", error);
-    res.status(500).json({ message: "カテゴリー修正中にエラーが発生しました。" });
+    return response.error(res, "カテゴリー修正中にエラーが発生しました。", 500);
   }
 };
 
@@ -78,12 +79,12 @@ export const deleteCategory = async (req, res) => {
     const affectedRows = await categoryModel.deleteCategory(id);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "カテゴリーが存在しません。" });
+      return response.error(res, "カテゴリーが存在しません。", 404);
     }
 
     res.json({ message: "カテゴリーが非公開になりました。" });
   } catch (error) {
     console.error("カテゴリー非公開エラー:", error);
-    res.status(500).json({ message: "カテゴリー非公開中にエラーが発生しました。" });
+    return response.error(res, "カテゴリー非公開中にエラーが発生しました。", 500);
   }
 };

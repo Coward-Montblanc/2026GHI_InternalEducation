@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 import * as cartModel from "../models/cart.model.js";
-
+import response from "../utils/response.js";
 
 
 export const getCartItems = async (req, res) => {
@@ -8,10 +8,10 @@ export const getCartItems = async (req, res) => {
   
   try {
     const items = await cartModel.getCartItemsByLoginId(login_id);
-    res.status(200).json(items);
+    res.status(200).json(items); //response로 변경해야함.
   } catch (err) {
     console.error("カート取得エラー:", err);
-    res.status(500).json({ message: "データベース取得中にエラーが発生しました。" });
+    return response.error(res, "データベース取得中にエラーが発生しました。", 500);
   }
 };
 
@@ -72,7 +72,7 @@ export const toggleCartItemStatus = async (req, res) => {
     console.log("두 값이 일치하나?:", rows[0].login_id === currentUser);
 
     if (rows[0].login_id !== currentUser) { //회원이 일치하지 않을경우
-      return res.status(403).json({ success: false, message: "本人のカート商品だけを修正できます。" });
+      return response.error(res, "本人のカート商品だけを修正できます。", 403);
     }
 
     await cartModel.toggleCartItem(status, cart_item_id);
@@ -80,6 +80,6 @@ export const toggleCartItemStatus = async (req, res) => {
     res.json({ success: true, message: status === 1 ? "非活性化されました。" : "活性化されました。" });
   } catch (error) {
     console.error("サーバーエラー :", error);
-    res.status(500).json({ success: false, message: error.message });
+    return response.error(res, "サーバーエラー ", 500);
   }
 };

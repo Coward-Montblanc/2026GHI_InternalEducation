@@ -1,5 +1,6 @@
 import express from "express";
 import * as orderController from "../controllers/order.controller.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js"; //로그인 검증 미들웨어 임포트
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ const router = express.Router();
  *                   type: integer
  *                   example: 10
  */
-router.post("/", orderController.createOrder);
+router.post("/", authenticateToken, orderController.createOrder);
 
 /**
  * @swagger
@@ -86,7 +87,7 @@ router.post("/", orderController.createOrder);
  *       404:
  *         description: 주문 없음
  */
-router.get("/:order_id", orderController.getOrder);
+router.get("/:order_id", authenticateToken, orderController.getOrder);
 
 /**
  * @swagger
@@ -117,6 +118,6 @@ router.get("/:order_id", orderController.getOrder);
  *                   items:
  *                     type: object
  */
-router.get("/user/:login_id", orderController.getOrdersByUser);
+router.get("/user/:login_id", authenticateToken, orderController.getOrdersByUser);
 
 export default router;

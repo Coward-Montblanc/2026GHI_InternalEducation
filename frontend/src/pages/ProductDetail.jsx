@@ -9,6 +9,7 @@ import {
   CircularProgress, Stack,
 } from "@mui/material";
 import Footer from "../components/Footer";
+import { storage } from "../utils/storage"; //스토리지 
 
 function ProductDetail() {
   const { id } = useParams();
@@ -71,7 +72,7 @@ function ProductDetail() {
   }
 
   // 로그인 상태 확인
-  const isLoggedIn = !!localStorage.getItem("token");
+  const isLoggedIn = !!storage.get("token");
 
   if (!product) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -174,7 +175,7 @@ function ProductDetail() {
                       return;
                     }
                     try {
-                      const user = JSON.parse(localStorage.getItem("user"));
+                      const user = storage.get("user");
                       const data = await addToCart(user.login_id, id, quantity);
                       if (data.success) {
                         if (window.confirm(`「${product.name}」${quantity}個がカートに追加されました。カートに移動しますか？`)) {

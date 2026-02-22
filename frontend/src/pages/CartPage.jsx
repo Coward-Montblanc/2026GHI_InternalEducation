@@ -9,12 +9,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ReplayIcon from "@mui/icons-material/Replay";
+import { storage } from "../utils/storage"; //스토리지 
 
 function CartPage() {
   const [cartItems, setCartItems] = useState([]);
+  
   const navigate = useNavigate();
   const url = import.meta.env.VITE_API_URL;
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = storage.get("user"); 
 
   const totalPrice = cartItems.reduce((acc, item) => { 
   if (item.status === 0) { return acc + item.price * item.quantity; }
@@ -44,7 +46,7 @@ function CartPage() {
   }, []);
 
   useEffect(() => { //토큰 만료시 리다이렉트
-  const token = localStorage.getItem("token"); //토큰 여부 판별
+  const token = storage.get("token"); //토큰 여부 판별
   if (!token) {
     alert("로그인이 필요한 서비스입니다.");
     navigate("/login");
@@ -67,7 +69,7 @@ function CartPage() {
   };
 
 const handleToggleStatus = async (cartItemId, currentStatus) => {
-  const token = localStorage.getItem("token");
+  const token = storage.get("token");
   if (!token) { //토큰이 발견되지 않을 시 = undefined
     alert("로그인 정보가 없습니다. 다시 로그인해 주세요.");
     return;
@@ -178,7 +180,7 @@ const handleToggleStatus = async (cartItemId, currentStatus) => {
               size="large" 
               sx={{ px: 10 }}
               onClick={() => navigate("/buy", { state: { items: cartItems } })}
-              disabled={cartItems.length === 0}
+              disabled={cartItems.length === 0 || totalPrice === 0} //주문할 상품이 없을 시 비활성화.
             >
               注文
             </Button>

@@ -27,6 +27,16 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   const [showTabs, setShowTabs] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
 
+  const refreshToAllProducts = () => { //카테고리 새로고침 기능 함수
+    setSearchText(""); 
+    setSelectedTab(0);
+    setSelectedCategoryName("カテゴリー");
+    if (onCategoryNameChange) onCategoryNameChange("カテゴリー");
+    if (onCategoryChange) onCategoryChange(null);
+    if (onSearch) onSearch("");
+    setShowTabs(false); // 애니메이션 닫기
+  };
+
   // カテゴリーAPIから取得
   useEffect(() => {
     const fetchCategories = async () => {
@@ -45,31 +55,44 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   };
 
   const handleTabChange = (event, newValue) => {
+    if (selectedTab === 0 && newValue === 0) { //전상품 카테고리에서 다시 전상품 클릭할시 새로고침
+      refreshToAllProducts();
+      return;
+    }
+    if (selectedTab === newValue) { //다른 카테고리에서 같은 카테고리 선택 시 새로고침
+      setShowTabs(false); // 드롭다운 닫기
+      return;
+    }
+
+
     setSelectedTab(newValue);
+
     if (newValue === 0) {
       setSelectedCategoryName("カテゴリー");
+      setSearchText("");
       if (onCategoryNameChange) onCategoryNameChange("カテゴリー");
-      if (onCategoryChange) {
-        onCategoryChange(null);
-      }
-      if (onSearch) {
-        onSearch(""); // 인기상품 해제 시 검색어도 초기화
-      }
+      if (onCategoryChange) { onCategoryChange(null); }
+      if (onSearch) {onSearch(""); /* 인기상품 해제 시 검색어도 초기화 */ }
     } else {
       const selectedCategory = categories[newValue - 1];
       if (selectedCategory) {
         setSelectedCategoryName(selectedCategory.name);
         if (onCategoryNameChange) onCategoryNameChange(selectedCategory.name);
-        if (onCategoryChange) {
-          onCategoryChange(selectedCategory.category_id);
-        }
-        if (onSearch) {
-          onSearch(""); // 일반 카테고리 선택 시 검색어 초기화
-        }
+        if (onCategoryChange) { onCategoryChange(selectedCategory.category_id); }
+        if (onSearch) { onSearch(""); /* 일반 카테고리 선택 시 검색어 초기화 */ }
       }
     }
-    setShowTabs(false);
+    setShowTabs(false); // 드롭다운 닫기
   };
+
+  const handlePopularProducts = () => { //인기상품 탭
+    if (onCategoryNameChange) onCategoryNameChange("人気商品");
+    setSelectedTab(-1);
+    if (onCategoryChange) onCategoryChange(null);
+    if (onSearch) onSearch("人気商品");
+    setShowTabs(false); // 드롭다운 닫기
+  };
+
 
   const handleAllProducts = () => {
     setSelectedCategoryName("カテゴリー");
@@ -131,18 +154,16 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
           カテゴリー
         </Button>
         {/* 인기상품 버튼 */}
-        <Button sx={{ flex: 1 }} onClick={() => {
-          if (onCategoryNameChange) onCategoryNameChange("人気商品");
-          setSelectedTab(0); // 인기상품 클릭 시 탭을 전체상품(0)으로 고정
-          if (onCategoryChange) onCategoryChange(null); // 카테고리 해제를
-          if (onSearch) onSearch("人気商品"); // sql에서 인기상품으로 검색
-        }}>人気商品</Button>
+        <Button sx={{ flex: 1 }} onClick={handlePopularProducts}> {/*인기상품 함수 가져옴*/}
+          人気商品
+        </Button>
         {/* 기타 메뉴 */}
         {menuItems.slice(2).map((item) => (
           <Button key={item} sx={{ flex: 1 }} onClick={() => {
             if (onCategoryNameChange) onCategoryNameChange(item);
             if (item === "イベント") navigate("/event");
             if (item === "お知らせ") navigate("/notice");
+            setShowTabs(false); // 드롭다운 닫기
           }}>
             {item}
           </Button>

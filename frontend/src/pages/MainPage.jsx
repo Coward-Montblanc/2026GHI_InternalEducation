@@ -10,6 +10,7 @@ function MainPage() {
   const [selectedCategoryName, setSelectedCategoryName] = useState("カテゴリー");
 
   // Category에서 검색어, 카테고리명, 카테고리id 모두 관리
+  
   return (
     <>
       <Banner />
