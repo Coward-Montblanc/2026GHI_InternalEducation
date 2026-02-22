@@ -4,7 +4,7 @@ import api from "../api/axios";
 export const getCart = async (loginId) => {
   try {
     const { data } = await api.get(`/cart/${loginId}`);
-    return data;
+    return data.items || []; //데이터 배열로 반환하게
   } catch (error) {
     console.error("カートリスト取得エラー:", error);
     throw error;

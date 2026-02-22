@@ -22,7 +22,7 @@ export const getProductViewUp = async (req, res) => {
       await productModel.incrementView(id);
     }
     const product = await productModel.getProductById(id);
-    if (!product) return res.status(404).json({ message: "商品が存在しません。" });
+    if (!product) return response.error(res , "商品が存在しません。" , 404);
     res.json(product);
   } catch (error) {
     console.error("商品詳細取得エラー:", error); 
@@ -106,9 +106,9 @@ export const getProductById = async (req, res) => {
     const { id } = req.params;
     const product = await productModel.getProductById(id); // 모델에서 이미지를 가져옴
     
-    if (!product) return res.status(404).json({ message: "商品が存在しません。" });
+    if (!product) return response.error(res , "商品が存在しません。" , 404);
 
-    const response = {
+    const response_p = {
       product,
       mainImage: product.images.find(img => img.role === 'MAIN')?.image_url || null,
       subImages: product.images.filter(img => img.role === 'SUB').map(img => img.image_url),
@@ -116,7 +116,7 @@ export const getProductById = async (req, res) => {
       view: product.view // 조회수 추가
     };
 
-    res.json(response);
+    res.json(response_p);
   } catch (error) {
     console.error("商品詳細取得エラー:", error);
     return response.error(res , "商品詳細取得中にエラーが発生しました。" , 500);
@@ -141,7 +141,7 @@ export const updateProduct = async (req, res) => {
     const affectedRows = await productModel.updateProduct(id, req.body);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "商品が存在しません。" });
+      return response.error(res , "商品が存在しません。" , 404);
     }
 
     res.json({ message: "商品が修正されました。" });

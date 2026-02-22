@@ -44,10 +44,10 @@ export const createOrder = async (req, res) => {
         return response.error(res , `商品ID ${item.product_id}の在庫が不足しているため、注文に失敗しました。` , 400);
       }
     }
-    res.status(201).json({ success: true, order_id }); //response로 변경해야함.
+    return response.success(res, { order_id }, 201); //주문 기능 구현 후 확인해야함.
   } catch (err) {
     console.error("注文作成エラー:", err);
-    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    return response.error(res , "サーバーエラーが発生しました。" , 500);
   }
 };
 
@@ -58,12 +58,12 @@ export const getOrder = async (req, res) => {
     const order = await orderModel.getOrderWithItems(order_id);
     // order가 없거나, order.items가 없거나, 빈 배열이면, 범위를 더 넓혀서 404 반환
     if (!order || !order.items || order.items.length === 0) {
-      return res.status(404).json({ success: false, message: "注文が存在しません。" });
+      return response.error(res , "注文が存在しません。" , 404);
     }
     res.json({ success: true, order });
   } catch (err) {
     console.error("주문 상세 조회 에러:", err);
-    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    return response.error(res , "サーバーエラーが発生しました。" , 500);
   }
 };
 
@@ -74,6 +74,6 @@ export const getOrdersByUser = async (req, res) => {
     const orders = await orderModel.getOrdersByUser(login_id);
     res.json({ success: true, orders });
   } catch (err) {
-    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    return response.error(res , "サーバーエラーが発生しました。" , 500);
   }
 };

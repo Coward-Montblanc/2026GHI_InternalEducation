@@ -35,14 +35,11 @@ export const createCategory = async (req, res) => {
     const { name } = req.body;
     
     if (!name) {
-      return res.status(400).json({ message: "カテゴリー名は必須です。" });
+      return response.error(res, "カテゴリー名は必須です。", 400);
     }
 
     const categoryId = await categoryModel.createCategory(name);
-    res.status(201).json({
-      message: "カテゴリーが作成されました。",
-      category_id: categoryId,
-    });
+    return response.success(res, { category_id: categoryId }, "カテゴリーが作成されました。", 201);
   } catch (error) {
     console.error("カテゴリー作成エラー:", error);
     return response.error(res, "カテゴリー作成中にエラーが発生しました。", 500);
