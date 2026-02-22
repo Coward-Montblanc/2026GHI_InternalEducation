@@ -8,7 +8,7 @@ export const getCartItems = async (req, res) => {
   
   try {
     const items = await cartModel.getCartItemsByLoginId(login_id);
-    res.status(200).json(items); //response로 변경해야함.
+    return response.success(res, { items: items }, 200);
   } catch (err) {
     console.error("カート取得エラー:", err);
     return response.error(res, "データベース取得中にエラーが発生しました。", 500);
@@ -22,11 +22,10 @@ export const addToCart = async (req, res) => {
     const cartId = await cartModel.getOrCreateCart(login_id); //장바구니 ID 가져오기 (없으면 자동생성)
     
     await cartModel.addOrUpdateItem(cartId, product_id, quantity); //아이템 추가
-    
-    res.status(200).json({ success: true, message: "カートに追加されました。" });
+    return response.success(res, {}, 200);
   } catch (err) {
     console.error("カート追加エラー:", err);
-    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    return response.error(res, "サーバーエラーが発生しました。", 500);
   }
 };
 
@@ -37,15 +36,15 @@ export const removeCartItem = async (req, res) => { //장바구니 내 상품 �
     [cart_item_id]
   );
   if (item.login_id !== current_user) { //일치하지 않을 경우
-    return res.status(403).send("商品とユーザーIDが一致しません");
+    return response.error(res, "商品とユーザーIDが一致しません。", 403);
   }
 
   try {
     await cartModel.deleteCartItem(cart_item_id);
-    res.status(200).json({ success: true, message: "商品が削除されました。" });
+    return response.success(res, {}, "商品が削除されました。", 200);
   } catch (err) {
     console.error("削除エラー:", err);
-    res.status(500).json({ success: false, message: "削除中にサーバーエラーが発生しました。" });
+    return response.error(res, "削除中にサーバーエラーが発生しました。", 500);
   }
 };
 

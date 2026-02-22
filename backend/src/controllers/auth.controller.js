@@ -35,8 +35,6 @@ export const login = async (req, res) => {
     console.error("ログインエラー:", error);
     return response.error(res, "ログイン処理中にサーバーエラーが発生しました。");
   }
-  
 
-  res.json({ user, token });
   
 };
