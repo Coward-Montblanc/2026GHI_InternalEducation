@@ -1,5 +1,6 @@
 import * as orderModel from "../models/order.model.js";
 import db from "../config/db.js";
+import response from "../utils/response.js";
 
 // 주문 생성
 export const createOrder = async (req, res) => {
@@ -7,7 +8,7 @@ export const createOrder = async (req, res) => {
     const { login_id, items, total_price, receiver_name, address, address_detail, 
             phone, delivery_request } = req.body;
     if (!login_id || !Array.isArray(items) || items.length === 0 || !receiver_name || !address || !phone) {
-      return res.status(400).json({ success: false, message: "必要な情報が不足しています。" });
+      return response.error(res , "必要な情報が不足しています。" , 400);
     }
 
     // 1. 주문 생성
@@ -30,7 +31,7 @@ export const createOrder = async (req, res) => {
       );
       const stock = stockRows[0]?.stock ?? null;
       if (stock === null || stock < item.quantity || stock === 0) {
-        return res.status(400).json({ success: false, message: `商品ID ${item.product_id}の在庫が不足しています。` });
+        return response.error(res , `商品ID ${item.product_id}の在庫が不足しています。` , 400);
       }
       await orderModel.createOrderItem(order_id, item.product_id, item.quantity, item.price);
 
@@ -40,10 +41,10 @@ export const createOrder = async (req, res) => {
         [item.quantity, item.product_id, item.quantity]
       );
       if (updateResult.affectedRows === 0) {
-        return res.status(400).json({ success: false, message: `商品ID ${item.product_id}の在庫が不足しているため、注文に失敗しました。` });
+        return response.error(res , `商品ID ${item.product_id}の在庫が不足しているため、注文に失敗しました。` , 400);
       }
     }
-    res.status(201).json({ success: true, order_id });
+    res.status(201).json({ success: true, order_id }); //response로 변경해야함.
   } catch (err) {
     console.error("注文作成エラー:", err);
     res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });

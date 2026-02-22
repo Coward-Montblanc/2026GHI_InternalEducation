@@ -17,7 +17,7 @@ export const loginApi = async (loginId, password) => {
 //회원가입
 export const signupApi = async (userData) => {
   try {
-    const { data } = await api.post("/users", userData);
+    const data = await api.post("/users", userData);
     return data;
   } catch (error) {
     console.error("会員登録エラー:", error);

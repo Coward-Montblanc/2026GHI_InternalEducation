@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 import * as productModel from "../models/product.model.js";
-
+import response from "../utils/response.js";
 
 // 인기상품 조회 (view 10 이상) 프론트엔드로는 아직 미구현
 export const getRankProducts = async (req, res) => {
@@ -8,7 +8,7 @@ export const getRankProducts = async (req, res) => {
     const products = await productModel.getRankProducts();
     res.json(products);
   } catch (err) {
-    res.status(500).json({ message: "人気商品取得エラー" });
+    return response.error(res , "人気商品取得エラー" , 500);
   }
 };
 
@@ -26,7 +26,7 @@ export const getProductViewUp = async (req, res) => {
     res.json(product);
   } catch (error) {
     console.error("商品詳細取得エラー:", error); 
-    res.status(500).json({ message: "商品詳細取得エラーが発生しました。" });
+    return response.error(res , "商品詳細取得エラーが発生しました。" , 500);
   }
 };
 
@@ -40,12 +40,12 @@ export const createProduct = async (req, res) => {
 
   // 이미지 파일 유무 확인
   if (!files || files.length === 0) {
-    return res.status(400).json({ success: false, message: "画像ファイルがありません。" });
+    return response.error(res , "画像ファイルがありません。" , 400);
   }
 
   // 필수 텍스트 데이터가 비어있는지 확인
   if (!category_id || !name || !price) {
-     return res.status(400).json({ success: false, message: "必須情報が不足しています。" });
+    return response.error(res , "必須情報が不足しています。" , 400);
   }
 
   const connection = await db.getConnection(); //이미지가 없을 경우를 대비한 트랜잭션 커넥션
@@ -76,7 +76,7 @@ export const createProduct = async (req, res) => {
     await connection.commit(); //트랜잭션 끝. 모든 작업이 성공하면 DB반영
 
     // 성공 응답 (프론트엔드의 res.data.success 조건과 일치시킴)
-    res.status(201).json({ 
+    res.status(201).json({  //response로 변경해야함.
       success: true, 
       message: "商品が正常に登録されました。",
       productId: productId 
@@ -84,7 +84,7 @@ export const createProduct = async (req, res) => {
 
   } catch (error) {
     console.error("登録エラー詳細:", error);
-    res.status(500).json({ success: false, message: "サーバー保存中にエラーが発生しました。" });
+    return response.error(res , "サーバー保存中にエラーが発生しました。" , 500);
   }
 };
 
@@ -97,7 +97,7 @@ export const getAllProducts = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("商品取得エラー:", error);
-    res.status(500).json({ message: "商品取得中にエラーが発生しました。" });
+    return response.error(res , "商品取得中にエラーが発生しました。" , 500);
   }
 };
 
@@ -119,7 +119,7 @@ export const getProductById = async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error("商品詳細取得エラー:", error);
-    res.status(500).json({ message: "商品詳細取得中にエラーが発生しました。" });
+    return response.error(res , "商品詳細取得中にエラーが発生しました。" , 500);
   }
 };
 
@@ -131,7 +131,7 @@ export const getProductsByCategory = async (req, res) => {
     res.json(products);
   } catch (error) {
     console.error("カテゴリ別商品取得エラー:", error);
-    res.status(500).json({ message: "商品取得中にエラーが発生しました。" });
+    return response.error(res , "商品取得中にエラーが発生しました。" , 500);
   }
 };
 
@@ -147,7 +147,7 @@ export const updateProduct = async (req, res) => {
     res.json({ message: "商品が修正されました。" });
   } catch (error) {
     console.error("商品修正エラー:", error);
-    res.status(500).json({ message: "商品修正中にエラーが発生しました。" });
+    return response.error(res , "商品修正エラーが発生しました。" , 500);
   }
 };
 
