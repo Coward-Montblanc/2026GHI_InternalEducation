@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signupApi } from "../services/LoginService";
+import { fetchJapaneseAddress } from "../utils/address"; //주소 찾기 API
+
 
 export const useSignup = () => {
   const navigate = useNavigate();
@@ -23,20 +25,14 @@ export const useSignup = () => {
   const [open, setOpen] = useState(false);
 
 
-  const fetchJapaneseAddress = async (zipCode) => { //일본 우편번호 검색하는 함수
-    const cleanZip = zipCode.replace('-', ''); //7자리 숫자로만 우편번호 검색
-    if (cleanZip.length !== 7) return; 
-
+  const Address = async () => {
     try {
-        const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${cleanZip}`); //api주소
-        const data = await response.json();
-        if (data.results) {
-            const res = data.results[0];
-            const fullAddr = `${res.address1}${res.address2}${res.address3}`;
+        const result = await fetchJapaneseAddress(formData.zip_code);
+        if (result) {
             setFormData(prev => ({
                 ...prev,
-                address: fullAddr,
-                zip_code: cleanZip
+                address: result.address,
+                zip_code: result.zip_code
             }));
         } else {
             alert("該当する住所が見つかりませんでした。");
@@ -121,7 +117,7 @@ export const useSignup = () => {
   customDomain, setCustomDomain, 
   open, setOpen,
   handleChange, 
-  fetchJapaneseAddress,
+  Address,
   handleSignup
     };
 };

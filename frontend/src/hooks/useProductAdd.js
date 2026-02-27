@@ -15,7 +15,7 @@ export const useProductAdd = () => {
     });
 
     const [selectedFiles, setSelectedFiles] = useState([]);
-  const [setLoading] = useState(true);
+    const [loading ,setLoading] = useState(true);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -36,7 +36,7 @@ export const useProductAdd = () => {
   
   const handleChange = (e) => {
     if(e.target.files){
-      const newfile = Array.from(e.target.file);
+      const newfile = Array.from(e.target.files);
     }
     setProduct({ ...product, [e.target.name]: e.target.value });
   };

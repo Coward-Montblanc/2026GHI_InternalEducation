@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createOrder } from "../services/OrderService";
 import { useAuth } from "../contexts/AuthContext";
+import { fetchJapaneseAddress } from "../utils/address"; //주소 찾기 API
 
 export const useBuy = () => {
     const navigate = useNavigate();
@@ -31,14 +32,13 @@ export const useBuy = () => {
 		setError("");
 		setSuccess(false);
 
-		// 구매 데이터
-		const formData = new FormData(e.target);
-		const receiver_name = formData.get("receiver_name");
-		const address = formData.get("address");
-		const address_detail = formData.get("address_detail");
-		const phone = formData.get("phone");
-		const delivery_request = deliveryRequest === "直接入力" ? deliveryRequestText : deliveryRequest;
-		const payment_method = paymentMethod;
+		const { 
+        receiver_name, 
+        zip_code, 
+        address, 
+        address_detail, 
+        phone 
+    	} = formData;
 
 		
 		if (!user) {
@@ -81,20 +81,14 @@ export const useBuy = () => {
 
 	
 
-	const fetchJapaneseAddress = async (zipCode) => { //일본 우편번호 검색하는 함수
-    const cleanZip = zipCode.replace('-', ''); //7자리 숫자로만 우편번호 검색
-    if (cleanZip.length !== 7) return; 
-
+	const Address = async () => {
     try {
-        const response = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${cleanZip}`); //api주소
-        const data = await response.json();
-        if (data.results) {
-            const res = data.results[0];
-            const fullAddr = `${res.address1}${res.address2}${res.address3}`;
+        const result = await fetchJapaneseAddress(formData.zip_code);
+        if (result) {
             setFormData(prev => ({
                 ...prev,
-                address: fullAddr,
-                zip_code: cleanZip
+                address: result.address,
+                zip_code: result.zip_code
             }));
         } else {
             alert("該当する住所が見つかりませんでした。");
@@ -138,6 +132,6 @@ export const useBuy = () => {
     deliveryRequest, setDeliveryRequest, deliveryRequestText,
     setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
 	paymentMethod, setPaymentMethod, open ,setOpen, formData, handleChange,
-	fetchJapaneseAddress
+	Address
     };
 };

@@ -57,7 +57,7 @@ export const useProductDetail = () => {
         }
       }
     } catch (err) {
-      alert(data.message || "カート追加中にエラーが発生しました");
+      alert(error.response?.data?.message || "カート追加中にエラーが発生しました");
     }
   };
 

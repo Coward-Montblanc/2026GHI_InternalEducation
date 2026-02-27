@@ -8,7 +8,7 @@ function SignupPage() {
   const {
     formData, emailId, setEmailId, emailDomain, setEmailDomain,
     customDomain, setCustomDomain, open, setOpen,
-    handleChange, fetchJapaneseAddress, handleSignup 
+    handleChange, Address, handleSignup 
   } = useSignup(); //임포트해서 리턴한 객체들 가져옴
   const navigate = useNavigate();
   
@@ -104,7 +104,7 @@ function SignupPage() {
 									placeholder="1234567"
       							/>
       							<Button variant="contained"
-										onClick={() => fetchJapaneseAddress(formData.zip_code)}>
+										onClick={() => Address(formData.zip_code)}>
         							住所検索
       							</Button>
     </Box>

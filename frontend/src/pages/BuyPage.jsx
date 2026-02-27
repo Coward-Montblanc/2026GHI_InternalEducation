@@ -17,7 +17,7 @@ function BuyPage() {
     deliveryRequest, setDeliveryRequest, deliveryRequestText,
     setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
 	paymentMethod, setPaymentMethod, open ,setOpen, formData, handleChange,
-	fetchJapaneseAddress
+	Address
   	} = useBuy(); //임포트해서 리턴한 객체들 가져옴
 
 
@@ -79,7 +79,7 @@ function BuyPage() {
 									placeholder="1234567"
       							/>
       							<Button variant="contained"
-										onClick={() => fetchJapaneseAddress(formData.zip_code)}>
+										onClick={() => Address(formData.zip_code)}>
         							住所検索
       							</Button>
     							</Box>
