@@ -1,98 +1,17 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signupApi} from "../services/LoginService";
-import { Box, Typography, TextField, Button, Paper, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
+import {  Modal, Box, Typography, TextField, Button, Paper, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-
+import { useSignup } from "../hooks/useSignup";
 
 
 function SignupPage() {
+  const {
+    formData, emailId, setEmailId, emailDomain, setEmailDomain,
+    customDomain, setCustomDomain, open, setOpen,
+    handleChange, fetchJapaneseAddress, handleSignup 
+  } = useSignup(); //임포트해서 리턴한 객체들 가져옴
   const navigate = useNavigate();
-  // 入力データを保存する状態(State)生成
-  const [formData, setFormData] = useState({
-    login_id: "",
-    password: "",
-    passwordConfirm: "",
-    name: "",
-    email: "",
-    phone: "",
-    zip_code: "",
-    address: "",
-    address_detail: "",
-    role: "USER"
-  });
-
-  const [emailId, setEmailId] = useState("");
-  const [emailDomain, setEmailDomain] = useState("naver.com");
-  const [customDomain, setCustomDomain] = useState(""); // 직접 입력한 도메인 저장용
-
-  // 2. 정규식 제약 조건 (영문+숫자 혼합, 4자 이상)
-  const validateFormat = (value) => {
-    const regex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/;
-    return regex.test(value);
-  };
-
-  // 入力値変更ハンドラー
-  const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value });
-  };
-
-  // 登録ボタンクリック時にバックエンド呼び出し
-  const handleSignup = async () => {
-    const finalDomain = emailDomain === "custom" ? customDomain : emailDomain; //이메일 도메인부분 직접 입력을 클릭하는지에 따라 바뀜.
-    const fullEmail = `${emailId}@${finalDomain}`;
-    
-    if (!emailId || !finalDomain) { 
-      alert("ドメインを選択してください。");
-      return;
-    }
-    if (emailDomain === "custom" && !customDomain) { //도메인을 비우고 가입할 경우
-      alert("ドメインを選択または入力してください。");
-      return;
-    }
-
-    if (!validateFormat(formData.login_id)) { //아이디,비밀번호 제약
-      alert("IDは英文と数字を含む4文字以上にしてください。");
-      return;
-    }
-    if (!validateFormat(formData.password)) {
-      alert("パスワードは英文と数字を含む4文字以上にしてください。");
-      return;
-    }
-
-    if (formData.password !== formData.passwordConfirm) {
-      alert("パスワードが一致しません。");
-      return;
-    }
-    if (!emailId) {
-      alert("メールアドレスを入力してください。");
-      return;
-    }
-
-    try {
-      const response = await signupApi({
-        login_id: formData.login_id,
-        password: formData.password,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        zip_code: formData.zip_code,
-        address: formData.address,
-        address_detail: formData.address_detail,
-        role: formData.role,
-        email: fullEmail
-      });
-
-      if (response.status === 201) {
-        alert("会員登録に成功しました。");
-        navigate("/"); // メイン画面に移動
-      }
-    } catch (error) {
-      console.error("会員登録エラー:", error);
-      alert(error.response?.data?.message || "サーバーエラーが発生しました。");
-    }
-  };
-
+  
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" }}>
       <Paper elevation={3} sx={{ width: 400, p: 3 }}>
@@ -107,7 +26,7 @@ function SignupPage() {
         </Box>
         <Typography variant="h5" align="center" gutterBottom>会員登録</Typography>
 
-        <TextField fullWidth label="名前*" name="name" margin="normal" onChange={handleChange} />
+        <TextField fullWidth label="Name*" name="name" margin="normal" onChange={handleChange} />
         <TextField
           fullWidth
           label="ID*"
@@ -175,9 +94,45 @@ function SignupPage() {
   )}
         </Box>
         <TextField fullWidth label="電話番号*" name="phone" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="郵便番号" name="zip_code" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="住所" name="address" margin="normal" onChange={handleChange} />
-        <TextField fullWidth label="詳細住所" name="address_detail" margin="normal" onChange={handleChange} />
+        {/* 우편번호와 검색 버튼 */}
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
+      <TextField 
+        							label="郵便番号" 
+        							name="zip_code" 
+        							value={formData.zip_code || ''}
+									onChange={handleChange}
+									placeholder="1234567"
+      							/>
+      							<Button variant="contained"
+										onClick={() => fetchJapaneseAddress(formData.zip_code)}>
+        							住所検索
+      							</Button>
+    </Box>
+
+    <TextField 
+      fullWidth 
+      label="住所" 
+      name="address" 
+      value={formData.address || ''} 
+      margin="normal" 
+      InputProps={{ readOnly: true }} 
+    />
+
+    <TextField 
+      fullWidth 
+      label="詳細住所" 
+      name="address_detail" 
+      margin="normal" 
+      onChange={handleChange} 
+    />
+
+    <Modal open={open} onClose={() => setOpen(false)}>
+      <Box sx={{ 
+        position: 'absolute', top: '50%', left: '50%', 
+        transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 1 
+      }}>
+      </Box>
+    </Modal>
 
         <Button fullWidth variant="contained" size="large" sx={{ mt: 3 }} onClick={handleSignup}>
           登録する

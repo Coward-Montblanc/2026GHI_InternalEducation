@@ -64,7 +64,6 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
       return;
     }
 
-
     setSelectedTab(newValue);
 
     if (newValue === 0) {
