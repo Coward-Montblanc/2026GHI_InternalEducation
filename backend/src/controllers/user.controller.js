@@ -22,7 +22,7 @@ export async function createUser(req, res) {
   
   if(!regex.test(login_id)){ return response.error(res, "IDは英字と数字を含む4文字以上である必要があります。", 400);}
   if(!regex.test(password)){ return response.error(res, "パスワードは英字と数字を含む4文字以上である必要があります。", 400);}
-  if (!email.includes('@')) { response.error(res, "有効なメール形式ではありません。", 400);}  //이메일에 @필수
+  if (!email.includes('@')) { return response.error(res, "有効なメール形式ではありません。", 400);}  //이메일에 @필수
 
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);

@@ -14,6 +14,7 @@ export const loginApi = async (loginId, password) => {
   }
 };
 
+
 //회원가입
 export const signupApi = async (userData) => {
   try {

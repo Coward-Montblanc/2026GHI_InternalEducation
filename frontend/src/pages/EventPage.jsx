@@ -4,7 +4,7 @@ import { CircularProgress, Box } from "@mui/material";
 
 function EventPage() {
 	const [loading, setLoading] = useState(true);
-	const [events, setEvents] = useState([]); //아직
+	const [events, setEvents] = useState([]); 
 
 	useEffect(() => { //로딩 처리
 		setLoading(true);

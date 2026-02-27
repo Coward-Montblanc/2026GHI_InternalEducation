@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import {
-	Box, Typography,
+	Modal, Box, Typography,
 	Button, TextField,
 	Paper, Divider,
 	Stack, Alert,
@@ -11,95 +9,17 @@ import {
 	InputLabel, Select,
 	MenuItem
 } from "@mui/material";
-import { useAuth } from "../contexts/AuthContext";
-import { createOrder } from "../services/OrderService";
+import { useBuy } from "../hooks/useBuy";
 
 function BuyPage() {
-	const navigate = useNavigate();
-	const location = useLocation();
-	const { user } = useAuth();
-	
-	// BuyService에서 항상 items 배열로 넘기도록 통일
-	const { items = [] } = location.state || {};
-	
-	const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
-	const [error, setError] = useState("");
-	const [success, setSuccess] = useState(false);
-	const [deliveryRequest, setDeliveryRequest] = useState("");
-	const [deliveryRequestText, setDeliveryRequestText] = useState("");
+	const {
+    url, items, success, error,
+    deliveryRequest, setDeliveryRequest, deliveryRequestText,
+    setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
+	paymentMethod, setPaymentMethod, open ,setOpen, formData, handleChange,
+	Address
+  	} = useBuy(); //임포트해서 리턴한 객체들 가져옴
 
-	const handleOrder = async (e) => {
-		e.preventDefault();
-		setError("");
-		setSuccess(false);
-
-		// 구매 데이터
-		const formData = new FormData(e.target);
-		const receiver_name = formData.get("receiver_name");
-		const address = formData.get("address");
-		const address_detail = formData.get("address_detail");
-		const phone = formData.get("phone");
-		const delivery_request = deliveryRequest === "直接入力" ? deliveryRequestText : deliveryRequest;
-		const payment_method = paymentMethod;
-
-		if (!user) {
-			setError("ログインが必要です。");
-			return;
-		}
-		if (!receiver_name || !address || !phone || !payment_method) {
-			setError("必須情報をすべて入力してください。");
-			return;
-		}
-
-		const total_price = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
-		try {
-			const res = await createOrder({
-				login_id: user.login_id || user.id || user.username,
-				items: items.map(item => ({
-					product_id: item.product_id,
-					price: item.price,
-					quantity: item.quantity
-				})),
-				total_price,
-				receiver_name,
-				address,
-				address_detail,
-				phone,
-				delivery_request,
-				payment_method
-			});
-			if (res.success) {
-				setSuccess(true);
-				setTimeout(() => navigate("/"), 5000); // 5초 뒤에 홈으로 이동
-			} else {
-				setError("注文に失敗しました。もう一度お試しください。");
-			}
-		} catch (err) {
-			setError(err.response?.data?.message || "注文処理中にエラーが発生しました。");
-		}
-	};
-
-	const deliveryOptions = [
-		"選択しない",
-		"警備員に渡してください。",
-		"チャイムを鳴らさないでください。",
-		"直接受け取りたいです。",
-		"宅配ボックスに入れてください。",
-		"犬が吠えます。注意してください。",
-		"直接入力"
-
-	];
-	const paymentOptions = [
-		"クレジットカード",
-		"銀行振込",
-		"PayPay",
-		"PayPal",
-		"コンビニ支払い",
-		"アマゾンペイ",
-		"楽天ペイ"
-	];
-	const [paymentMethod, setPaymentMethod] = useState("");
 
 	return (
 		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto" }}>
@@ -147,23 +67,55 @@ function BuyPage() {
 									name="receiver_name"
 									required
 									fullWidth
+									value={formData.receiver_name} //폼데이터 저장
+        							onChange={handleChange}
 								/>
-								<TextField
-									label="住所"
-									name="address"
-									required
-									fullWidth
-								/>
-								<TextField
-									label="詳細住所"
-									name="address_detail"
-									fullWidth
-								/>
+								<Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
+      							<TextField 
+        							label="郵便番号" 
+        							name="zip_code" 
+        							value={formData.zip_code || ''}
+									onChange={handleChange}
+									placeholder="1234567"
+      							/>
+      							<Button variant="contained"
+										onClick={() => Address(formData.zip_code)}>
+        							住所検索
+      							</Button>
+    							</Box>
+						<TextField 
+      					  fullWidth 
+      					  label="住所" 
+      					  name="address" 
+      					  value={formData.address || ''} 
+      					  margin="normal" 
+      					  InputProps={{ readOnly: true }} 
+    					/>
+
+    					<TextField 
+      					  fullWidth 
+      					  label="詳細住所" 
+      					  name="address_detail" 
+						  value={formData.address_detail}
+      					  margin="normal" 
+      					  onChange={handleChange} 
+    					/>
+
+    					<Modal open={open} onClose={() => setOpen(false)}>
+      					<Box sx={{ 
+        					position: 'absolute', top: '50%', left: '50%', 
+        					transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 1 
+      					}}>
+        					
+      					</Box>
+    					</Modal>
 								<TextField
 									label="連絡先"
 									name="phone"
 									required
 									fullWidth
+									value={formData.phone}         
+        							onChange={handleChange}
 								/>
 							</Stack>
 						</Paper>

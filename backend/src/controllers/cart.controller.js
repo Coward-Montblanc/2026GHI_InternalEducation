@@ -8,7 +8,7 @@ export const getCartItems = async (req, res) => {
   
   try {
     const items = await cartModel.getCartItemsByLoginId(login_id);
-    return response.success(res, { items: items }, 200);
+    return response.success(res, { items: items }, "장바구니 조회 성공", 200);
   } catch (err) {
     console.error("カート取得エラー:", err);
     return response.error(res, "データベース取得中にエラーが発生しました。", 500);
