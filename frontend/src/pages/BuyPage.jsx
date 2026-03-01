@@ -3,60 +3,45 @@ import {
 	Button, TextField,
 	Paper, Divider,
 	Stack, Alert,
-	Table, TableHead,
-	TableRow, TableCell,
-	TableBody, FormControl,
+	FormControl,
 	InputLabel, Select,
-	MenuItem
+	MenuItem,
+	CircularProgress
 } from "@mui/material";
 import { useBuy } from "../hooks/useBuy";
+import OrderList from "../components/OrderList";
 
 function BuyPage() {
 	const {
-    url, items, success, error,
-    deliveryRequest, setDeliveryRequest, deliveryRequestText,
-    setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
-	paymentMethod, setPaymentMethod, open ,setOpen, formData, handleChange,
-	Address
-  	} = useBuy(); //임포트해서 리턴한 객체들 가져옴
+		url, items, error, isSubmitting,
+		deliveryRequest, setDeliveryRequest, deliveryRequestText,
+		setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
+		paymentMethod, setPaymentMethod, open, setOpen, formData, handleChange,
+		Address, setFormData
+	} = useBuy();
 
-
-	return (
-		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto" }}>
+	return ( //로딩 오버레이
+		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto", position: "relative" }}>
+			{isSubmitting && (
+				<Box
+					sx={{
+						position: "fixed",
+						top: 0, left: 0, right: 0, bottom: 0, //꽉차게
+						display: "flex", alignItems: "center", justifyContent: "center",
+						bgcolor: "rgba(255,255,255,0.8)",
+						zIndex: 9999, //맨 위에 표시
+					}}
+				>
+					<CircularProgress size={60} />
+				</Box>
+			)}
 			<Stack spacing={4}>
 				{/* 상품 정보 상자 */}
-				<Paper sx={{ p: 3 }} elevation={4}>
-					<Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>購入商品一覧</Typography>
-					<Table sx={{ minWidth: 650 }}>
-						<TableHead>
-							<TableRow sx={{ background: '#f5f5f5' }}>
-								<TableCell align="center">商品写真</TableCell>
-								<TableCell align="center">商品名</TableCell>
-								<TableCell align="center">数量</TableCell>
-								<TableCell align="center">価格</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{items.map((item) => (
-								<TableRow key={item.cart_item_id || item.product_id}>
-									<TableCell align="center">
-										<img src={`${url}${item.image_url}`} alt={item.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
-									</TableCell>
-									<TableCell>{item.name}</TableCell>
-									<TableCell align="center">{item.quantity}</TableCell>
-									<TableCell align="right">{(item.price * item.quantity).toLocaleString()}円</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-					<Box sx={{ textAlign: 'right', mt: 10 }}>
-						<Typography variant="h5">総支払金額</Typography>
-						<Typography variant="h4"><b>{items.reduce((acc, item) => acc + item.price * item.quantity, 0).toLocaleString()}円</b></Typography> 
-					</Box>
-				</Paper>
+					<OrderList items={items} url={url} />
 
 				<form onSubmit={handleOrder}>
 					<Stack spacing={4}>
+						{error && <Alert severity="error">{error}</Alert>}
 						{/* 배송지 정보 입력 상자 */}
 						<Paper sx={{ p: 4 }} elevation={2}>
 							<Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>配送先</Typography>
@@ -73,7 +58,8 @@ function BuyPage() {
 								<Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
       							<TextField 
         							label="郵便番号" 
-        							name="zip_code" 
+        							name="zip_code"
+									required 
         							value={formData.zip_code || ''}
 									onChange={handleChange}
 									placeholder="1234567"
@@ -87,6 +73,7 @@ function BuyPage() {
       					  fullWidth 
       					  label="住所" 
       					  name="address" 
+						  required
       					  value={formData.address || ''} 
       					  margin="normal" 
       					  InputProps={{ readOnly: true }} 
@@ -163,7 +150,11 @@ function BuyPage() {
 									id="payment-method-select"
 									value={paymentMethod}
 									label="支払い方法"
-									onChange={e => setPaymentMethod(e.target.value)}
+									required
+									onChange={e => {
+										setPaymentMethod(e.target.value);
+										setFormData({ ...formData, payment_method: e.target.value });
+									}}
 								>
 									{paymentOptions.map(option => (
 										<MenuItem key={option} value={option}>{option}</MenuItem>
@@ -172,11 +163,17 @@ function BuyPage() {
 							</FormControl>
 						</Paper>
 
-						<Button type="submit" variant="contained" size="large" color="primary" fullWidth sx={{ mt: 2 }}>
+						<Button
+							type="submit"
+							variant="contained"
+							size="large"
+							color="primary"
+							fullWidth
+							sx={{ mt: 2 }}
+							disabled={isSubmitting}
+						>
 							支払い
 						</Button>
-						
-						{success && <Alert severity="success" sx={{ mb: 2 }}>注文が完了しました！もうすぐホームに戻ります。</Alert>}
 					</Stack>
 				</form>
 			</Stack>

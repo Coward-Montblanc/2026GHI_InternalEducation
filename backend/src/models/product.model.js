@@ -4,8 +4,11 @@ import db from "../config/db.js";
   // 인기상품 조회 (view 30 이상)
 export const getRankProducts = async () => {
   const [rows] = await db.query(
-    "SELECT * FROM products WHERE status = 0 AND (view >= 30 OR name LIKE '%人気商品%') ORDER BY view DESC"
-    //뷰 30 + 이름에 '인기상품' 포함된 것까지 조회하도록 수정
+    `SELECT p.*,
+      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 'MAIN' LIMIT 1) as main_image
+     FROM products p
+     WHERE p.status = 0 AND (p.view >= 30 OR p.name LIKE '%人気商品%')
+     ORDER BY p.view DESC`
   );
   return rows;
 };

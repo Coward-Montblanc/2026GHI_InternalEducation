@@ -13,7 +13,8 @@ export const useBuy = () => {
         zip_code: "",
         address: "",
         address_detail: "",
-        phone: ""
+        phone: "",
+		payment_method: ""
     });
 
 	// BuyService에서 항상 items 배열로 넘기도록 통일
@@ -25,32 +26,35 @@ export const useBuy = () => {
 	const [deliveryRequest, setDeliveryRequest] = useState("");
 	const [deliveryRequestText, setDeliveryRequestText] = useState("");
 	const [open, setOpen] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	
 	const handleOrder = async (e) => {
 		e.preventDefault();
 		setError("");
 		setSuccess(false);
+		setIsSubmitting(true);
 
-		const { 
-        receiver_name, 
-        zip_code, 
-        address, 
-        address_detail, 
-        phone 
-    	} = formData;
+		const {
+			receiver_name,
+			address,
+			address_detail,
+			phone,
+			payment_method
+		} = formData;
 
-		
 		if (!user) {
 			setError("ログインが必要です。");
+			setIsSubmitting(false);
 			return;
 		}
 		if (!receiver_name || !address || !phone || !payment_method) {
 			setError("必須情報をすべて入力してください。");
+			setIsSubmitting(false);
 			return;
 		}
 
 		const total_price = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+		const delivery_request = deliveryRequest === "直接入力" ? deliveryRequestText : (deliveryRequest || "");
 
 		try {
 			const res = await createOrder({
@@ -63,19 +67,22 @@ export const useBuy = () => {
 				total_price,
 				receiver_name,
 				address,
-				address_detail,
+				address_detail: address_detail || "",
 				phone,
 				delivery_request,
 				payment_method
 			});
-			if (res.success) {
+			if (res.success && res.order_id) {
 				setSuccess(true);
-				setTimeout(() => navigate("/"), 5000); // 5초 뒤에 홈으로 이동
+				await new Promise((r) => setTimeout(r, 2000));
+				navigate("/order-confirm", { state: { order_id: res.order_id } });
 			} else {
 				setError("注文に失敗しました。もう一度お試しください。");
+				setIsSubmitting(false);
 			}
 		} catch (err) {
 			setError(err.response?.data?.message || "注文処理中にエラーが発生しました。");
+			setIsSubmitting(false);
 		}
 	};
 
@@ -90,8 +97,7 @@ export const useBuy = () => {
                 address: result.address,
                 zip_code: result.zip_code
             }));
-        } else {
-            alert("該当する住所が見つかりませんでした。");
+			//alert창 중복표시, 삭제
         }
     } catch (error) {
         console.error("Address fetch error:", error);
@@ -128,10 +134,10 @@ export const useBuy = () => {
 	const [paymentMethod, setPaymentMethod] = useState("");
 
     return {
-    url, items, success, error,
+    url, items, success, error, isSubmitting,
     deliveryRequest, setDeliveryRequest, deliveryRequestText,
     setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
 	paymentMethod, setPaymentMethod, open ,setOpen, formData, handleChange,
-	Address
+	Address, setFormData
     };
 };

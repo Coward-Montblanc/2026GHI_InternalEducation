@@ -10,6 +10,8 @@ import EventPage from "./pages/EventPage";
 import NoticePage from "./pages/NoticePage";
 import CartPage from "./pages/CartPage";
 import BuyPage from "./pages/BuyPage";
+import OrderConfirmPage from "./pages/OrderConfirmPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
           <Route path="/notice" element={<NoticePage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/buy" element={<BuyPage />} />
+          <Route path="/order-confirm" element={<OrderConfirmPage />} />
+          <Route path="/my-orders" element={<MyOrdersPage />} />
         </Routes>
       </AuthProvider>
     </Router>

@@ -9,9 +9,6 @@ const router = express.Router();
 // 인기상품 조회
 router.get("/popular", productController.getRankProducts);
 
-// 상품 상세 조회 (view 증가 포함)
-router.get("/:id", productController.getProductViewUp);
-
 // Multer 설정 (이미지 업로드 필수)
 const uploadDir = path.join(path.resolve(), "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -62,6 +59,7 @@ router.get("/", productController.getAllProducts);
  */
 router.get("/category/:categoryId", productController.getProductsByCategory);
 
+// 상품 상세 조회 (view 증가) — /:id는 구체 경로 뒤에 두기
 /**
  * @swagger
  * /products/{id}:
@@ -81,7 +79,7 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *       404:
  *         description: 상품을 찾을 수 없음
  */
-
+router.get("/:id", productController.getProductViewUp);
 
 /**
  * @swagger

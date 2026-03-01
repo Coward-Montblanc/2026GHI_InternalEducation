@@ -5,19 +5,23 @@ import response from "../utils/response.js";
 
 export const getCartItems = async (req, res) => {
   const { login_id } = req.params;
-  
+  if (req.user?.login_id !== login_id) {
+    return response.error(res, "本人のカートのみ閲覧できます。", 403);
+  }
   try {
     const items = await cartModel.getCartItemsByLoginId(login_id);
-    return response.success(res, { items: items }, "장바구니 조회 성공", 200);
+    return response.success(res, { items: items }, "カート取得成功", 200);
   } catch (err) {
     console.error("カート取得エラー:", err);
     return response.error(res, "データベース取得中にエラーが発生しました。", 500);
   }
 };
 
-export const addToCart = async (req, res) => { 
+export const addToCart = async (req, res) => {
   const { login_id, product_id, quantity } = req.body;
-
+  if (req.user?.login_id !== login_id) {
+    return response.error(res, "本人のカートにのみ追加できます。", 403);
+  }
   try {
     const cartId = await cartModel.getOrCreateCart(login_id); //장바구니 ID 가져오기 (없으면 자동생성)
     
@@ -31,15 +35,16 @@ export const addToCart = async (req, res) => {
 
 export const removeCartItem = async (req, res) => { //장바구니 내 상품 삭제
   const { cart_item_id } = req.params;
-  //상품이 유저와 일치하는 지 확인하는 쿼리
-  const [item] = await db.query("select c.login_id from cart_item ci join carts c on ci.cart_id = c.cart_id where ci.cart_item_id = ?",
-    [cart_item_id]
-  );
-  if (item.login_id !== current_user) { //일치하지 않을 경우
-    return response.error(res, "商品とユーザーIDが一致しません。", 403);
-  }
-
+  const currentUser = req.user?.login_id;
+  if (!currentUser) return response.error(res, "ログインが必要です。", 401);
   try {
+    const [rows] = await db.query(
+      `SELECT c.login_id FROM cart_items ci JOIN carts c ON ci.cart_id = c.cart_id WHERE ci.cart_item_id = ?`,
+      [cart_item_id]
+    );
+    if (!rows?.length || rows[0].login_id !== currentUser) {
+      return response.error(res, "商品とユーザーIDが一致しません。", 403);
+    }
     await cartModel.deleteCartItem(cart_item_id);
     return response.success(res, {}, "商品が削除されました。", 200);
   } catch (err) {

@@ -8,15 +8,13 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { useCart } from "../hooks/useCart";
-
+import { BuyPageMany } from "../services/OrderService";
+import { getFallbackImageUrl } from "../services/ProductService";
 
 function CartPage() {
   const navigate = useNavigate();
-  const {
-      cartItems,
-      url, totalPrice,
-      handleUpdateQty, handleToggleStatus
-      } = useCart(); //임포트해서 리턴한 객체들 가져옴
+  const { cartItems, url, totalPrice, handleUpdateQty, handleToggleStatus } = useCart();
+  const fallbackImage = getFallbackImageUrl(url);
 
   return (
     <Box sx={{ p: 5, maxWidth: "1000px", margin: "0 auto" }}>
@@ -44,10 +42,11 @@ function CartPage() {
                         }}>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
-                        <img 
-                          src={`${url}${item.image_url}`} 
-                          alt={item.name} 
-                          style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "4px" }} 
+                        <img
+                          src={item.image_url ? `${url}${item.image_url}` : fallbackImage}
+                          alt={item.name}
+                          onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                          style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "4px" }}
                         />
                         <Typography variant="body1">{item.name}</Typography>
                       </Stack>
@@ -97,7 +96,7 @@ function CartPage() {
               variant="contained" 
               size="large" 
               sx={{ px: 10 }}
-              onClick={() => navigate("/buy", { state: { items: cartItems } })}
+              onClick={() => BuyPageMany(navigate, cartItems)}
               disabled={cartItems.length === 0 || totalPrice === 0} //주문할 상품이 없을 시 비활성화.
             >
               注文

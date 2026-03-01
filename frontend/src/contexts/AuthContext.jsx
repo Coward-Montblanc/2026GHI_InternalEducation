@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { storage } from "../utils/storage"; //토큰 스토리지 함수
+import api from "../api/axios";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {

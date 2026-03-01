@@ -8,11 +8,13 @@ import {
   Alert, Pagination, CircularProgress,
 } from "@mui/material";
 import { singleProductToItems} from '../services/OrderService.js';
-import { getProducts, getProductsByCategory, getPopularProducts } from "../services/ProductService";
+import { getProducts, getProductsByCategory, getPopularProducts, getFallbackImageUrl } from "../services/ProductService";
 import { addToCart } from "../services/CartService";
+
 function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop 추가
   const navigate = useNavigate();
-  const url = import.meta.env.VITE_API_URL; //.env파일에서 가져옴
+  const url = import.meta.env.VITE_API_URL;
+  const fallbackImage = getFallbackImageUrl(url);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +38,12 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
   try {
     setLoading(true);
     let data;
-    if (searchText === "人気商品") {
+    // 전체상품 강제 표시: categoryId가 null이고 searchText가 빈 문자열이면 전체상품 API 호출
+    if (categoryId === null && searchText === "") {
+      data = await getProducts(page, itemsPerPage, "");
+      setProducts(data.products);
+      setTotalPages(data.pagination.totalPages);
+    } else if (searchText === "人気商品") {
       data = await getPopularProducts();
       setProducts(data);
       setTotalPages(1);
@@ -97,7 +104,7 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
                     }}
                     onClick={() => navigate(`/product/${product.product_id}`)}
                   >
-                    {/* 상품 이미지 영역 */}
+                    {/* 상품 이미지 (없거나 로드 실패 시 sample1.png) */}
                     <Box
                       sx={{
                         width: "100%",
@@ -107,34 +114,18 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
                         overflow: "hidden"
                       }}
                     >
-                      {product.main_image ? (
-                        <Box
-                          component="img"
-                          src={`${url}${product.main_image}`}
-                          alt={product.name}
-                          sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                          }}
-                        >
-                          写真なし
-                        </Typography>
-                      )}
+                      <Box
+                        component="img"
+                        src={product.main_image ? `${url}${product.main_image}` : fallbackImage}
+                        alt={product.name}
+                        onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                        sx={{
+                          position: "absolute",
+                          top: 0, left: 0,
+                          width: "100%", height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
                     </Box>
 
                     <CardContent sx={{ flexGrow: 1, pb: 1 }}>

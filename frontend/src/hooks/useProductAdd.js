@@ -49,14 +49,14 @@ export const useProductAdd = () => {
 
       
       if (selectedFiles.length + newFiles.length > MAX_COUNT) { // 개수 체크
-        alert(`이미지는 최대 ${MAX_COUNT}장까지만 업로드 가능합니다.`);
+        alert(`イメージは ${MAX_COUNT}枚までアップロードできます.`);
         e.target.value = ""; 
         return;
       }
 
       for (let file of newFiles) { // 용량확인
         if (file.size > MAX_SIZE) {
-          alert(`용량이 250KB를 초과합니다.`);
+          alert(`サイズが 250KBを超えています.`);
           e.target.value = "";
           return;
         }
@@ -82,7 +82,7 @@ export const useProductAdd = () => {
   selectedFiles.forEach((file) => {
     formData.append("images", file);
   });
-  console.log("실제 파일 객체 확인:", selectedFiles);
+  //console.log("실제 파일 객체 확인:", selectedFiles);
   try {
     const res = await createProduct(formData);
     if (res.success) {

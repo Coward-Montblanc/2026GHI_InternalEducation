@@ -2,13 +2,16 @@ import * as orderModel from "../models/order.model.js";
 import db from "../config/db.js";
 import response from "../utils/response.js";
 
-// 주문 생성
+// 주문 생성 (본인만 주문 가능)
 export const createOrder = async (req, res) => {
   try {
-    const { login_id, items, total_price, receiver_name, address, address_detail, 
+    const { login_id, items, total_price, receiver_name, address, address_detail,
             phone, delivery_request } = req.body;
     if (!login_id || !Array.isArray(items) || items.length === 0 || !receiver_name || !address || !phone) {
       return response.error(res , "必要な情報が不足しています。" , 400);
+    }
+    if (req.user?.login_id !== login_id) {
+      return response.error(res , "本人の注文のみ実行できます。" , 403);
     }
 
     // 1. 주문 생성
@@ -51,26 +54,34 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// 주문 상세 조회
+// 주문 상세 조회 본인 주문이 아니면 볼 수 없도록 방어
 export const getOrder = async (req, res) => {
   try {
     const { order_id } = req.params;
-    const order = await orderModel.getOrderWithItems(order_id);
-    // order가 없거나, order.items가 없거나, 빈 배열이면, 범위를 더 넓혀서 404 반환
-    if (!order || !order.items || order.items.length === 0) {
+    const orderData = await orderModel.getOrderWithItems(order_id);
+    const orderRow = orderData?.order;
+    const items = orderData?.items;
+    if (!orderRow || !items || items.length === 0) {
       return response.error(res , "注文が存在しません。" , 404);
     }
-    res.json({ success: true, order });
+    // 본인 주문이 아니면 403 (관리자 제외)
+    if (req.user.role !== "ADMIN" && orderRow.login_id !== req.user.login_id) {
+      return response.error(res , "この注文を閲覧する権限がありません。" , 403);
+    }
+    res.json({ success: true, order: { order: orderRow, items } });
   } catch (err) {
     console.error("주문 상세 조회 에러:", err);
     return response.error(res , "サーバーエラーが発生しました。" , 500);
   }
 };
 
-// 유저별 주문 목록
+// 유저별 주문 목록 (방어2)
 export const getOrdersByUser = async (req, res) => {
   try {
     const { login_id } = req.params;
+    if (req.user.role !== "ADMIN" && req.user.login_id !== login_id) {
+      return response.error(res , "他のユーザーの注文履歴は閲覧できません。" , 403);
+    }
     const orders = await orderModel.getOrdersByUser(login_id);
     res.json({ success: true, orders });
   } catch (err) {
