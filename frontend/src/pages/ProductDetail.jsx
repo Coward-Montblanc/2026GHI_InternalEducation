@@ -11,6 +11,7 @@ function ProductDetail() {
         product, quantity,navigate,
         mainImage, setMainImage,
         url, error,
+        fallbackImage,
         formatPrice,
         changeQuantity,
         AddToCart,
@@ -54,11 +55,12 @@ function ProductDetail() {
               alignItems: "center",
               justifyContent: "center"
             }}>
-              {mainImage ? (
-                <img src={mainImage} alt="商品画像" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-              ) : (
-                <Typography color="text.secondary">画像がありません。</Typography>
-              )}
+              <img
+                src={mainImage || fallbackImage}
+                alt="商品画像"
+                onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
             </Box>
 
             {/* 서브 이미지 리스트 (썸네일) */}
@@ -76,7 +78,12 @@ function ProductDetail() {
                     overflow: "hidden"
                   }}
                 >
-                  <img src={`${url}${img.image_url}`} alt="サムネイル" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img
+                    src={`${url}${img.image_url}`}
+                    alt="サムネイル"
+                    onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
                 </Box>
               ))}
             </Box>

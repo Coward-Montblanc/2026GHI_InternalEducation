@@ -83,7 +83,7 @@ CREATE TABLE orders (
   phone VARCHAR(20) NOT NULL, /* 연락처 추가 */
   address_detail VARCHAR(200) DEFAULT NULL, /* 배송지 상세주소 추가(빈칸 ok) */
   delivery_request VARCHAR(200) DEFAULT NULL, /* 배송 요청사항 추가(빈칸 ok) */
-  status VARCHAR(20) DEFAULT 'ORDERED',
+  status VARCHAR(20) DEFAULT 'ORDERED', /* OrderServce 참고 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_order_user FOREIGN KEY (login_id) REFERENCES users(login_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

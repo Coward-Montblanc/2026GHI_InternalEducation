@@ -23,7 +23,7 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [categories, setCategories] = useState([]);
-  // selectedCategoryName, setSelectedCategoryName는 MainPage에서 props로 받음
+  //setSelectedCategoryName는 MainPage에서 props로 받음
   const [showTabs, setShowTabs] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -86,21 +86,11 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
 
   const handlePopularProducts = () => { //인기상품 탭
     if (onCategoryNameChange) onCategoryNameChange("人気商品");
-    setSelectedTab(-1);
+    setSelectedTab(0);
     if (onCategoryChange) onCategoryChange(null);
     if (onSearch) onSearch("人気商品");
     setShowTabs(false); // 드롭다운 닫기
   };
-
-
-  const handleAllProducts = () => {
-    setSelectedCategoryName("カテゴリー");
-    setSelectedTab(0);
-    if (onCategoryChange) {
-      onCategoryChange(null);
-    }
-  };
- 
   const handleSearch = () => {
     if (onSearch) {
       onSearch(searchText.trim());
@@ -196,7 +186,13 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
               },
             }}
           >
-            <Tab label="全商品" /> {/* 전체 상품만 띄우기 */}
+            <Tab
+              label="全商品"
+              onClick={() => {
+                // 검색/人気商品 등으로 탭 값이 이미 0일 때는 onChange가 안 불리므로, 全商品 클릭 시 항상 전상품으로 초기화
+                refreshToAllProducts();
+              }}
+            />
             {categories.map((category) => (
               <Tab key={category.category_id} label={category.name} />
             ))}

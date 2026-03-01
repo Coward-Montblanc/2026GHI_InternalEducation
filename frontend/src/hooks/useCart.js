@@ -19,13 +19,13 @@ export const useCart = () => {
       const data = await getCart(user.login_id);
       setCartItems(data);
     } catch (err) {
-      console.error("장바구니 로딩 실패:", err);
+      console.error("カート読み込み失敗:", err);
     }
   };
 
   useEffect(() => { //로그인 상태 확인
     if (!user) {
-      alert("로그인이 필요합니다.");
+      alert("ログインが必要です。");
       navigate("/login");
     } else {
       fetchCartItems();
@@ -35,7 +35,7 @@ export const useCart = () => {
   useEffect(() => { //토큰 만료시 리다이렉트
   const token = storage.get("token"); //토큰 여부 판별
   if (!token) {
-    alert("로그인이 필요한 서비스입니다.");
+    alert("ログインが必要なサービスです。");
     navigate("/login");
   }
   }, []);
@@ -43,7 +43,7 @@ export const useCart = () => {
  
   const handleUpdateQty = (itemId, newQty, stock) => {  //수량 변경
     if (parseInt(newQty) > stock) {  //상품 현 재고 이상으로 수량을 올릴 시 에러
-    alert(`현재 재고(${stock}개)까지만 주문 가능합니다.`);
+    alert(`現在の在庫(${stock}個)までしか注文できません。`);
     setCartItems(items => items.map(item => 
       item.cart_item_id === itemId ? { ...item, quantity: stock } : item //최대 갯수를 재고수량으로 조정 
     ));  return; }
@@ -58,11 +58,11 @@ export const useCart = () => {
     const handleToggleStatus = async (cartItemId, currentStatus) => {
     const token = storage.get("token");
     if (!token) { //토큰이 발견되지 않을 시 = undefined
-        alert("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+        alert("ログイン情報がありません。再度ログインしてください。");
         return;
      }
     const Status = currentStatus === 0 ? 1 : 0;
-    const confirmMsg = Status === 1 ? "상품을 삭제하시겠습니까?" : "상품을 장바구니에 다시 넣으시겠습니까?";
+    const confirmMsg = Status === 1 ? "商品を削除しますか？" : "商品をカートに戻しますか？";
 
     if (!window.confirm(confirmMsg)) return;
     try {
@@ -74,12 +74,12 @@ export const useCart = () => {
         );
       }
     }catch (err) {
-        console.error("상태 변경 에러:", err);
+        console.error("状態変更エラー:", err);
         if (err.response) {
-        console.error("서버 응답 코드:", err.response.status);
-        console.error("서버 응답 데이터:", err.response.data);
+        console.error("サーバー応答コード:", err.response.status);
+        console.error("サーバー応答データ:", err.response.data);
         }
-        alert("상태 변경에 실패했습니다.");
+        alert("状態変更に失敗しました。");
     }
     };
     return {

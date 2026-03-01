@@ -19,7 +19,7 @@ export const useLogin = () => {
     if (params.get('exp') === 'true' && !hasAlerted.current) { //알림창 띄움 여부로 판별
       hasAlerted.current = true;
 
-      alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
+      alert("セッションが期限切れです。再度ログインしてください。");
 
       navigate('/login', { replace: true });
     }

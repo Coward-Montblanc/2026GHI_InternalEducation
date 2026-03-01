@@ -17,7 +17,7 @@ export const login = async (req, res) => {
     }
 
     
-    const tokenTime = "5m"; //시간 지정
+    const tokenTime = "12h"; //시간 지정
     const token = jwt.sign( //JWT 토큰 발급　
       { login_id: user.login_id, role: user.role },
       process.env.JWT_SECRET, //env파일에서 키 가져옴

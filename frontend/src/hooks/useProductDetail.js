@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { getProductById } from "../services/ProductService";
 import { useParams, useNavigate } from "react-router-dom";
 import { addToCart } from "../services/CartService";
-import { singleProductToItems } from '../services/OrderService.js';
-import { storage } from "../utils/storage"; //스토리지 
+import { BuyPageSingle } from '../services/OrderService.js';
+import { storage } from "../utils/storage"; //스토리지
+import { getFallbackImageUrl } from "../services/ProductService";
 
 export const useProductDetail = () => {
   const { id } = useParams();
@@ -11,20 +12,21 @@ export const useProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [mainImage, setMainImage] = useState(""); // 현재 크게 보여줄 이미지
-  const url = import.meta.env.VITE_API_URL; 
+  const url = import.meta.env.VITE_API_URL;
+  const fallbackImage = getFallbackImageUrl(url);
+  const [mainImage, setMainImage] = useState(fallbackImage);
 
   const user = storage.get("user"); // 로그인 정보 확인
   const isLoggedIn = !!storage.get("token"); // 로그인 상태 확인
   useEffect(() => {
-        // 상품 상세 정보 가져오기 (이미지 배열이 포함되어 있어야 함)
     const getProductDetail = async () => {
       try {
         const data = await getProductById(id);
         setProduct(data);
-                // 첫 번째 이미지를 메인으로 설정 (보통 DB 조회 시 main_image가 먼저 오도록 쿼리)
         if (data.images && data.images.length > 0) {
           setMainImage(`${url}${data.images[0].image_url}`);
+        } else {
+          setMainImage(getFallbackImageUrl(url)); //이미지가 없다면 fallback을 불러옴
         }
       } catch (err) {
         if (err.response) {
@@ -66,9 +68,8 @@ export const useProductDetail = () => {
       alert("ログイン後に実行してください"); //비회원 주문 탭필요
       return;
     }
-    const items = singleProductToItems(product, quantity);
     alert(`「${product.name}」${quantity}個を購入します。購入ページへ移動します。`);
-    navigate("/buy", { state: { items } });
+    BuyPageSingle(navigate, product, quantity);
   };
 
   const formatPrice = (price) => {
@@ -86,6 +87,7 @@ export const useProductDetail = () => {
         product, quantity,navigate,
         mainImage,setMainImage,
         url, error,
+        fallbackImage,
         formatPrice,
         changeQuantity,
         AddToCart,

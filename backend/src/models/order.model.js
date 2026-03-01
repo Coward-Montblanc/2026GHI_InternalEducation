@@ -29,11 +29,17 @@ export const createOrderItem = async (order_id, product_id, quantity, price) => 
   );
 };
 
-// 주문 상세 조회 (order + order_items)
+// 주문 상세 조회 (order + order_items, 상품명 포함)
 export const getOrderWithItems = async (order_id) => {
   const [[order]] = await db.query(`SELECT * FROM orders WHERE order_id = ?`, [order_id]);
-  const [items] = await db.query(`SELECT * FROM order_items WHERE order_id = ?`, [order_id]);
-  return {order, items};
+  const [items] = await db.query(
+    `SELECT oi.*, p.name AS product_name
+     FROM order_items oi
+     LEFT JOIN products p ON oi.product_id = p.product_id
+     WHERE oi.order_id = ?`,
+    [order_id]
+  );
+  return { order, items: items || [] };
 };
 
 // 유저별 주문 목록 조회

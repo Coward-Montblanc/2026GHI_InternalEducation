@@ -65,3 +65,8 @@ export const createProduct = async (formData) => {
   }
 };
 
+// 상품 이미지 없음/로드 실패 시 기본 이미지를 설정 (backend/uploads/sample1.png 세탁기 사진 사용)
+export function getFallbackImageUrl(baseUrl) {
+  const url = (baseUrl || "").replace(/\/$/, ""); //슬래시 제거하고 반환
+  return `${url}/uploads/sample1.png`;
+}
