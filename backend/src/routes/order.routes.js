@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * /orders:
  *   post:
- *     summary: 주문 생성
+ *     summary: 注文作成
  *     tags: [Orders]
  *     requestBody:
  *       required: true
@@ -43,7 +43,7 @@ const router = express.Router();
  *                       example: 2
  *     responses:
  *       201:
- *         description: 주문 완료
+ *         description: 注文完了
  *         content:
  *           application/json:
  *             schema:
@@ -62,18 +62,18 @@ router.post("/", authenticateToken, orderController.createOrder);
  * @swagger
  * /orders/{order_id}:
  *   get:
- *     summary: 주문 상세 조회
+ *     summary: 注文詳細取得
  *     tags: [Orders]
  *     parameters:
  *       - in: path
  *         name: order_id
  *         required: true
  *         schema:
- *           type: integer
- *         description: 주문 ID
+ *           type: string
+ *         description: 注文ID (OD1 形式)
  *     responses:
  *       200:
- *         description: 주문 상세 정보
+ *         description: 注文詳細情報
  *         content:
  *           application/json:
  *             schema:
@@ -85,7 +85,7 @@ router.post("/", authenticateToken, orderController.createOrder);
  *                 order:
  *                   type: object
  *       404:
- *         description: 주문 없음
+ *         description: 注文が見つかりません
  */
 router.get("/:order_id", authenticateToken, orderController.getOrder);
 
@@ -93,7 +93,7 @@ router.get("/:order_id", authenticateToken, orderController.getOrder);
  * @swagger
  * /orders/user/{login_id}:
  *   get:
- *     summary: 유저별 주문 목록 조회
+ *     summary: ユーザー別注文一覧取得
  *     tags: [Orders]
  *     parameters:
  *       - in: path
@@ -101,10 +101,10 @@ router.get("/:order_id", authenticateToken, orderController.getOrder);
  *         required: true
  *         schema:
  *           type: string
- *         description: 유저 로그인 ID
+ *         description: ユーザーのログインID
  *     responses:
  *       200:
- *         description: 주문 목록
+ *         description: 注文一覧
  *         content:
  *           application/json:
  *             schema:

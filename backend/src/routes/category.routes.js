@@ -7,11 +7,11 @@ const router = express.Router();
  * @swagger
  * /categories:
  *   get:
- *     summary: 모든 카테고리 조회
+ *     summary: すべてのカテゴリ取得
  *     tags: [Categories]
  *     responses:
  *       200:
- *         description: 카테고리 목록
+ *         description: カテゴリ一覧
  *         content:
  *           application/json:
  *             schema:
@@ -24,7 +24,7 @@ const router = express.Router();
  *                     example: 1
  *                   name:
  *                     type: string
- *                     example: TV/영상가전
+ *                     example: TV/映像家電
  */
 router.get("/", categoryController.getAllCategories);
 
@@ -32,7 +32,7 @@ router.get("/", categoryController.getAllCategories);
  * @swagger
  * /categories/{id}:
  *   get:
- *     summary: 카테고리 상세 조회
+ *     summary: カテゴリ詳細取得
  *     tags: [Categories]
  *     parameters:
  *       - in: path
@@ -40,12 +40,12 @@ router.get("/", categoryController.getAllCategories);
  *         required: true
  *         schema:
  *           type: integer
- *         description: 카테고리 ID
+ *         description: カテゴリID
  *     responses:
  *       200:
- *         description: 카테고리 상세 정보
+ *         description: カテゴリ詳細情報
  *       404:
- *         description: 카테고리를 찾을 수 없음
+ *         description: カテゴリが見つかりません
  */
 router.get("/:id", categoryController.getCategoryById);
 
@@ -53,7 +53,7 @@ router.get("/:id", categoryController.getCategoryById);
  * @swagger
  * /categories:
  *   post:
- *     summary: 카테고리 생성
+ *     summary: カテゴリ作成
  *     tags: [Categories]
  *     requestBody:
  *       required: true
@@ -66,10 +66,10 @@ router.get("/:id", categoryController.getCategoryById);
  *             properties:
  *               name:
  *                 type: string
- *                 example: 새 카테고리
+ *                 example: 新しいカテゴリ
  *     responses:
  *       201:
- *         description: 카테고리 생성 성공
+ *         description: カテゴリ作成成功
  *         content:
  *           application/json:
  *             schema:
@@ -77,7 +77,7 @@ router.get("/:id", categoryController.getCategoryById);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: 카테고리가 생성되었습니다.
+ *                   example: カテゴリが作成されました。
  *                 category_id:
  *                   type: integer
  *                   example: 7
@@ -88,7 +88,7 @@ router.post("/", categoryController.createCategory);
  * @swagger
  * /categories/{id}:
  *   put:
- *     summary: 카테고리 수정
+ *     summary: カテゴリ修正
  *     tags: [Categories]
  *     parameters:
  *       - in: path
@@ -96,7 +96,7 @@ router.post("/", categoryController.createCategory);
  *         required: true
  *         schema:
  *           type: integer
- *         description: 카테고리 ID
+ *         description: カテゴリID
  *     requestBody:
  *       required: true
  *       content:
@@ -108,12 +108,12 @@ router.post("/", categoryController.createCategory);
  *             properties:
  *               name:
  *                 type: string
- *                 example: 수정된 카테고리
+ *                 example: 修正されたカテゴリ
  *     responses:
  *       200:
- *         description: 카테고리 수정 성공
+ *         description: カテゴリ修正成功
  *       404:
- *         description: 카테고리를 찾을 수 없음
+ *         description: カテゴリが見つかりません
  */
 router.put("/:id", categoryController.updateCategory);
 
@@ -121,7 +121,7 @@ router.put("/:id", categoryController.updateCategory);
  * @swagger
  * /categories/{id}:
  *   delete:
- *     summary: 카테고리 논리적 삭제
+ *     summary: カテゴリ論理削除
  *     tags: [Categories]
  *     parameters:
  *       - in: path
@@ -129,12 +129,12 @@ router.put("/:id", categoryController.updateCategory);
  *         required: true
  *         schema:
  *           type: integer
- *         description: 카테고리 ID
+ *         description: カテゴリID
  *     responses:
  *       200:
- *         description: 카테고리 논리적 삭제 성공
+ *         description: カテゴリ論理削除成功
  *       404:
- *         description: 카테고리를 찾을 수 없음
+ *         description: カテゴリが見つかりません
  */
 router.delete("/:id", categoryController.deleteCategory);
 

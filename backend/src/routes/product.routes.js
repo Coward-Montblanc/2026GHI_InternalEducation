@@ -32,11 +32,11 @@ const upload = multer({ //파일 업로드 설정
  * @swagger
  * /products:
  *   get:
- *     summary: 모든 상품 조회
+ *     summary: すべての商品取得
  *     tags: [Products]
  *     responses:
  *       200:
- *         description: 상품 목록
+ *         description: 商品一覧
  */
 router.get("/", productController.getAllProducts);
 
@@ -44,7 +44,7 @@ router.get("/", productController.getAllProducts);
  * @swagger
  * /products/category/{categoryId}:
  *   get:
- *     summary: 카테고리별 상품 조회
+ *     summary: カテゴリ別商品取得
  *     tags: [Products]
  *     parameters:
  *       - in: path
@@ -52,19 +52,18 @@ router.get("/", productController.getAllProducts);
  *         required: true
  *         schema:
  *           type: integer
- *         description: 카테고리 ID
+ *         description: カテゴリID
  *     responses:
  *       200:
- *         description: 카테고리별 상품 목록
+ *         description: カテゴリ別商品一覧
  */
 router.get("/category/:categoryId", productController.getProductsByCategory);
 
-// 상품 상세 조회 (view 증가) — /:id는 구체 경로 뒤에 두기
 /**
  * @swagger
  * /products/{id}:
  *   get:
- *     summary: 상품 상세 조회
+ *     summary: 商品詳細取得
  *     tags: [Products]
  *     parameters:
  *       - in: path
@@ -72,12 +71,12 @@ router.get("/category/:categoryId", productController.getProductsByCategory);
  *         required: true
  *         schema:
  *           type: integer
- *         description: 상품 ID
+ *         description: 商品ID
  *     responses:
  *       200:
- *         description: 상품 상세 정보
+ *         description: 商品詳細情報
  *       404:
- *         description: 상품을 찾을 수 없음
+ *         description: 商品が見つかりません
  */
 router.get("/:id", productController.getProductViewUp);
 
@@ -85,7 +84,7 @@ router.get("/:id", productController.getProductViewUp);
  * @swagger
  * /products:
  *   post:
- *     summary: 상품 생성
+ *     summary: 商品作成
  *     tags: [Products]
  *     requestBody:
  *       required: true
@@ -105,10 +104,10 @@ router.get("/:id", productController.getProductViewUp);
  *                 example: 1
  *               name:
  *                 type: string
- *                 example: 스마트 TV 65인치
+ *                 example: スマート TV 65インチ
  *               description:
  *                 type: string
- *                 example: 최신형 스마트 TV입니다
+ *                 example: 最新型スマート TVです
  *               price:
  *                 type: integer
  *                 example: 1500000
@@ -122,7 +121,7 @@ router.get("/:id", productController.getProductViewUp);
  *                   format: binary
  *     responses:
  *       201:
- *         description: 상품 생성 성공
+ *         description: 商品作成成功
  *         content:
  *           application/json:
  *             schema:
@@ -130,30 +129,31 @@ router.get("/:id", productController.getProductViewUp);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: 상품이 생성되었습니다.
+ *                   example: 商品が作成されました。
  *                 product_id:
  *                   type: integer
  *                   example: 25
  */
 router.post("/", (req, res, next) => {
   // 최대 5장까지 업로드 허용 및 에러 핸들링
-  upload.array("images", 5)(req, res, (err) => {
+  upload.fields([ //필드가 많아서 array못씀
+    { name: "images", maxCount: 5 },
+    { name: "detail_images", maxCount: 5 },
+  ])(req, res, (err) => {
     if (err) { 
-      console.error("Multer 에러 발생:", err);
-      
-      // 파일 사이즈 오버(250KB 제한) 처리
+      console.error("Multer エラー発生:", err);
       if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json({ 
+        return res.status(400).json({
           success: false, 
-          message: "파일 크기는 250KB 이하여야 합니다." 
+          message: "ファイルサイズは250KB以下でなければなりません。",
         });
       }
       
       // 기타 업로드 에러
-      return res.status(400).json({ 
-        success: false, 
-        message: "파일 업로드 에러", 
-        error: err.message 
+      return res.status(400).json({
+        success: false,
+        message: "ファイルアップロードエラー",
+        error: err.message,
       });
     }
     next();
@@ -164,7 +164,7 @@ router.post("/", (req, res, next) => {
  * @swagger
  * /products/{id}:
  *   put:
- *     summary: 상품 수정
+ *     summary: 商品修正
  *     tags: [Products]
  *     parameters:
  *       - in: path
@@ -172,7 +172,7 @@ router.post("/", (req, res, next) => {
  *         required: true
  *         schema:
  *           type: integer
- *         description: 상품 ID
+ *         description: 商品ID
  *     requestBody:
  *       required: true
  *       content:
@@ -185,10 +185,10 @@ router.post("/", (req, res, next) => {
  *                 example: 1
  *               name:
  *                 type: string
- *                 example: 수정된 상품명
+ *                 example: 修正された商品名
  *               description:
  *                 type: string
- *                 example: 수정된 설명
+ *                 example: 修正された説明
  *               price:
  *                 type: integer
  *                 example: 2000000
@@ -200,9 +200,9 @@ router.post("/", (req, res, next) => {
  *                 example: /images/updated.jpg
  *     responses:
  *       200:
- *         description: 상품 수정 성공
+ *         description: 商品修正成功
  *       404:
- *         description: 상품을 찾을 수 없음
+ *         description: 商品が見つかりません
  */
 router.put("/:id", productController.updateProduct);
 

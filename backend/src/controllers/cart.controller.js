@@ -70,10 +70,10 @@ export const toggleCartItemStatus = async (req, res) => {
       [cart_item_id]
     );
     
-    console.log("--- 소유권 검증 시작 ---");
-    console.log("DB에 저장된 주인 ID:", rows[0].login_id);
-    console.log("현재 로그인한 유저 ID:", currentUser);
-    console.log("두 값이 일치하나?:", rows[0].login_id === currentUser);
+    //console.log("--- 소유권 검증 시작 ---");
+    //console.log("DB에 저장된 주인 ID:", rows[0].login_id);
+    //console.log("현재 로그인한 유저 ID:", currentUser);
+    //console.log("두 값이 일치하나?:", rows[0].login_id === currentUser);
 
     if (rows[0].login_id !== currentUser) { //회원이 일치하지 않을경우
       return response.error(res, "本人のカート商品だけを修正できます。", 403);

@@ -63,9 +63,10 @@ function ProductDetail() {
               />
             </Box>
 
-            {/* 서브 이미지 리스트 (썸네일) */}
+            {/* 메인이미지 서브이미지　Role: 1,2 */}
             <Box sx={{ display: "flex", gap: "10px", mt: 2, flexWrap: "wrap" }}>
-              {product.images?.map((img, index) => (
+              {/* 메인이미지와 서브이미지를 결정하는 부분 */}
+              {(product.images?.filter((img) => img.role === 1 || img.role === 2) || []).map((img, index) => (
                 <Box
                   key={index}
                   onClick={() => setMainImage(`${url}${img.image_url}`)}
@@ -151,13 +152,33 @@ function ProductDetail() {
           </Box>
         </Box>
 
-        {/* 하단: 상품 상세 설명 */}
+        {/* 하단: 상품 상세 설명 + 상세 이미지 */}
         <Box sx={{ mt: 10 }}>
           <Typography variant="h5" sx={{ fontWeight: "bold", mb: 3, borderBottom: "2px solid #333", pb: 1 }}>商品詳細</Typography>
           <Box sx={{ p: 4, border: "1px solid #eee", borderRadius: "8px" }}>
             <Typography sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
               {product.description || "商品詳細説明がありません。"}
             </Typography>
+            {/* 상세이미지 / role: 3） */}
+            {(product.images?.filter((img) => img.role === 3).length > 0) && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>詳細画像</Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {product.images
+                    .filter((img) => img.role === 3)
+                    .map((img, index) => (
+                      <Box key={img.image_id ?? index} sx={{ width: "100%", maxWidth: 800, mx: "auto" }}>
+                        <img
+                          src={`${url}${img.image_url}`}
+                          alt={`詳細 ${index + 1}`}
+                          onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                          style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px" }}
+                        />
+                      </Box>
+                    ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         </Box>
       </Box>

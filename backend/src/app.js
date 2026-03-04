@@ -9,6 +9,8 @@ import productRoutes from "./routes/product.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
+import noticeRoutes from "./routes/notice.routes.js";
+import eventRoutes from "./routes/event.routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 
@@ -34,6 +36,8 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes); 
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/notices", noticeRoutes);
+app.use("/api/events", eventRoutes);
 app.get("/", (req, res) => {
   res.send("API running");
 });

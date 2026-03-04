@@ -1,34 +1,37 @@
 import Footer from "../components/Footer";
-import { useEffect, useState } from "react";
-import { CircularProgress, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { getEvents } from "../services/EventService";
+import { useNEList } from "../hooks/useNEList";
+import NEListTable from "../components/NEListTable";
 
+// 목록 조회·로딩·에러 상태는 useNEList 훅에서 처리 (공지/이벤트 공통)
 function EventPage() {
-	const [loading, setLoading] = useState(true);
-	const [events, setEvents] = useState([]); 
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const { items, loading, error } = useNEList(
+    getEvents,
+    "events",
+    "イベントの取得に失敗しました。"
+  );
 
-	useEffect(() => { //로딩 처리
-		setLoading(true);
-		setTimeout(() => {
-			setEvents([]); 
-			setLoading(false);
-		}, 1000);
-	}, []);
-
-	return (
-		<>
-			<div style={{ minHeight: '60vh', padding: '40px 0', textAlign: 'center' }}>
-				<h2 style={{ fontWeight: 'bold', fontSize: '2rem', marginBottom: 24 }}>イベント</h2>
-				{loading ? (
-					<Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
-						<CircularProgress />
-					</Box>
-				) : (
-					<p>現在進行中のイベントはありません。</p>
-				)}
-			</div>
-			<Footer />
-		</>
-	);
+  return (
+    <>
+      <NEListTable
+        title="イベント"
+        emptyMessage="イベントはありません。"
+        items={items}
+        idKey="event_id"
+        basePath="/event"
+        error={error}
+        loading={loading}
+        isAdmin={isAdmin}
+        onNavigate={navigate}
+      />
+      <Footer />
+    </>
+  );
 }
 
 export default EventPage;

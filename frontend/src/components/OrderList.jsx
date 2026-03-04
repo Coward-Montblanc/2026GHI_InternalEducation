@@ -1,7 +1,8 @@
+import { Link } from "react-router-dom";
 import { Paper, Typography, Table, TableHead, TableRow, TableCell, TableBody, Box } from "@mui/material";
 import { getFallbackImageUrl } from "../services/ProductService";
 
-function OrderList({ items, url, showImage = true }) {
+function OrderList({ items, url, showImage = true, linkToProduct = false }) { //linkToProduct 기본값 정의
   const displayItems = Array.isArray(items) ? items : [];
   const fallbackImage = getFallbackImageUrl(url);
   return (
@@ -29,7 +30,17 @@ function OrderList({ items, url, showImage = true }) {
                   />
                 </TableCell>
               )}
-              <TableCell>{item.name || item.product_name || `商品ID ${item.product_id}`}</TableCell>
+              <TableCell>
+                {linkToProduct && item.product_id ? (
+                  <Link to={`/product/${item.product_id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                    <Typography variant="body1" sx={{ "&:hover": { textDecoration: "underline" } }}>
+                      {item.name || item.product_name || `商品ID ${item.product_id}`}
+                    </Typography>
+                  </Link>
+                ) : (
+                  item.name || item.product_name || `商品ID ${item.product_id}`
+                )}
+              </TableCell>
               <TableCell align="center">{item.quantity}</TableCell>
               <TableCell align="right">{(item.price * item.quantity).toLocaleString()}円</TableCell>
             </TableRow>

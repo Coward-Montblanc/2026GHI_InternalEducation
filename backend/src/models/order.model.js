@@ -1,17 +1,17 @@
 import db from "../config/db.js";
 
 // 주문"만" 생성
-export const createOrder = async (login_id, total_price, receiver_name, address, phone, address_detail, delivery_request, status = 'ORDERED') => {
-  const [result] = await db.query(
-    `
-    INSERT INTO orders 
-    (login_id, total_price, receiver_name, address, phone, address_detail, delivery_request, status)
-    VALUES 
-    (?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [login_id, total_price, receiver_name, address, phone, address_detail, delivery_request, status]
+//BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
+export const createOrder = async (login_id, total_price, receiver_name, address, phone, address_detail, delivery_request, status = 1) => {
+  const [[rows]] = await db.query(
+    "SELECT COALESCE(MAX(CAST(SUBSTRING(order_id, 3) AS UNSIGNED)), 0) + 1 AS n FROM orders"
   );
-  return result.insertId;
+  const order_id = `OD${rows.n}`;
+  await db.query(
+    "INSERT INTO orders (order_id, login_id, total_price, receiver_name, address, phone, address_detail, delivery_request, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [order_id, login_id, total_price, receiver_name, address, phone, address_detail, delivery_request, status]
+  );
+  return order_id;
 };
 
 // 이제 그 주문에 여러 상품을 등록

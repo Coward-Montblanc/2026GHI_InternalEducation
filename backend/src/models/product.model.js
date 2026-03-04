@@ -2,10 +2,11 @@ import db from "../config/db.js";
 
 
   // 인기상품 조회 (view 30 이상)
+  //role1을 메인이미지로 두도록 변경
 export const getRankProducts = async () => {
   const [rows] = await db.query(
     `SELECT p.*,
-      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 'MAIN' LIMIT 1) as main_image
+      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
      FROM products p
      WHERE p.status = 0 AND (p.view >= 30 OR p.name LIKE '%人気商品%')
      ORDER BY p.view DESC`
@@ -38,7 +39,7 @@ export const getAllProducts = async (page = 1, limit = 24, search = "") => {
     SELECT 
       p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
       c.name as category_name,
-      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 'MAIN' LIMIT 1) as main_image
+      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
     WHERE p.status = 0 ${searchCond}
@@ -90,7 +91,7 @@ export const getProductsByCategory = async (categoryId, search = "") => {
     SELECT 
       p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
       c.name as category_name,
-      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 'MAIN' LIMIT 1) as main_image
+      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
     WHERE p.category_id = ? AND p.status = 0 ${searchCond}
@@ -102,13 +103,18 @@ export const getProductsByCategory = async (categoryId, search = "") => {
 };
 
 // 상품 생성 (InsertId 반환)
-export const createProduct = async (productData) => {
+//BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
+export const createProduct = async (connection, productData) => {
   const { category_id, name, description, price, stock, status = 0 } = productData;
-  const [result] = await db.query(
-    `INSERT INTO products (category_id, name, description, price, stock, status) VALUES (?, ?, ?, ?, ?, ?)`,
-    [category_id, name, description, price, stock, status]
+  const [[rows]] = await connection.execute(
+    "SELECT COALESCE(MAX(CAST(SUBSTRING(product_id, 3) AS UNSIGNED)), 0) + 1 AS n FROM products"
   );
-  return result.insertId;
+  const product_id = `PD${rows.n}`;
+  await connection.execute(
+    "INSERT INTO products (product_id, category_id, name, description, price, stock, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    [product_id, category_id, name, description, price, stock, status]
+  );
+  return product_id;
 };
 
 // 상품 정보 수정

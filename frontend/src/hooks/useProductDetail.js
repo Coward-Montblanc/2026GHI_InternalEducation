@@ -23,8 +23,9 @@ export const useProductDetail = () => {
       try {
         const data = await getProductById(id);
         setProduct(data);
-        if (data.images && data.images.length > 0) {
-          setMainImage(`${url}${data.images[0].image_url}`);
+        if (data.images?.length) {
+          const main = data.images.find((i) => i.role === 1) || data.images[0];
+          setMainImage(`${url}${main.image_url}`);
         } else {
           setMainImage(getFallbackImageUrl(url)); //이미지가 없다면 fallback을 불러옴
         }
