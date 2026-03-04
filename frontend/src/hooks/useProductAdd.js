@@ -15,6 +15,7 @@ export const useProductAdd = () => {
     });
 
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [selectedDetailFiles, setSelectedDetailFiles] = useState([]);
     const [loading ,setLoading] = useState(true);
   useEffect(() => {
     const fetchCategories = async () => {
@@ -66,6 +67,28 @@ export const useProductAdd = () => {
     }
   };
 
+  const handleDetailFileChange = (e) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      const MAX_SIZE = 250 * 1024;
+      const MAX_COUNT = 5;
+      if (selectedDetailFiles.length + newFiles.length > MAX_COUNT) {
+        alert(`詳細画像は ${MAX_COUNT}枚までアップロードできます。`);
+        e.target.value = "";
+        return;
+      }
+      for (const file of newFiles) {
+        if (file.size > MAX_SIZE) {
+          alert("サイズが 250KBを超えています。");
+          e.target.value = "";
+          return;
+        }
+      }
+      setSelectedDetailFiles((prev) => [...prev, ...newFiles]);
+      e.target.value = "";
+    }
+  };
+
   const handleSubmit = async (e) => {
   e.preventDefault();
 
@@ -82,6 +105,9 @@ export const useProductAdd = () => {
   selectedFiles.forEach((file) => {
     formData.append("images", file);
   });
+  selectedDetailFiles.forEach((file) => { //role3으 이미지도 추가
+    formData.append("detail_images", file);
+  });
   //console.log("실제 파일 객체 확인:", selectedFiles);
   try {
     const res = await createProduct(formData);
@@ -94,12 +120,14 @@ export const useProductAdd = () => {
   }
   };
 
-  return{
+  return {
     categories,
     product,
     selectedFiles,
+    selectedDetailFiles,
     handleChange,
     handleFileChange,
-    handleSubmit
+    handleDetailFileChange,
+    handleSubmit,
   };
 };

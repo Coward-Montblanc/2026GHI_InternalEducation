@@ -7,7 +7,13 @@ import Header from "./components/Header";
 import ProductAddPage from "./pages/ProductAddPage";
 import ProductDetail from "./pages/ProductDetail";
 import EventPage from "./pages/EventPage";
+import EventDetailPage from "./pages/EventDetailPage";
+import EventWritePage from "./pages/EventWritePage";
+import EventEditPage from "./pages/EventEditPage";
 import NoticePage from "./pages/NoticePage";
+import NoticeDetailPage from "./pages/NoticeDetailPage";
+import NoticeWritePage from "./pages/NoticeWritePage";
+import NoticeEditPage from "./pages/NoticeEditPage";
 import CartPage from "./pages/CartPage";
 import BuyPage from "./pages/BuyPage";
 import OrderConfirmPage from "./pages/OrderConfirmPage";
@@ -25,7 +31,13 @@ function App() {
           <Route path="/admin/product-add" element={<ProductAddPage />} />{/* 상품 등록 버튼 */}
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/event" element={<EventPage />} />
+          <Route path="/event/write" element={<EventWritePage />} />
+          <Route path="/event/:id/edit" element={<EventEditPage />} />
+          <Route path="/event/:id" element={<EventDetailPage />} />
           <Route path="/notice" element={<NoticePage />} />
+          <Route path="/notice/write" element={<NoticeWritePage />} />
+          <Route path="/notice/:id/edit" element={<NoticeEditPage />} />
+          <Route path="/notice/:id" element={<NoticeDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/buy" element={<BuyPage />} />
           <Route path="/order-confirm" element={<OrderConfirmPage />} />

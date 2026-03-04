@@ -14,8 +14,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
-import { getOrdersByUser } from "../services/OrderService";
-import { getOrderStatusLabel } from "../services/OrderService";
+import { getOrdersByUser, getOrderStatusLabel } from "../services/OrderService";
+import { formatDate } from "../utils/date";
 
 export default function MyOrdersPage() {
   const navigate = useNavigate();
@@ -67,11 +67,6 @@ export default function MyOrdersPage() {
   }
 
   const formatPrice = (price) => new Intl.NumberFormat("ja-JP").format(price);
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "-";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-  };
 
   return (
     <Box sx={{ p: 4, maxWidth: 900, margin: "0 auto" }}>

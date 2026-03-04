@@ -10,8 +10,7 @@ import {
   Divider,
 } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; //주문 완료 아이콘
-import { getOrder } from "../services/OrderService";
-import { getOrderStatusLabel } from "../services/OrderService";
+import { getOrder, getOrderStatusLabel } from "../services/OrderService";
 import OrderList from "../components/OrderList";
 
 export default function OrderConfirmPage() {
@@ -96,7 +95,7 @@ export default function OrderConfirmPage() {
           </Typography>
         </Box>
 
-        <OrderList items={listItems} url={url} showImage={false} />
+        <OrderList items={listItems} url={url} showImage={false} linkToProduct />
 
         <Divider sx={{ my: 3 }} />
 

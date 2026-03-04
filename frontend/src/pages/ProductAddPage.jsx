@@ -7,18 +7,38 @@ function ProductAddPage() {
     categories,
     product,
     selectedFiles,
+    selectedDetailFiles,
     handleChange,
     handleFileChange,
-    handleSubmit
+    handleDetailFileChange,
+    handleSubmit,
   } = useProductAdd();
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 5, mb: 5 }}>
+    <Container maxWidth="md" sx={{ mt: 5, mb: 5 }}>
       <Paper sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom align="center">
+        <Typography variant="h4" gutterBottom align="center">
           新規商品登録
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate>
+          {/* 상품사진 추가(위, 메인 서브)*/}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              商品画像（メイン・サブ）
+            </Typography>
+            <Button variant="outlined" component="label" fullWidth>
+              ファイル選択 (最大5枚まで、各250KB制限)
+              <input type="file" hidden multiple accept="image/*" onChange={handleFileChange} />
+            </Button>
+            <Box sx={{ mt: 1 }}>
+              {selectedFiles.map((file, index) => (
+                <Typography key={index} variant="caption" display="block">
+                  {index + 1}. {file.name}
+                </Typography>
+              ))}
+            </Box>
+          </Box>
+
           <TextField 
             select 
             fullWidth 
@@ -49,19 +69,19 @@ function ProductAddPage() {
             <TextField fullWidth type="number" label="在庫" name="stock" onChange={handleChange} required margin="normal" />
           </Stack>
 
-          {/* ファイルアップロード入力 */}
+          {/* 상품사진 추가 디테일, 상세사진 */}
           <Box sx={{ mt: 3, mb: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              商品画像 (最初の写真がメイン画像になります)
+            <Typography variant="h6" gutterBottom>
+              詳細画像 (商品詳細ページ用、任意)
             </Typography>
             <Button variant="outlined" component="label" fullWidth>
               ファイル選択 (最大5枚まで、各250KB制限)
-              <input type="file" hidden multiple accept="image/*" onChange={handleFileChange} />
+              <input type="file" hidden multiple accept="image/*" onChange={handleDetailFileChange} />
             </Button>
             
             {/* 선택된 파일 목록 표시 */}
             <Box sx={{ mt: 1 }}>
-              {selectedFiles.map((file, index) => (
+              {selectedDetailFiles.map((file, index) => (
                 <Typography key={index} variant="caption" display="block">
                   {index + 1}. {file.name}
                 </Typography>

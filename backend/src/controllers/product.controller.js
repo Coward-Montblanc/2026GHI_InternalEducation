@@ -36,7 +36,8 @@ export const createProduct = async (req, res) => {
   console.log("受信したFILES:", req.files);
 
   const { category_id, name, description, price, stock } = req.body;
-  const files = req.files;
+  const files = Array.isArray(req.files?.images) ? req.files.images : [];
+  const detailFiles = Array.isArray(req.files?.detail_images) ? req.files.detail_images : [];
 
   // 이미지 파일 유무 확인
   if (!files || files.length === 0) {
@@ -54,22 +55,32 @@ export const createProduct = async (req, res) => {
     //상품 기본 정보 저장
     await connection.beginTransaction(); //트랜잭션 시작, 
 
-    const [productResult] = await connection.execute( //DB가 아닌 트랜잭션
-      `INSERT INTO products (category_id, name, description, price, stock) VALUES (?, ?, ?, ?, ?)`,
-      [category_id, name, description, price, stock]
-    );
-
-    const productId = productResult.insertId;
+      //상품 아이디 지정방식이 varchar로 바뀌면서 바꿔야했습니다. 
+    const productId = await productModel.createProduct(connection, {
+      category_id,
+      name,
+      description,
+      price,
+      stock,
+      status: 0,
+    });
     console.log("生成された商品ID:", productId);
 
-    // 이미지 정보 저장 (루프를 돌며 DB에 기록)
-    for (let i = 0; i < files.length; i++) {
+    // 사진 저장 메인1 서브2
+    for (let i = 0; i < files.length; i++) { //첫번째 이미지를 메인으로 저장해주는 부분, for문을 통해서 번호 지정
       const imageUrl = `/uploads/${files[i].filename}`;
-      const role = (i === 0) ? 'MAIN' : 'SUB'; //메인 서브 이미지 판별
-
+      const role = i === 0 ? 1 : 2; //main sub에서 12로 변경
       await connection.execute(
         `INSERT INTO product_images (product_id, image_url, image_order, role) VALUES (?, ?, ?, ?)`,
         [productId, imageUrl, i + 1, role]
+      );
+    }
+    // role3은 상세 이미지로
+    for (let i = 0; i < detailFiles.length; i++) {
+      const imageUrl = `/uploads/${detailFiles[i].filename}`;
+      await connection.execute(
+        `INSERT INTO product_images (product_id, image_url, image_order, role) VALUES (?, ?, ?, ?)`,
+        [productId, imageUrl, i + 1, 3]
       );
     }
 
@@ -96,7 +107,7 @@ export const getAllProducts = async (req, res) => {
     const result = await productModel.getAllProducts(page, limit, search);
     res.json(result);
   } catch (error) {
-    console.error("商品取得エラー:", error);
+    console.error("商品取得エラー:", error?.message || error);
     return response.error(res , "商品取得中にエラーが発生しました。" , 500);
   }
 };
@@ -110,9 +121,9 @@ export const getProductById = async (req, res) => {
 
     const response_p = {
       product,
-      mainImage: product.images.find(img => img.role === 'MAIN')?.image_url || null,
-      subImages: product.images.filter(img => img.role === 'SUB').map(img => img.image_url),
-      detailImages: product.images.filter(img => img.role === 'DETAIL').map(img => img.image_url),
+      mainImage: product.images.find(img => img.role === 1)?.image_url || null,
+      subImages: product.images.filter(img => img.role === 2).map(img => img.image_url),
+      detailImages: product.images.filter(img => img.role === 3).map(img => img.image_url),
       view: product.view // 조회수 추가
     };
 
@@ -137,8 +148,7 @@ export const getProductsByCategory = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
-    const { id } = req.params;
-    const affectedRows = await productModel.updateProduct(id, req.body);
+    const affectedRows = await productModel.updateProduct(req.params.id, req.body);
 
     if (affectedRows === 0) {
       return response.error(res , "商品が存在しません。" , 404);

@@ -69,17 +69,15 @@ export async function getOrdersByUser(loginId) {
   }
 }
 
-// 주문 상태 코드 일본어 표시 (ORDERED / PREPARE / DELIVERY / COMPLETE / CANCELED)
 export const ORDER_STATUS_LABELS = {
-  ORDERED: "注文完了",
-  PREPARE: "準備中",
-  DELIVERY: "配送中",
-  COMPLETE: "配送完了",
-  CANCELED: "注文キャンセル",
+  0: "注文キャンセル",
+  1: "注文完了（準備中）",
+  2: "配送中",
+  3: "配送完了",
 };
 
-export function getOrderStatusLabel(status) {
-  if (!status) return ORDER_STATUS_LABELS.ORDERED;
-  const key = String(status).toUpperCase();
-  return ORDER_STATUS_LABELS[key] ?? status;
+export function getOrderStatusLabel(status) { //숫자에 맞게 String을 number로 번경. 방어코드로도 작동가능
+  if (status === null || status === undefined) return ORDER_STATUS_LABELS[1];
+  const n = Number(status);
+  return ORDER_STATUS_LABELS[n] ?? status;
 }

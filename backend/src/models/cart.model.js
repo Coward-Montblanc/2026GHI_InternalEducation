@@ -1,14 +1,16 @@
 import db from "../config/db.js";
 
 // 장바구니 생성 및 확인
+//BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
 export async function getOrCreateCart(login_id) {
-  let [cart] = await db.query("SELECT cart_id FROM carts WHERE login_id = ?", [login_id]);
-  
-  if (cart.length === 0) {
-    const [result] = await db.query("INSERT INTO carts (login_id) VALUES (?)", [login_id]);
-    return result.insertId;
-  }
-  return cart[0].cart_id;
+  const [cart] = await db.query("SELECT cart_id FROM carts WHERE login_id = ?", [login_id]);
+  if (cart.length > 0) return cart[0].cart_id;
+  const [[rows]] = await db.query(
+    "SELECT COALESCE(MAX(CAST(SUBSTRING(cart_id, 3) AS UNSIGNED)), 0) + 1 AS n FROM carts"
+  );
+  const cart_id = `CT${rows.n}`;
+  await db.query("INSERT INTO carts (cart_id, login_id) VALUES (?, ?)", [cart_id, login_id]);
+  return cart_id; 
 }
 
 // 아이템 추가 및 업데이트

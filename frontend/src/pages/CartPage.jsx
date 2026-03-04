@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, IconButton, Stack, TextField
@@ -48,7 +48,13 @@ function CartPage() {
                           onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                           style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "4px" }}
                         />
-                        <Typography variant="body1">{item.name}</Typography>
+                        {item.product_id ? (
+                          <Link to={`/product/${item.product_id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                            <Typography variant="body1" sx={{ "&:hover": { textDecoration: "underline" } }}>{item.name}</Typography>
+                          </Link>
+                        ) : (
+                          <Typography variant="body1">{item.name}</Typography>
+                        )}
                       </Stack>
                     </TableCell>
                     <TableCell align="center"> {/*상품 수량 늘리고 줄이기*/}

@@ -12,7 +12,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Users
- *   description: 데이터베이스 회원 관리 API
+ *   description: データベースユーザー管理API
  */
 
 
@@ -20,11 +20,11 @@ const router = express.Router();
  * @swagger
  * /users:
  *   get:
- *     summary: 회원 목록 조회
+ *     summary: ユーザー一覧取得
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: 회원 목록 반환
+ *         description: ユーザー一覧
  */
 router.get("/", getUsers);
 
@@ -32,7 +32,7 @@ router.get("/", getUsers);
  * @swagger
  * /users:
  *   post:
- *     summary: 회원 생성
+ *     summary: ユーザー作成
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -48,13 +48,13 @@ router.get("/", getUsers);
  *             properties:
  *               login_id:
  *                 type: string
- *                 example: hgd123
+ *                 example: yamada0123
  *               password:
  *                 type: string
- *                 example: 1234
+ *                 example: yamada0123
  *               name:
  *                 type: string
- *                 example: 홍길동
+ *                 example: 山田一郎 
  *               email:
  *                 type: string
  *                 example: user@example.com
@@ -63,21 +63,21 @@ router.get("/", getUsers);
  *                 example: 010-1234-5678
  *               zip_code:
  *                 type: string
- *                 example: 06234
+ *                 example: 100-0001
  *               address:
  *                 type: string
- *                 example: 서울시 강남구 테헤란로
+ *                 example: 東京都千代田区永田町1-7-1
  *               address_detail:
  *                 type: string
- *                 example: 101동 202호
+ *                 example: 101-0001
  *               role:
  *                 type: string
  *                 example: USER
  *     responses:
  *       201:
- *         description: 회원 생성 성공
+ *         description: ユーザー作成成功
  *       400:
- *         description: 잘못된 요청
+ *         description: 不正なリクエスト
  */
 router.post("/", createUser);
 
@@ -85,7 +85,7 @@ router.post("/", createUser);
  * @swagger
  * /users/{id}:
  *   delete:
- *     summary: 사용자 삭제
+ *     summary: ユーザー削除
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -93,7 +93,7 @@ router.post("/", createUser);
  *         required: true
  *         schema:
  *           type: string
- *         description: 회원 ID
+ *         description: ユーザーID
  */
 router.delete("/:id", deleteUser);
 
@@ -101,15 +101,15 @@ router.delete("/:id", deleteUser);
  * @swagger
  * /users/{id}:
  *   put:
- *     summary: 회원 기본 정보 수정
+ *     summary: ユーザー基本情報修正
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
- *         description: 회원 ID
+ *           type: string
+ *         description: ユーザーID (login_id)
  *     requestBody:
  *       required: true
  *       content:
@@ -126,7 +126,7 @@ router.delete("/:id", deleteUser);
  *                 example: newpassword123
  *               name:
  *                 type: string
- *                 example: 홍길동
+ *                 example: 山田一郎
  *               email:
  *                 type: string
  *                 example: hong@test.com
@@ -138,21 +138,21 @@ router.delete("/:id", deleteUser);
  *                 example: 06234
  *               address:
  *                 type: string
- *                 example: 서울시 강남구 테헤란로
+ *                 example: 東京都千代田区永田町1-7-1
  *               address_detail:
  *                 type: string
- *                 example: 101동 202호
+ *                 example: 101-0001
  *               role:
  *                 type: string
  *                 enum: [USER, ADMIN]
  *                 example: USER
  *     responses:
  *       200:
- *         description: 수정 성공
+ *         description: 修正成功
  *       404:
- *         description: 회원 없음
+ *         description: ユーザーが見つかりません
  *       409:
- *         description: 중복 값 존재
+ *         description: 重複値が存在します
  */
 router.put("/:id", updateUser);
 
