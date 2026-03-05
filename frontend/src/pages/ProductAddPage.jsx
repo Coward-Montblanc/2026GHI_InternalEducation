@@ -1,4 +1,4 @@
-import { Container, TextField, Button, Typography, Box, Paper, MenuItem, Stack, CircularProgress } from "@mui/material";
+import { Container, TextField, Button, Typography, Box, Paper, MenuItem, Stack } from "@mui/material";
 import { useProductAdd } from "../hooks/useProductAdd";
 
 

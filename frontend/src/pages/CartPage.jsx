@@ -10,11 +10,14 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import { useCart } from "../hooks/useCart";
 import { BuyPageMany } from "../services/OrderService";
 import { getFallbackImageUrl } from "../services/ProductService";
+import { LoadingView } from "../components/LoadingCircle";
 
 function CartPage() {
   const navigate = useNavigate();
-  const { cartItems, url, totalPrice, handleUpdateQty, handleToggleStatus } = useCart();
+  const { cartItems, url, loading, totalPrice, handleUpdateQty, handleToggleStatus } = useCart();
   const fallbackImage = getFallbackImageUrl(url);
+
+  if (loading) { return <LoadingView />; }
 
   return (
     <Box sx={{ p: 5, maxWidth: "1000px", margin: "0 auto" }}>

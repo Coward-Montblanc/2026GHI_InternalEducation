@@ -6,12 +6,12 @@ import {
   Typography,
   Button,
   Alert,
-  CircularProgress,
   Divider,
 } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; //주문 완료 아이콘
 import { getOrder, getOrderStatusLabel } from "../services/OrderService";
 import OrderList from "../components/OrderList";
+import { LoadingView } from "../components/LoadingCircle";
 
 export default function OrderConfirmPage() {
   const navigate = useNavigate();
@@ -45,13 +45,7 @@ export default function OrderConfirmPage() {
     fetchOrder();
   }, [order_id]);
 
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading) { return ( <LoadingView /> ); }
 
   if (error || !order_id) {
     return (

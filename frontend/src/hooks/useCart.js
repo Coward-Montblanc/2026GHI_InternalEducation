@@ -1,44 +1,33 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { getCart, updateCartItemStatus } from "../services/CartService";
-import { storage } from "../utils/storage"; //스토리지 
+import { useAuth } from "../contexts/AuthContext";
+import storage from "../utils/storage";
 
 export const useCart = () => {
-  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const url = import.meta.env.VITE_API_URL;
-  const user = storage.get("user"); 
+  const { user, logout } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   const totalPrice = cartItems.reduce((acc, item) => { 
   if (item.status === 0) { return acc + item.price * item.quantity; }
   return acc; }, 0);// status가 0일 때만 금액을 더하고, 1이면 무시
 
   const fetchCartItems = async () => { //장바구니 데이터 불러오기
-    if (!user) return;
+    if (!user?.login_id) return;
     try {
       const data = await getCart(user.login_id);
       setCartItems(data);
     } catch (err) {
       console.error("カート読み込み失敗:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => { //로그인 상태 확인
-    if (!user) {
-      alert("ログインが必要です。");
-      navigate("/login");
-    } else {
-      fetchCartItems();
-    }
-  }, []);
-
-  useEffect(() => { //토큰 만료시 리다이렉트
-  const token = storage.get("token"); //토큰 여부 판별
-  if (!token) {
-    alert("ログインが必要なサービスです。");
-    navigate("/login");
-  }
-  }, []);
+  useEffect(() => {
+    fetchCartItems();
+  }, [user?.login_id]);
 
  
   const handleUpdateQty = (itemId, newQty, stock) => {  //수량 변경
@@ -83,7 +72,7 @@ export const useCart = () => {
     }
     };
     return {
-  cartItems, 
+  cartItems, loading, 
   url,totalPrice,
   handleUpdateQty, 
   handleToggleStatus

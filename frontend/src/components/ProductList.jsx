@@ -5,11 +5,13 @@ import {
   CardContent,
   Typography,
   Button, Box,
-  Alert, Pagination, CircularProgress,
+  Alert, Pagination,
 } from "@mui/material";
 import { singleProductToItems} from '../services/OrderService.js';
 import { getProducts, getProductsByCategory, getPopularProducts, getFallbackImageUrl } from "../services/ProductService";
 import { addToCart } from "../services/CartService";
+import { LoadingView } from "../components/LoadingCircle";
+import { storage } from "../utils/storage";
 
 function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop 추가
   const navigate = useNavigate();
@@ -72,14 +74,11 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
   let filteredProducts = products;
 
   // 로그인 상태 확인
-  const isLoggedIn = !!localStorage.getItem("token");
+  const isLoggedIn = !!storage.get("token");
 
   return (
     <Box sx={{ p: 4, maxWidth: "1400px", margin: "0 auto", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
-          <CircularProgress />
-        </Box>
+      {loading ? ( <LoadingView/>
       ) : (
         <>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -155,7 +154,7 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
                         fullWidth
                         onClick={async () => {
                         try {
-                          const user = JSON.parse(localStorage.getItem("user"));
+                          const user = JSON.parse(storage.get("user"));
                           const data = await addToCart(user.login_id, product.product_id, 1);
                           if (data.success) {
                             if (window.confirm(`「${product.name}」${1}個がカートに追加されました。カートに移動しますか？`)) {

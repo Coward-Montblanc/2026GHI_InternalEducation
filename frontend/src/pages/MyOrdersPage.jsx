@@ -10,61 +10,18 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Alert,
-  CircularProgress,
+  Alert
 } from "@mui/material";
-import { useAuth } from "../contexts/AuthContext";
-import { getOrdersByUser, getOrderStatusLabel } from "../services/OrderService";
+import { getOrderStatusLabel } from "../services/OrderService";
+import { useOrder } from "../hooks/useOrder";
 import { formatDate } from "../utils/date";
+import { LoadingView } from "../components/LoadingCircle";
 
 export default function MyOrdersPage() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate(); // navigate는 컴포넌트에서 직접 선언
+  const { loading, orders, error } = useOrder();
 
-  useEffect(() => {
-    if (!user?.login_id) {
-      setLoading(false);
-      setError("ログインが必要です。");
-      return;
-    }
-    const fetchOrders = async () => {
-      try {
-        const data = await getOrdersByUser(user.login_id);
-        setOrders(data.orders || []);
-        setError(null);
-      } catch (err) {
-        setError(err.response?.data?.message || "注文一覧の取得に失敗しました。");
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-  }, [user?.login_id]);
-
-  if (!user) {
-    return (
-      <Box sx={{ p: 4, maxWidth: 600, margin: "0 auto" }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          ログイン後にご利用ください。
-        </Alert>
-        <Button variant="contained" onClick={() => navigate("/login")}>
-          ログイン
-        </Button>
-      </Box>
-    );
-  }
-
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading) { return ( <LoadingView /> ); }
 
   const formatPrice = (price) => new Intl.NumberFormat("ja-JP").format(price);
 
@@ -117,12 +74,6 @@ export default function MyOrdersPage() {
           </Table>
         )}
       </Paper>
-
-      <Box sx={{ mt: 2 }}>
-        <Button variant="outlined" onClick={() => navigate("/")}>
-          ホームへ戻る
-        </Button>
-      </Box>
     </Box>
   );
 }

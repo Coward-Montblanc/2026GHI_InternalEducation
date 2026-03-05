@@ -13,6 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import { createEvent } from "../services/EventService";
+import { LoadingView } from "../components/LoadingCircle";
 
 function EventWritePage() {
   const navigate = useNavigate();
