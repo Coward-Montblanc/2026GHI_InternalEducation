@@ -5,8 +5,11 @@ import {
   deleteUser, //회원 삭제
   updateUser //회원 업데이트
 } from "../controllers/user.controller.js"; //경로에서 임포트연결.
+import { authenticateToken } from "../middlewares/auth.middleware.js"; //로그인 검증 미들웨어 임포트
 
 const router = express.Router();
+
+router.put("/update-profile", authenticateToken, updateUser); //회원 정보 수정라우트
 
 /**
  * @swagger
@@ -70,6 +73,9 @@ router.get("/", getUsers);
  *               address_detail:
  *                 type: string
  *                 example: 101-0001
+ *               status:
+ *                 type: integer
+ *                 example: 0
  *               role:
  *                 type: string
  *                 example: USER
@@ -142,6 +148,9 @@ router.delete("/:id", deleteUser);
  *               address_detail:
  *                 type: string
  *                 example: 101-0001
+ *               status:
+ *                 type: integer
+ *                 example: 0
  *               role:
  *                 type: string
  *                 enum: [USER, ADMIN]

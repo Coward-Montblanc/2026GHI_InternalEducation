@@ -10,9 +10,9 @@ import {
   Paper,
   FormControlLabel,
   Checkbox,
-  Alert,
-  CircularProgress, //조회해야해서 로딩 추가
+  Alert
 } from "@mui/material";
+import { LoadingView } from "../components/LoadingCircle";
 import { getEventDetail, updateEvent } from "../services/EventService";
 
 function EventEditPage() {
@@ -76,13 +76,7 @@ function EventEditPage() {
 
   if (!user) return null;
   if (!isAdmin) return null;
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading) { return ( <LoadingView /> ); }
 
   return (
     <>

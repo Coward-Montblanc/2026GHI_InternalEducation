@@ -1,10 +1,7 @@
-import {
-  Box, Typography,
-  Button, Alert,
-  CircularProgress, Stack,
-} from "@mui/material";
+import { Box, Typography, Button, Alert, Stack } from "@mui/material";
 import Footer from "../components/Footer";
 import { useProductDetail } from "../hooks/useProductDetail.js";
+import { LoadingView } from "../components/LoadingCircle";
 
 function ProductDetail() {
   const{
@@ -30,11 +27,7 @@ function ProductDetail() {
     );
   }
 
-  if (!product) return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <CircularProgress />
-    </Box>
-  );
+  if (!product) { return ( <LoadingView /> ); }
 
   return (
     <Box>

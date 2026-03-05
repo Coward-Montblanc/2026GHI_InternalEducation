@@ -69,18 +69,28 @@ export async function deleteUser(req, res) { //회원 삭제
 }
 
 export async function updateUser(req, res) { //회원정보 수정
-  const { id } = req.params; // login_id
-  const { name, email, phone, zip_code, address, address_detail, role, password } = req.body;
+  const id = req.params.id || req.user?.login_id;
+  if (!id) {
+    console.error("変更先 IDエラー");
+    return response.error(res, "変更先 ID が見つかりません。", 400);
+  }
+
+  const { name, email, phone, zip_code, address, address_detail, role, password, status } = req.body;
 
   try {
+    const User = await userModel.findByLoginId(id);
+    if (!User) {
+        return response.error(res, "登録された会員が存在しません。", 404);
+    }
     const updateData = {
-      name,
-      email,
-      phone,
-      zip_code,
-      address,
-      address_detail,
-      role: role || "USER",
+      name: name ?? User.name,
+      email: email ?? User.email,
+      phone: phone ?? User.phone,
+      zip_code: zip_code ?? User.zip_code,
+      address: address ?? User.address,
+      address_detail: address_detail ?? User.address_detail,
+      role: role ?? User.role,
+      status: (status !== undefined) ? status : User.status //탈퇴할때만 수정되게
     };
 
     if (password) {

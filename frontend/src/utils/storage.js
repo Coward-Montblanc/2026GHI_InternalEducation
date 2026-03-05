@@ -10,3 +10,5 @@ export const storage = { //토큰 확인할때 자주 쓰는 스토리지함수
   },
   remove: (key) => localStorage.removeItem(key), //지우기 : 유저 이름이나 토큰 이름
 };
+
+export default storage;

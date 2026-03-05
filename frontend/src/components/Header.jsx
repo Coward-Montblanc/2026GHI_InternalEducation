@@ -41,6 +41,11 @@ function Header() {
     navigate("/");
   };
 
+  const handleMypage = () => {
+    navigate("/mypage");
+  };
+  
+
   return (
     <AppBar position="static" color="primary">
       <Toolbar sx={{ justifyContent: "space-between" }}>
@@ -66,16 +71,7 @@ function Header() {
                 </Button>
               )}
 
-              <Button
-                variant="contained"
-                color="blue"
-                sx={{ mr: 1 }}
-                onClick={() => navigate("/my-orders")}
-              >
-                注文履歴
-              </Button> {/* 일단 버튼으로 만들어뒀습니다. 
-              나중에 정보수정 페이지도 넣어야하니까 이름을 클릭했을 때 마이페이지로 넘어가게하고 또 표시하는게 초기 구상입니다 */}
-
+              
               <IconButton //장바구니 버튼
                 color="inherit" 
                 sx={{ mr: 2 }} 
@@ -89,6 +85,9 @@ function Header() {
               <Typography variant="body1" sx={{ mr: 2 }}>
                 <strong>{user.name || user.login_id}</strong>様、ようこそ！
               </Typography>
+              <Button color="inherit" onClick={handleMypage}>
+                マイページ
+              </Button>
               <Button color="inherit" onClick={handleLogout}>
                 ログアウト
               </Button>

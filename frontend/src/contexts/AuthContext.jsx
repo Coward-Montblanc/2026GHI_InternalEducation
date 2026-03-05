@@ -8,6 +8,16 @@ export function AuthProvider({ children }) {
     return storage.get("user"); //스토리지 내에서 없으면 토큰이 없음을 명시함
   });
   
+  const verifyPassword = async (password) => { //회원정보 수정용 비밀번호 검증 함수 추가 
+    try {
+      const response = await api.post("/auth/verify-password", { password });
+      return response.data.success;  //200 응답 반환.
+    } catch (err) {
+      console.error("パスワード検証に失敗しました。 :", err);
+      return false; // 실패 시 false
+    }
+  };
+
   useEffect(() => {
   const checkToken = async () => {
     if (storage.get("token")) {
@@ -38,7 +48,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout ,verifyPassword}}>
       {children}
     </AuthContext.Provider>
   );

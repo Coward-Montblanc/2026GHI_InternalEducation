@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext"; //로그인 토큰용 함수
+import AuthGuard from "./components/auth/AuthGuard"; 
 import MainPage from "./pages/MainPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -17,6 +18,8 @@ import NoticeEditPage from "./pages/NoticeEditPage";
 import CartPage from "./pages/CartPage";
 import BuyPage from "./pages/BuyPage";
 import OrderConfirmPage from "./pages/OrderConfirmPage";
+import MyPage from "./pages/MyPage";
+import MyProfile from "./pages/MyProfile";
 import MyOrdersPage from "./pages/MyOrdersPage";
 
 function App() {
@@ -38,10 +41,15 @@ function App() {
           <Route path="/notice/write" element={<NoticeWritePage />} />
           <Route path="/notice/:id/edit" element={<NoticeEditPage />} />
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
-          <Route path="/cart" element={<CartPage />} />
           <Route path="/buy" element={<BuyPage />} />
-          <Route path="/order-confirm" element={<OrderConfirmPage />} />
-          <Route path="/my-orders" element={<MyOrdersPage />} />
+          {/* 로그인이 필요한 페이지들 = AuthGuard로 감싸기 */}
+          <Route path="/cart" element={<AuthGuard> <CartPage /> </AuthGuard> } />
+          <Route path="/order-confirm" element={<AuthGuard> <OrderConfirmPage /> </AuthGuard>} />
+          <Route path="/mypage" element={<AuthGuard> <MyPage /> </AuthGuard>}> {/* 마이페이지 버튼 */}
+            <Route index element={<MyProfile />} />
+            <Route path="orders" element={<MyOrdersPage />} /> {/* 주문 내역 페이지를 마이페이지 안으로 넣음*/}
+          </Route>
+
         </Routes>
       </AuthProvider>
     </Router>

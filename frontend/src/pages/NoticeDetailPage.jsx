@@ -1,10 +1,11 @@
 import Footer from "../components/Footer";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Box, CircularProgress, Button, Alert } from "@mui/material";
+import { Box, Button, Alert } from "@mui/material";
 import { getNoticeDetail, deleteNotice } from "../services/NoticeService";
 import { useNEDetail } from "../hooks/useNEDetail";
 import NEDetailView from "../components/NEDetailView";
+import { LoadingView } from "../components/LoadingCircle";
 
 // 상세 조회·삭제·로딩·에러는 useNEDetail 훅에서 처리 (공지/이벤트 공통)
 function NoticeDetailPage() {
@@ -24,14 +25,8 @@ function NoticeDetailPage() {
     }
   );
 
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
+  if (loading) { return ( <LoadingView /> ); }
+  
   if (error || !item) {
     return (
       <>

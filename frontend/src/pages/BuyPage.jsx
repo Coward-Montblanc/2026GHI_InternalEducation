@@ -5,11 +5,11 @@ import {
 	Stack, Alert,
 	FormControl,
 	InputLabel, Select,
-	MenuItem,
-	CircularProgress
+	MenuItem
 } from "@mui/material";
 import { useBuy } from "../hooks/useBuy";
 import OrderList from "../components/OrderList";
+import { LoadingView } from "../components/LoadingCircle";
 
 function BuyPage() {
 	const {
@@ -22,19 +22,7 @@ function BuyPage() {
 
 	return ( //로딩 오버레이
 		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto", position: "relative" }}>
-			{isSubmitting && (
-				<Box
-					sx={{
-						position: "fixed",
-						top: 0, left: 0, right: 0, bottom: 0, //꽉차게
-						display: "flex", alignItems: "center", justifyContent: "center",
-						bgcolor: "rgba(255,255,255,0.8)",
-						zIndex: 9999, //맨 위에 표시
-					}}
-				>
-					<CircularProgress size={60} />
-				</Box>
-			)}
+			{isSubmitting && ( <LoadingView/> )}
 			<Stack spacing={4}>
 				{/* 상품 정보 상자 */}
 					<OrderList items={items} url={url} />
