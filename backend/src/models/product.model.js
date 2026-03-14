@@ -29,7 +29,8 @@ export const getAllProducts = async (page = 1, limit = 24, search = "") => {
   const searchValue = search && search.trim() !== "" ? `%${search}%` : null;
 
   // 전체 상품 개수 조회 (검색어 포함)
-  const countQuery = `SELECT COUNT(*) as total FROM products p WHERE p.status = 0 ${searchCond}`;
+  // 일시품절상품도 표시는 되지만 구매버튼 막아둠
+  const countQuery = `SELECT COUNT(*) as total FROM products p WHERE p.status IN (0, 2) ${searchCond}`;
   const countParams = searchCond ? [searchValue] : []; 
   const [countRows] = await db.query(countQuery, countParams);
   const total = countRows[0].total;
@@ -42,7 +43,7 @@ export const getAllProducts = async (page = 1, limit = 24, search = "") => {
       (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.status = 0 ${searchCond}
+    WHERE p.status IN (0, 2) ${searchCond}
     ORDER BY p.created_at DESC
     LIMIT ? OFFSET ?
   `;
@@ -94,7 +95,7 @@ export const getProductsByCategory = async (categoryId, search = "") => {
       (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.category_id = ? AND p.status = 0 ${searchCond}
+    WHERE p.category_id = ? AND p.status IN (0, 2) ${searchCond}
     ORDER BY p.created_at DESC
   `;
   const params = searchCond ? [categoryId, searchValue] : [categoryId];
@@ -105,7 +106,9 @@ export const getProductsByCategory = async (categoryId, search = "") => {
 // 상품 생성 (InsertId 반환)
 //BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
 export const createProduct = async (connection, productData) => {
-  const { category_id, name, description, price, stock, status = 0 } = productData;
+  const { category_id, name, description, price, stock } = productData;
+  let status = Number(productData.status ?? 0);
+  if (Number(stock) === 0) status = 2;
   const [[rows]] = await connection.execute(
     "SELECT COALESCE(MAX(CAST(SUBSTRING(product_id, 3) AS UNSIGNED)), 0) + 1 AS n FROM products"
   );
@@ -117,9 +120,48 @@ export const createProduct = async (connection, productData) => {
   return product_id;
 };
 
+// 관리자용 전체 상품 조회 (status 필터 없음)
+export const getAllProductsForAdmin = async (page = 1, limit = 24, search = "") => {
+  const offset = (Number(page) - 1) * Number(limit);
+  const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : "";
+  const searchValue = search && search.trim() !== "" ? `%${search}%` : null;
+
+  const countQuery = `SELECT COUNT(*) as total FROM products p WHERE 1=1 ${searchCond}`;
+  const countParams = searchCond ? [searchValue] : [];
+  const [countRows] = await db.query(countQuery, countParams);
+  const total = countRows[0].total;
+
+  const query = `
+    SELECT 
+      p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
+      c.name as category_name,
+      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.category_id
+    WHERE 1=1 ${searchCond}
+    ORDER BY p.created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+  const params = searchCond ? [searchValue, Number(limit), offset] : [Number(limit), offset];
+  const [rows] = await db.query(query, params);
+
+  return {
+    products: rows,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total: total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+};
+
 // 상품 정보 수정
 export const updateProduct = async (productId, productData) => {
-  const { category_id, name, description, price, stock, status } = productData;
+  const { category_id, name, description, price, stock } = productData;
+  let status = Number(productData.status);
+  //재고가 0인 상태에서 판매중 상태로 둬도 자동으로 품절로 뜨도록
+  if (Number(stock) === 0) status = 2;
   const [result] = await db.query(
     `UPDATE products SET category_id = ?, name = ?, description = ?, price = ?, stock = ?, status = ? WHERE product_id = ?`,
     [category_id, name, description, price, stock, status, productId]

@@ -29,6 +29,7 @@ app.use(cors()); // CORS 허용
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
+app.use("/image_list", express.static(path.join(path.resolve(), "image_list")));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes); 
 app.use("/api/users", userRoutes); 

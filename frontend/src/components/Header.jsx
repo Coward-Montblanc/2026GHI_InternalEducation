@@ -60,17 +60,6 @@ function Header() {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>{/* 로그인 여부에 따라 다르게 나타남. */}
           {user ? (
             <>
-              {user.role === "ADMIN" && (
-                <Button 
-                  variant="contained" 
-                  color="blue" 
-                  sx={{ mr: 2 }}
-                  onClick={() => navigate("/admin/product-add")}
-                >
-                  商品登録
-                </Button>
-              )}
-
               
               <IconButton //장바구니 버튼
                 color="inherit" 
@@ -86,7 +75,7 @@ function Header() {
                 <strong>{user.name || user.login_id}</strong>様、ようこそ！
               </Typography>
               <Button color="inherit" onClick={handleMypage}>
-                マイページ
+                {user.role === "ADMIN" ? "管理ページ" : "マイページ"}
               </Button>
               <Button color="inherit" onClick={handleLogout}>
                 ログアウト

@@ -13,6 +13,10 @@ dist/
 build/
 *.log
 
+# Uploaded files (user-uploaded product images)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # IDE
 .vscode/*
 !.vscode/extensions.json

@@ -10,7 +10,8 @@ export function useNEList(fetchFn, listKey, errorMessage) {
       setLoading(true);
       setError(null);
       const data = await fetchFn();
-      setItems(data[listKey] ?? data ?? []);
+      const next = data?.[listKey];
+      setItems(Array.isArray(next) ? next : []); //배열인지 확인을 안했던 것
     } catch (err) {
       setError(err.response?.data?.message || errorMessage);
       setItems([]);

@@ -28,6 +28,7 @@ CREATE TABLE users (
   zip_code VARCHAR(10),
   address VARCHAR(255),
   address_detail VARCHAR(255),
+  status TINYINT DEFAULT 0,  /* 0=회원, 1=탈퇴 */
   role VARCHAR(20) DEFAULT 'USER',  /* USER=一般, ADMIN=管理者 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

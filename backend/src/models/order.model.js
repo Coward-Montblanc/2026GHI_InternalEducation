@@ -33,7 +33,8 @@ export const createOrderItem = async (order_id, product_id, quantity, price) => 
 export const getOrderWithItems = async (order_id) => {
   const [[order]] = await db.query(`SELECT * FROM orders WHERE order_id = ?`, [order_id]);
   const [items] = await db.query(
-    `SELECT oi.*, p.name AS product_name
+    `SELECT oi.*, p.name AS product_name,
+     (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) AS image_url
      FROM order_items oi
      LEFT JOIN products p ON oi.product_id = p.product_id
      WHERE oi.order_id = ?`,

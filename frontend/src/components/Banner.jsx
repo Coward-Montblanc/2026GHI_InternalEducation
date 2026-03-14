@@ -8,9 +8,9 @@ const url = import.meta.env.VITE_API_URL;
 
 function Banner() {
   const images = [
-    `${url}/uploads/Banner1.png`,
-    `${url}/uploads/Banner2.png`,
-    `${url}/uploads/Banner3.png`
+    `${url}/image_list/Banner1.png`,
+    `${url}/image_list/Banner2.png`,
+    `${url}/image_list/Banner3.png`
   ];
   const [index, setIndex] = useState(0);
 

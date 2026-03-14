@@ -3,11 +3,15 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 // 인기상품 조회
 router.get("/popular", productController.getRankProducts);
+
+// 관리자용 전체 상품 조회 (status 무관)
+router.get("/admin/all", authenticateToken, productController.getAllProductsForAdmin);
 
 // Multer 설정 (이미지 업로드 필수)
 const uploadDir = path.join(path.resolve(), "uploads");
@@ -134,7 +138,7 @@ router.get("/:id", productController.getProductViewUp);
  *                   type: integer
  *                   example: 25
  */
-router.post("/", (req, res, next) => {
+router.post("/", authenticateToken, (req, res, next) => {
   // 최대 5장까지 업로드 허용 및 에러 핸들링
   upload.fields([ //필드가 많아서 array못씀
     { name: "images", maxCount: 5 },
@@ -204,7 +208,20 @@ router.post("/", (req, res, next) => {
  *       404:
  *         description: 商品が見つかりません
  */
-router.put("/:id", productController.updateProduct);
+router.put("/:id", authenticateToken, (req, res, next) => {
+  upload.fields([
+    { name: "images", maxCount: 5 },
+    { name: "detail_images", maxCount: 5 },
+  ])(req, res, (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ success: false, message: "ファイルサイズは250KB以下でなければなりません。" });
+      }
+      return res.status(400).json({ success: false, message: "ファイルアップロードエラー", error: err.message });
+    }
+    next();
+  });
+}, productController.updateProduct);
 
 
 export default router;

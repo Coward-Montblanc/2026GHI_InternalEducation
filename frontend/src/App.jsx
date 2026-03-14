@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Header from "./components/Header";
 import ProductAddPage from "./pages/ProductAddPage";
+import AdminProductEditPage from "./pages/AdminProductEditPage";
 import ProductDetail from "./pages/ProductDetail";
 import EventPage from "./pages/EventPage";
 import EventDetailPage from "./pages/EventDetailPage";
@@ -31,7 +32,8 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/admin/product-add" element={<ProductAddPage />} />{/* 상품 등록 버튼 */}
+          <Route path="/admin/product-add" element={<AuthGuard requireAdmin><ProductAddPage /></AuthGuard>} />
+          <Route path="/admin/product-edit/:id" element={<AuthGuard requireAdmin><AdminProductEditPage /></AuthGuard>} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/event" element={<EventPage />} />
           <Route path="/event/write" element={<EventWritePage />} />
