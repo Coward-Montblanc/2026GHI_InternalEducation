@@ -28,6 +28,7 @@ export const getEventDetail = async (event_id) => {
 
 //이벤트 생성
 //BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
+//이러면 동시에 입력한게 같은 번호로 들어올 확률 있음. 추후 AUTO_INCREMENT로 수정예정
 export const createEvent = async (login_id, title, content, is_pinned = 0) => {
   const [[rows]] = await db.query(
     "SELECT COALESCE(MAX(CAST(SUBSTRING(event_id, 3) AS UNSIGNED)), 0) + 1 AS n FROM events"

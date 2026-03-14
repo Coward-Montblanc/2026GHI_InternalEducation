@@ -1,16 +1,32 @@
 import { useState, useEffect } from "react";
-import { Box, Paper, List, ListItemButton, ListItem, ListItemText } from "@mui/material";
+import { Box, Paper, List, ListItemButton, ListItem, ListItemText, Typography } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { LoadingView } from "../components/LoadingCircle";
 import MyWithdraw from "./MyWithdraw"
-import MyOrdersPage from "./MyOrdersPage"; // 가져오기
+import MyOrdersPage from "./MyOrdersPage";
 import MyProfile from "./MyProfile";
+import AdminProductList from "./AdminProductList";
+import AdminUserList from "./AdminUserList";
+import AdminOrderManagement from "./AdminOrderManagement";
 
+const USER_MENU = [
+  { key: "profile", label: "会員情報" },
+  { key: "orders",  label: "注文履歴" },
+  { key: "withdraw", label: "会員脱退" },
+];
+
+const ADMIN_MENU = [
+  { key: "adminProducts", label: "商品管理" },
+  { key: "adminUsers",    label: "ユーザー一覧" },
+  { key: "adminOrders",   label: "ユーザー注文管理" },
+];
 
 function MyPage() {
-  const [view, setView] = useState("profile");
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+
+  const [view, setView] = useState(isAdmin ? "adminProducts" : "profile");
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); 
 
   useEffect(() => {
     if (user) {
@@ -20,17 +36,19 @@ function MyPage() {
 
   if (loading) { return ( <LoadingView /> ); }
 
+  const menu = isAdmin ? ADMIN_MENU : USER_MENU;
+
   return (
     <Box sx={{ p: { xs: 1, md: 4 }, maxWidth: 1400, margin: "0 auto" }}>
       <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: { xs: 1, md: 3 } }}>
         
-        {/* [좌측 사이드바 */}
+        {/* 좌측 사이드바 */}
         <Paper
           elevation={0}
           variant="outlined"
           sx={{
             width: { xs: "100px", sm: "180px", md: "240px" }, 
-            flexShrink: 0, //
+            flexShrink: 0,
             borderRadius: 4,
             position: "sticky", 
             top: 20,
@@ -38,61 +56,38 @@ function MyPage() {
           }}
         >
           <List sx={{ p: 1 }}>
-            <ListItem disablePadding>
-              <ListItemButton 
-                selected={view === "profile"} 
-                onClick={() => setView("profile")}
-                sx={{ borderRadius: 2, mb: 1, px: { xs: 1, md: 2 } }}
-              >
-                <ListItemText 
-                  primary="会員情報" 
-                  primaryTypographyProps={{ 
-                    fontSize: { xs: '0.75rem', md: '1rem' },
-                    fontWeight: view === "profile" ? 700 : 500 
-                  }} 
-                />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton 
-                selected={view === "orders"} 
-                onClick={() => setView("orders")}
-                sx={{ borderRadius: 2, px: { xs: 1, md: 2 } }}
-              >
-                <ListItemText 
-                  primary="注文履歴" 
-                  primaryTypographyProps={{ 
-                    fontSize: { xs: '0.75rem', md: '1rem' },
-                    fontWeight: view === "orders" ? 700 : 500 
-                  }} 
-                />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton 
-                selected={view === "withdraw"} 
-                onClick={() => setView("withdraw")}
-                sx={{ borderRadius: 2, mb: 1, px: { xs: 1, md: 2 } }}
-              >
-                <ListItemText 
-                  primary="会員脱退" 
-                  primaryTypographyProps={{ 
-                    fontSize: { xs: '0.75rem', md: '1rem' },
-                    fontWeight: view === "withdraw" ? 700 : 500 
-                  }} 
-                />
-              </ListItemButton>
-            </ListItem>
+            {menu.map(({ key, label }) => (
+              <ListItem key={key} disablePadding>
+                <ListItemButton
+                  selected={view === key}
+                  onClick={() => setView(key)}
+                  sx={{ borderRadius: 2, mb: 0.5, px: { xs: 1, md: 2 } }}
+                >
+                  <ListItemText
+                    primary={label}
+                    primaryTypographyProps={{
+                      fontSize: { xs: "0.75rem", md: "1rem" },
+                      fontWeight: view === key ? 700 : 500,
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
           </List>
         </Paper>
 
-        {/* [2] 우측 컨텐츠 영역 (확장) */}
+        {/* 우측 콘텐츠 영역 */}
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          {view === "profile" && <MyProfile />}
-          {view === "orders" && <MyOrdersPage />}
-          {view === "withdraw" && <MyWithdraw />} {/* 내부 컴포넌트 호출 */}
+          {/* 일반 유저 */}
+          {view === "profile"  && <MyProfile />}
+          {view === "orders"   && <MyOrdersPage />}
+          {view === "withdraw" && <MyWithdraw />}
+          {/* 관리자 */}
+          {view === "adminProducts" && <AdminProductList />}
+          {view === "adminUsers"    && <AdminUserList />}
+          {view === "adminOrders"   && <AdminOrderManagement />}
         </Box>
-        
+
       </Box>
     </Box>
   );

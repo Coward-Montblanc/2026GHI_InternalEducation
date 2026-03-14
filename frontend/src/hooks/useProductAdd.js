@@ -3,6 +3,55 @@ import { useNavigate } from "react-router-dom";
 import { getCategories } from "../services/CategoryService";
 import { createProduct } from "../services/ProductService";
 
+//메인서브/디테일 따로따로 불러오니 위에 선언하는거로 변경
+const MAX_SIZE  = 250 * 1024;
+const MAX_COUNT = 5;
+
+export const useProductFiles = () => {
+  const [selectedFiles, setSelectedFiles]             = useState([]);
+  const [selectedDetailFiles, setSelectedDetailFiles] = useState([]);
+
+  const handleFileChange = (e) => {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files);
+    if (selectedFiles.length + newFiles.length > MAX_COUNT) {
+      alert(`イメージは${MAX_COUNT}枚までアップロードできます。`);
+      e.target.value = "";
+      return;
+    }
+    for (const file of newFiles) {
+      if (file.size > MAX_SIZE) {
+        alert("サイズが250KBを超えています。");
+        e.target.value = "";
+        return;
+      }
+    }
+    setSelectedFiles((prev) => [...prev, ...newFiles]);
+    e.target.value = "";
+  };
+
+  const handleDetailFileChange = (e) => {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files);
+    if (selectedDetailFiles.length + newFiles.length > MAX_COUNT) {
+      alert(`詳細画像は${MAX_COUNT}枚までアップロードできます。`);
+      e.target.value = "";
+      return;
+    }
+    for (const file of newFiles) {
+      if (file.size > MAX_SIZE) {
+        alert("サイズが250KBを超えています。");
+        e.target.value = "";
+        return;
+      }
+    }
+    setSelectedDetailFiles((prev) => [...prev, ...newFiles]);
+    e.target.value = "";
+  };
+
+  return { selectedFiles, selectedDetailFiles, handleFileChange, handleDetailFileChange };
+};
+
 export const useProductAdd = () => {
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
@@ -14,8 +63,8 @@ export const useProductAdd = () => {
         stock: "",
     });
 
-    const [selectedFiles, setSelectedFiles] = useState([]);
-    const [selectedDetailFiles, setSelectedDetailFiles] = useState([]);
+    //저장 / 수정 두가지로
+    const { selectedFiles, selectedDetailFiles, handleFileChange, handleDetailFileChange } = useProductFiles();
     const [loading ,setLoading] = useState(true);
   useEffect(() => {
     const fetchCategories = async () => {
@@ -36,57 +85,7 @@ export const useProductAdd = () => {
   }, []);
   
   const handleChange = (e) => {
-    if(e.target.files){
-      const newfile = Array.from(e.target.files);
-    }
     setProduct({ ...product, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (e) => { // 파일 선택 시 호출되는 함수
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      const MAX_SIZE = 250 * 1024; // 250KB
-      const MAX_COUNT = 5;
-
-      
-      if (selectedFiles.length + newFiles.length > MAX_COUNT) { // 개수 체크
-        alert(`イメージは ${MAX_COUNT}枚までアップロードできます.`);
-        e.target.value = ""; 
-        return;
-      }
-
-      for (let file of newFiles) { // 용량확인
-        if (file.size > MAX_SIZE) {
-          alert(`サイズが 250KBを超えています.`);
-          e.target.value = "";
-          return;
-        }
-      }
-      setSelectedFiles((prevFiles) => [...prevFiles, ...newFiles]);
-      e.target.value = "";// 연속해서 같은 파일을 선택할 수 있도록 인풋 초기화
-    }
-  };
-
-  const handleDetailFileChange = (e) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      const MAX_SIZE = 250 * 1024;
-      const MAX_COUNT = 5;
-      if (selectedDetailFiles.length + newFiles.length > MAX_COUNT) {
-        alert(`詳細画像は ${MAX_COUNT}枚までアップロードできます。`);
-        e.target.value = "";
-        return;
-      }
-      for (const file of newFiles) {
-        if (file.size > MAX_SIZE) {
-          alert("サイズが 250KBを超えています。");
-          e.target.value = "";
-          return;
-        }
-      }
-      setSelectedDetailFiles((prev) => [...prev, ...newFiles]);
-      e.target.value = "";
-    }
   };
 
   const handleSubmit = async (e) => {

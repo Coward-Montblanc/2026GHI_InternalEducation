@@ -46,8 +46,14 @@ export const createOrder = async (req, res) => {
       if (updateResult.affectedRows === 0) {
         return response.error(res , `商品ID ${item.product_id}の在庫が不足しているため、注文に失敗しました。` , 400);
       }
+
+      //재고 차감으로인해 재고수가 0으로 바뀌었을 때 스테이터스를 바꿈
+      await db.query(
+        "UPDATE products SET status = 2 WHERE product_id = ? AND stock = 0 AND status = 0",
+        [item.product_id]
+      );
     }
-    return response.success(res, { order_id }, 201); //주문 기능 구현 후 확인해야함.
+    return response.success(res, { order_id }, 201); 
   } catch (err) {
     console.error("注文作成エラー:", err);
     return response.error(res , "サーバーエラーが発生しました。" , 500);

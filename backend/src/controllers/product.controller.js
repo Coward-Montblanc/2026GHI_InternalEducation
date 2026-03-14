@@ -1,6 +1,8 @@
 import db from "../config/db.js";
 import * as productModel from "../models/product.model.js";
 import response from "../utils/response.js";
+import fs from "fs";
+import path from "path";
 
 // 인기상품 조회 (view 10 이상) 프론트엔드로는 아직 미구현
 export const getRankProducts = async (req, res) => {
@@ -27,6 +29,17 @@ export const getProductViewUp = async (req, res) => {
   } catch (error) {
     console.error("商品詳細取得エラー:", error); 
     return response.error(res , "商品詳細取得エラーが発生しました。" , 500);
+  }
+};
+
+export const getAllProductsForAdmin = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+    const data = await productModel.getAllProductsForAdmin(Number(page), Number(limit), search);
+    res.json(data);
+  } catch (err) {
+    console.error("管理者商品一覧取得エラー:", err);
+    return response.error(res, "商品一覧取得エラー", 500);
   }
 };
 
@@ -94,8 +107,11 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
+    await connection.rollback();
     console.error("登録エラー詳細:", error);
     return response.error(res , "サーバー保存中にエラーが発生しました。" , 500);
+  } finally {
+    connection.release();
   }
 };
 
@@ -146,18 +162,73 @@ export const getProductsByCategory = async (req, res) => {
   }
 };
 
+//상품수정
 export const updateProduct = async (req, res) => {
-  try {
-    const affectedRows = await productModel.updateProduct(req.params.id, req.body);
+  const { id } = req.params;
+  const files       = req.files?.images        ?? [];
+  const detailFiles = req.files?.detail_images ?? [];
 
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // 텍스트 정보 수정
+    const affectedRows = await productModel.updateProduct(id, req.body);
     if (affectedRows === 0) {
-      return response.error(res , "商品が存在しません。" , 404);
+      await connection.rollback();
+      return response.error(res, "商品が存在しません。", 404);
     }
 
-    res.json({ message: "商品が修正されました。" });
+    // 일단 이미지를 새로 추가해야만 바뀌는 방식,x버튼등을 클릭해서 삭제하는 방식을 고려중
+    if (files.length > 0) {
+      const [oldImages] = await connection.execute(
+        `SELECT image_url FROM product_images WHERE product_id = ? AND role IN (1, 2)`, [id]
+      );
+      await connection.execute(
+        `DELETE FROM product_images WHERE product_id = ? AND role IN (1, 2)`, [id]
+      );
+      oldImages.forEach(({ image_url }) => {
+        const filePath = path.join(path.resolve(), image_url);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      });
+      for (let i = 0; i < files.length; i++) {
+        const imageUrl = `/uploads/${files[i].filename}`;
+        const role = i === 0 ? 1 : 2;
+        await connection.execute(
+          `INSERT INTO product_images (product_id, image_url, image_order, role) VALUES (?, ?, ?, ?)`,
+          [id, imageUrl, i + 1, role]
+        );
+      }
+    }
+
+    if (detailFiles.length > 0) {
+      const [oldDetailImages] = await connection.execute(
+        `SELECT image_url FROM product_images WHERE product_id = ? AND role = 3`, [id]
+      );
+      await connection.execute(
+        `DELETE FROM product_images WHERE product_id = ? AND role = 3`, [id]
+      );
+      oldDetailImages.forEach(({ image_url }) => {
+        const filePath = path.join(path.resolve(), image_url);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      });
+      for (let i = 0; i < detailFiles.length; i++) {
+        const imageUrl = `/uploads/${detailFiles[i].filename}`;
+        await connection.execute(
+          `INSERT INTO product_images (product_id, image_url, image_order, role) VALUES (?, ?, ?, ?)`,
+          [id, imageUrl, i + 1, 3]
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ success: true, message: "商品が修正されました。" });
   } catch (error) {
+    await connection.rollback();
     console.error("商品修正エラー:", error);
-    return response.error(res , "商品修正エラーが発生しました。" , 500);
+    return response.error(res, "商品修正エラーが発生しました。", 500);
+  } finally {
+    connection.release();
   }
 };
 

@@ -153,8 +153,12 @@ function ProductList({ categoryId, searchText }) { // 검색어(searchText) prop
                         variant="outlined"
                         fullWidth
                         onClick={async () => {
+                        if (!isLoggedIn) {
+                          alert("ログイン後に実行してください");
+                          return;
+                        }
                         try {
-                          const user = JSON.parse(storage.get("user"));
+                          const user = storage.get("user");
                           const data = await addToCart(user.login_id, product.product_id, 1);
                           if (data.success) {
                             if (window.confirm(`「${product.name}」${1}個がカートに追加されました。カートに移動しますか？`)) {
