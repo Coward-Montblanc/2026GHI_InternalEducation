@@ -12,7 +12,9 @@ import {
 } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../hooks/useProfile";
+import { useAddressSelection } from "../hooks/useAddressSelection";
 import { LoadingView } from "../components/LoadingCircle";
+import AddressSelectModal from '../components/modals/AddressSelectModal';
 
 export default function MyProfile() {
     const {
@@ -28,8 +30,17 @@ export default function MyProfile() {
     setIsEditing,
     handleVerify,    
     Address,
-    cancelEdit      
+    cancelEdit,
+    setFormData       
   } = useProfile();
+
+  const {
+        isAddrModalOpen,
+        openAddrModal,
+        closeAddrModal,
+        handleSelectAddress
+    } = useAddressSelection(setFormData);
+
     
     const { user, loading: authLoading } = useAuth();
 
@@ -140,7 +151,15 @@ export default function MyProfile() {
                     onChange={handleChange} disabled={!isVerified} sx={{ width: 200 }}
                   />
                   {isVerified && (
+                    <>
                     <Button variant="contained" onClick={() => Address(formData.zip_code)}>検索</Button>
+                    <Button variant="outlined" onClick={() => openAddrModal(true)}>配送先変更</Button>
+							        <AddressSelectModal 
+    							        open={isAddrModalOpen}
+    							        onClose={closeAddrModal}
+    							        onSelect={handleSelectAddress}
+							        />
+                    </>
                   )}
                 </Box>
               </Box>

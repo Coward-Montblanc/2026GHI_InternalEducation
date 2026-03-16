@@ -3,12 +3,20 @@ import {
   getUsers, //회원 조회
   createUser, //회원 추가
   deleteUser, //회원 삭제
-  updateUser //회원 업데이트
+  updateUser, //회원 업데이트
+  getUserAddresses,
+  addUserAddress,
+  updateDefaultAddress,
+  getAdminUsers
 } from "../controllers/user.controller.js"; //경로에서 임포트연결.
 import { authenticateToken } from "../middlewares/auth.middleware.js"; //로그인 검증 미들웨어 임포트
 
 const router = express.Router();
-
+router.get('/adminUsers', authenticateToken, getAdminUsers);
+router.patch("/addresses/default", authenticateToken, updateDefaultAddress);
+router.get("/addresses", authenticateToken, getUserAddresses); //회원정보 불러와야 해서 미들웨어 임포트
+router.post("/addresses", authenticateToken, addUserAddress);
+router.post("/register", createUser);
 router.put("/update-profile", authenticateToken, updateUser); //회원 정보 수정라우트
 
 /**

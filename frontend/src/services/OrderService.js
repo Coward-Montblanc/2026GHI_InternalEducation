@@ -1,5 +1,18 @@
 import api from "../api/axios";
 
+export const getAdminOrders = async (params) => {
+  try {
+    
+    const { data } = await api.get("/orders", { params });
+    console.log("전체 응답 객체 키:", Object.keys(data));
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error("ユーザ一覧取得エラー:", error);
+    throw error;
+  }
+};
+
 // 단일(갯수 상관x 한 상품) 상품저장
 export function singleProductToItems(product, quantity) {
   try {

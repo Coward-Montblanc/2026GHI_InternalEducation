@@ -1,30 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Banner from "../components/Banner";
 import Category from "../components/Category";
 import ProductList from "../components/ProductList";
 import Footer from "../components/Footer";
+import { useProductSearch } from "../hooks/useProductSearch";
 
 function MainPage() {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [searchText, setSearchText] = useState("");
   const [selectedCategoryName, setSelectedCategoryName] = useState("カテゴリー");
+  const [searchParams] = useSearchParams();
 
-  // Category에서 검색어, 카테고리명, 카테고리id 모두 관리
+  const { products, loading, fetchProducts } = useProductSearch();
+
+  useEffect(() => {//카테고리 id와 검색어를 가져옴
+    const categoryId = searchParams.get("category"); 
+    const searchTerm = searchParams.get("search");
+
+    fetchProducts({ 
+    category_id: categoryId || undefined, 
+    name: searchTerm || undefined 
+  });
+
+    if (!categoryId) setSelectedCategoryName("カテゴリー");
+  }, [searchParams, fetchProducts]);
+
+  const handleSearchTrigger = (params) => {
+    fetchProducts(params);
+  };
   
   return (
     <>
       <Banner />
       <Category 
-        onCategoryChange={setSelectedCategory} //카테고리가 바뀔 때
-        onSearch={setSearchText} //검색어가 바뀔 때
-        selectedCategoryName={selectedCategoryName} //선택된 카테고리명
-        setSelectedCategoryName={setSelectedCategoryName} //카테고리명 설정 함수
-        onCategoryNameChange={setSelectedCategoryName} //카테고리명 변경 함수
+        onSearch={handleSearchTrigger} // 통합 검색 함수
+        onCategoryNameChange={setSelectedCategoryName}
       />
       <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.7rem', margin: '25px 0' }}> {/*선택된 카테고리명 표시*/}
         {selectedCategoryName === 'カテゴリー' ? '全商品' : selectedCategoryName}
       </div>
-      <ProductList categoryId={selectedCategory} searchText={searchText} />
+      <ProductList products={products} loading={loading} />
       <Footer />
     </>
   );

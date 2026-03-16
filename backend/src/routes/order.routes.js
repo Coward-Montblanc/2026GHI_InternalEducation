@@ -2,8 +2,10 @@ import express from "express";
 import * as orderController from "../controllers/order.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js"; //로그인 검증 미들웨어 임포트
 
-const router = express.Router();
 
+
+const router = express.Router();
+router.get('/', authenticateToken, orderController.getAdminOrders);
 /**
  * @swagger
  * /orders:

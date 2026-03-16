@@ -1,4 +1,43 @@
 import db from "../config/db.js";
+import { buildDynamicQuery } from '../utils/queryBuilder.js';
+
+export const findOrdersAdmin = async (filters) => {
+    const { limit, offset, ...searchFilters } = filters;
+    const baseSql = `
+        SELECT 
+            order_id, login_id, total_price, receiver_name, 
+            address, phone, address_detail, delivery_request, 
+            status, created_at 
+        FROM orders
+    `;
+
+    const options = {
+        order_id: 'LIKE',
+        login_id: 'LIKE',
+        receiver_name: 'LIKE',
+        created_at: 'BETWEEN'
+    };
+    
+    const { sql, params } = buildDynamicQuery(baseSql, searchFilters, options);
+    
+    const { sql: countSql, params: countParams } = buildDynamicQuery(
+        "SELECT COUNT(*) as total FROM orders", 
+        searchFilters, 
+        options
+    );
+
+    //조립 유틸 함수로 넘김
+    const finalSql = `${sql} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    const finalParams = [ ...params, Number(limit), Number(offset) ];
+    
+    const [rows] = await db.query(finalSql, finalParams);
+    const [countResult] = await db.execute(countSql, countParams);
+    
+    return {
+        rows,
+        totalCount: countResult[0].total
+    };
+};
 
 // 주문"만" 생성
 //BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경

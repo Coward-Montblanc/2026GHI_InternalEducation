@@ -8,8 +8,10 @@ import {
 	MenuItem
 } from "@mui/material";
 import { useBuy } from "../hooks/useBuy";
+import { useAddressSelection } from "../hooks/useAddressSelection";
 import OrderList from "../components/OrderList";
 import { LoadingView } from "../components/LoadingCircle";
+import { AddressSelectModal } from "../components/modals/AddressSelectModal";
 
 function BuyPage() {
 	const {
@@ -20,12 +22,19 @@ function BuyPage() {
 		Address, setFormData
 	} = useBuy();
 
+	const {
+        isAddrModalOpen,
+        openAddrModal,
+        closeAddrModal,
+        handleSelectAddress
+    } = useAddressSelection(setFormData);
+
 	return ( //로딩 오버레이
 		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto", position: "relative" }}>
 			{isSubmitting && ( <LoadingView/> )}
 			<Stack spacing={4}>
 				{/* 상품 정보 상자 */}
-					<OrderList items={items} url={url} />
+					<OrderList items={items} url={url} linkToProduct={true} />
 
 				<form onSubmit={handleOrder}>
 					<Stack spacing={4}>
@@ -35,6 +44,12 @@ function BuyPage() {
 							<Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>配送先</Typography>
 							<Divider sx={{ mb: 3 }} />
 							<Stack spacing={2}>
+								<Button variant="outlined" onClick={() => openAddrModal(true)}>配送先変更</Button>
+							<AddressSelectModal 
+    							open={isAddrModalOpen}
+    							onClose={closeAddrModal}
+    							onSelect={handleSelectAddress}
+							/>
 								<TextField
 									label="名前"
 									name="receiver_name"

@@ -7,17 +7,17 @@ export const getProducts = async (page, limit, searchText) => { //쿼리 전달 
     const { data } = await api.get("/products", { params });
     return data;
   } catch (error) {
-    console.error("상품 목록 조회 에러:", error);
+    console.error("管理者商品一覧取得エラー:", error);
     throw error;
   }
 };
 
 //관리자 조건으로 불러오기
-export const getAdminProducts = async (page, limit, searchText) => {
+export const getAdminProducts = async (searchParams) => {//객체로 받아서 불러옴
   try {
-    const params = { page, limit };
-    if (searchText) params.search = searchText;
-    const { data } = await api.get("/products/admin/all", { params });
+    const { data } = await api.get("/products/admin/all", { 
+      params: searchParams 
+    });
     return data;
   } catch (error) {
     console.error("管理者商品一覧取得エラー:", error);

@@ -32,8 +32,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/admin/product-add" element={<AuthGuard requireAdmin><ProductAddPage /></AuthGuard>} />
-          <Route path="/admin/product-edit/:id" element={<AuthGuard requireAdmin><AdminProductEditPage /></AuthGuard>} />
+          
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/event" element={<EventPage />} />
           <Route path="/event/write" element={<EventWritePage />} />
@@ -45,13 +44,18 @@ function App() {
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
           <Route path="/buy" element={<BuyPage />} />
           {/* 로그인이 필요한 페이지들 = AuthGuard로 감싸기 */}
-          <Route path="/cart" element={<AuthGuard> <CartPage /> </AuthGuard> } />
-          <Route path="/order-confirm" element={<AuthGuard> <OrderConfirmPage /> </AuthGuard>} />
-          <Route path="/mypage" element={<AuthGuard> <MyPage /> </AuthGuard>}> {/* 마이페이지 버튼 */}
-            <Route index element={<MyProfile />} />
-            <Route path="orders" element={<MyOrdersPage />} /> {/* 주문 내역 페이지를 마이페이지 안으로 넣음*/}
+          <Route element={<AuthGuard />}>
+            <Route path="/cart" element={ <CartPage /> } />
+            <Route path="/order-confirm" element={<OrderConfirmPage />} />
+            <Route path="/mypage" element={ <MyPage /> }> {/* 마이페이지 버튼 */}
+              <Route index element={<MyProfile />} />
+              <Route path="orders" element={<MyOrdersPage />} /> {/* 주문 내역 페이지를 마이페이지 안으로 넣음*/}
+            </Route>
+            <Route element={<AuthGuard requireAdmin/>}>
+              <Route path="/admin/product-add" element={ <ProductAddPage /> } />
+              <Route path="/admin/product-edit/:id" element={ <AdminProductEditPage /> } />
+            </Route>
           </Route>
-
         </Routes>
       </AuthProvider>
     </Router>

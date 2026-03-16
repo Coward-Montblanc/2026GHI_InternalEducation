@@ -1,40 +1,60 @@
 import {
-  Box,
-  Button,
-  ButtonGroup,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Tabs,
-  Tab,
-  Collapse,
-  Paper,
+  Box, Button, ButtonGroup,
+  TextField, InputAdornment,
+  IconButton, Tabs, Tab,
+  Collapse, Paper,
+  FormControl, Select, MenuItem
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getCategories } from "../services/CategoryService";
 
 const menuItems = ["全商品", "人気商品", "イベント", "お知らせ"];
 
-function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCategoryNameChange }) {
+function Category({ onCategoryChange, onSearch, onCategoryNameChange }) {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [categories, setCategories] = useState([]);
   //setSelectedCategoryName는 MainPage에서 props로 받음
   const [showTabs, setShowTabs] = useState(false);
+  //selectedTab, setSelectedTab은 카테고리 탭, searchCategory, setSearchCategory은 검색창의 카테고리
   const [selectedTab, setSelectedTab] = useState(0);
+  const [searchCategory, setSearchCategory] = useState(0);
+  const [searchParams] = useSearchParams();
+  
+  useEffect(() => {
+    const categoryId = searchParams.get("category");
+    
+    if (categoryId && categories) { //카테고리 ID에 따라 카테고리 검색
+      const currentCategory = categories.find(c => String(c.category_id) === String(categoryId));
+      
+      if (currentCategory) {// 해당 카테고리로 이름 변경
+        onCategoryNameChange(currentCategory.name);
+      }
+    } else if (!categoryId) {//카테고리 값이 비거나 없으면 기본으로
+      onCategoryNameChange("カテゴリー");
+    }
+  }, [searchParams, categories, onCategoryNameChange]);
 
-  const refreshToAllProducts = () => { //카테고리 새로고침 기능 함수
+  const triggerSearch = (catId, term) => {
+    if (onSearch) {
+      onSearch({
+        category_id: catId, // null이면 전체검색, 값이 있으면 카테고리검색
+        name: term.trim()   // 검색어
+      });
+    }
+  };
+
+  const refreshToAllProducts = () => {
     setSearchText(""); 
     setSelectedTab(0);
-    setSelectedCategoryName("カテゴリー");
     if (onCategoryNameChange) onCategoryNameChange("カテゴリー");
-    if (onCategoryChange) onCategoryChange(null);
-    if (onSearch) onSearch("");
-    setShowTabs(false); // 애니메이션 닫기
+    navigate("/");
+    triggerSearch(null, ""); 
+    setShowTabs(false);
   };
 
   // カテゴリーAPIから取得
@@ -55,33 +75,22 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
   };
 
   const handleTabChange = (event, newValue) => {
-    if (selectedTab === 0 && newValue === 0) { //전상품 카테고리에서 다시 전상품 클릭할시 새로고침
-      refreshToAllProducts();
-      return;
-    }
-    if (selectedTab === newValue) { //다른 카테고리에서 같은 카테고리 선택 시 새로고침
-      setShowTabs(false); // 드롭다운 닫기
-      return;
-    }
+    const selectedIndex = typeof newValue === 'number' ? newValue : event.target.value; //검색창 카테고리에서 받아올 때.
+    if (typeof selectedIndex !== 'number') return;
 
-    setSelectedTab(newValue);
+    setSelectedTab(selectedIndex);
 
-    if (newValue === 0) {
-      setSelectedCategoryName("カテゴリー");
-      setSearchText("");
-      if (onCategoryNameChange) onCategoryNameChange("カテゴリー");
-      if (onCategoryChange) { onCategoryChange(null); }
-      if (onSearch) {onSearch(""); /* 인기상품 해제 시 검색어도 초기화 */ }
-    } else {
-      const selectedCategory = categories[newValue - 1];
-      if (selectedCategory) {
-        setSelectedCategoryName(selectedCategory.name);
-        if (onCategoryNameChange) onCategoryNameChange(selectedCategory.name);
-        if (onCategoryChange) { onCategoryChange(selectedCategory.category_id); }
-        if (onSearch) { onSearch(""); /* 일반 카테고리 선택 시 검색어 초기화 */ }
-      }
-    }
-    setShowTabs(false); // 드롭다운 닫기
+    const newCatId = selectedIndex === 0 ? null : categories[selectedIndex - 1].category_id;
+    const newCatName = selectedIndex === 0 ? "カテゴリー" : categories[selectedIndex - 1].name; //카테고리 이름, 아무것도없으면 カテゴリー로표기
+    
+    if (onCategoryNameChange) onCategoryNameChange(newCatName);
+    
+    triggerSearch(newCatId, searchText); // 카테고리는 바꾸되 검색어는 유지
+
+    setShowTabs(false);
+  };
+  const handleSearchCategoryChange = (event) => {
+  setSearchCategory(event.target.value);
   };
 
   const handlePopularProducts = () => { //인기상품 탭
@@ -92,22 +101,39 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
     setShowTabs(false); // 드롭다운 닫기
   };
   const handleSearch = () => {
-    if (onSearch) {
-      onSearch(searchText.trim());
-    }
+    const currentCatId = searchCategory === 0 ? null : categories[searchCategory - 1].category_id;
+    triggerSearch(currentCatId, searchText);
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    if (e.key === "Enter") { handleSearch(); }
   };
 
   return (
     <Box sx={{ width: "100%", p: 3 }}>
       {/* 検索 */}
-      <Box sx={{ mb: 5, display: 'flex', justifyContent: 'center' }}>
-        <Box sx={{ width: '50%'}}>
+      <Box sx={{ mb: 5, display: 'flex', justifyContent: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', width: '60%', gap: 0 }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <Select
+            value={searchCategory}
+            onChange={handleSearchCategoryChange} 
+            sx={{ 
+              width :'160px',
+              borderTopLeftRadius: 12, 
+              borderBottomLeftRadius: 12,
+              backgroundColor: '#fdfdfd' 
+            }}
+          >
+            <MenuItem value={0}>全商品</MenuItem>
+              {categories.map((cat, index) => (
+              <MenuItem key={cat.category_id} value={index + 1}>
+                {cat.name}
+              </MenuItem>
+              ))
+              }
+          </Select>
+        </FormControl>
           <TextField
             fullWidth
             size="small"
@@ -115,6 +141,12 @@ function Category({ onCategoryChange, onSearch, setSelectedCategoryName, onCateg
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onKeyDown={handleKeyPress}
+            sx={{ 
+            '& .MuiOutlinedInput-root': { 
+              borderTopRightRadius: 12, 
+              borderBottomRightRadius: 12,
+              } 
+            }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">

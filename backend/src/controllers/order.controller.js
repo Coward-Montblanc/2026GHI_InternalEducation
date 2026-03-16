@@ -2,6 +2,37 @@ import * as orderModel from "../models/order.model.js";
 import db from "../config/db.js";
 import response from "../utils/response.js";
 
+export const getAdminOrders = async (req, res) => {
+  try {
+    const { status, startDate, endDate, order_id, login_id, receiver_name, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const filters = {
+      status, startDate, endDate, order_id,
+      login_id, receiver_name,
+      offset: parseInt(offset),
+      limit: parseInt(limit)
+    };
+
+    const { rows : orders, totalCount } = await orderModel.findOrdersAdmin(filters); //페이지용 숫자
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    res.json({
+      success: true,
+      orders,
+      pagination: {
+        totalItems: totalCount,
+        totalPages,
+        currentPage: parseInt(page)
+      }
+    });
+  } catch (error) {
+    console.error("Admin Order Error:", error);
+    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+  }
+};
+
 // 주문 생성 (본인만 주문 가능)
 export const createOrder = async (req, res) => {
   try {

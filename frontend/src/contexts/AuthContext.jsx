@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {//선언과 동시에 실행 (토큰 있는지)
-    return storage.get("user"); //스토리지 내에서 없으면 토큰이 없음을 명시함
+    return storage.get("user"); 
   });
   
   const verifyPassword = async (password) => { //회원정보 수정용 비밀번호 검증 함수 추가 
