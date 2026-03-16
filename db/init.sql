@@ -69,6 +69,7 @@ CREATE TABLE carts (
   cart_id VARCHAR(10) PRIMARY KEY,
   login_id VARCHAR(50) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status TINYINT DEFAULT 0, /* 0=表示中, 1=非表示 */
   CONSTRAINT fk_cart_user FOREIGN KEY (login_id) REFERENCES users(login_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -158,3 +159,18 @@ CREATE TABLE event_images (
 INSERT INTO categories (category_id, name) VALUES 
 (1, '冷房製品'), (2, '空調'), (3, 'キッチン家電'), (4, '洗濯'), (5, '小型生活家電'),
 (6, 'テレビ・映像'), (7, 'PC製品'), (8, 'IT周辺機器'), (9, 'モバイル'), (10, '音響');
+
+CREATE TABLE delivery_addresses (
+  login_id VARCHAR(50) NOT NULL,
+  address_name VARCHAR(50) NOT NULL,
+  receiver_name VARCHAR(50) NOT NULL,
+  zip_code VARCHAR(10) NOT NULL,
+  address VARCHAR(255) NOT NULL,
+  address_detail VARCHAR(255),
+  phone VARCHAR(20) NOT NULL,
+  is_default TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (login_id, address_name),
+  FOREIGN KEY (login_id) REFERENCES users(login_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

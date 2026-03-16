@@ -32,14 +32,69 @@ export const getProductViewUp = async (req, res) => {
   }
 };
 
-export const getAllProductsForAdmin = async (req, res) => {
+export const getAllProductsForAdmin = async (req, res) => { //관리자 페이지용 상품검색
   try {
-    const { page = 1, limit = 10, search = "" } = req.query;
-    const data = await productModel.getAllProductsForAdmin(Number(page), Number(limit), search);
-    res.json(data);
+    
+    const { name, product_id, category_id, status, startDate, endDate, page = 1, limit = 10 } = req.query; //한페이지 10개씩 보이게
+    
+    const pageSize = Number(limit) || 10;
+    const offset = (Number(page) - 1) * pageSize;
+
+    const filters = { //비우면 전체검색 되게 undefined로 비움
+      product_id: product_id || undefined,
+      name: name || undefined,
+      category_id: category_id || undefined,
+      status: (status !== undefined && status !== "") ? status : undefined,
+      created_at: (startDate && endDate) ? [startDate, endDate] : undefined,
+      limit: pageSize,
+      offset: offset
+    };
+    const { products, totalCount } = await productModel.findProducts(filters);
+    
+    res.json({
+      success: true,
+      products: products,
+      pagination: {
+        totalItems: totalCount,
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalCount / pageSize) || 1 
+      }
+    });
   } catch (err) {
     console.error("管理者商品一覧取得エラー:", err);
     return response.error(res, "商品一覧取得エラー", 500);
+  }
+};
+
+export const getProducts = async (req, res) => { //메인화면용 카테고리 상품검색 함수
+  try {
+    const { category, name, page = 1, limit = 24 } = req.query; //한페이지 6X4= 24개
+    
+    const pageSize = Number(limit) || 10;
+    const offset = (Number(page) - 1) * pageSize;
+
+    const filters = {
+      category_id: category || undefined,
+      name: name || undefined,
+      status: 0,
+      limit: pageSize,
+      offset: offset
+    };
+
+    const { products, totalCount } = await productModel.findProducts(filters);
+    
+    res.json({
+      success: true,
+      products: products,
+      pagination: { 
+        totalItems: totalCount,
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalCount / pageSize) || 1 
+      }
+    });
+  } catch (error) {
+    console.error("商品一覧取得エラー:", error);
+    res.status(500).json({ success: false, message: "商品一覧取得エラー" });
   }
 };
 

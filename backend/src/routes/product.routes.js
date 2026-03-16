@@ -10,8 +10,8 @@ const router = express.Router();
 // 인기상품 조회
 router.get("/popular", productController.getRankProducts);
 
-// 관리자용 전체 상품 조회 (status 무관)
-router.get("/admin/all", authenticateToken, productController.getAllProductsForAdmin);
+router.get("/search", productController.getProducts); //메인화면 상품 검색함수
+router.get("/admin/all", authenticateToken, productController.getAllProductsForAdmin);//관리자용 상품 검색함수
 
 // Multer 설정 (이미지 업로드 필수)
 const uploadDir = path.join(path.resolve(), "uploads");

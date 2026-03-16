@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { isAuthenticated } from "../../utils/auth";
 import { LoadingView } from "../LoadingCircle";
 
-const AuthGuard = ({ children, requireAdmin = false }) => {
+const AuthGuard = ({ requireAdmin = false }) => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const [status, setStatus] = useState("idle"); // 'idle' | 'loading' | 'authorized'
@@ -14,8 +14,8 @@ const AuthGuard = ({ children, requireAdmin = false }) => {
         if (!isAuthenticated() || !user) { //토큰 및 유저확인
             if (isAuthenticated()) {
                 alert("ログインが必要です。");
+                logout();
             }
-            logout();
             navigate("/login");
             return;
         }
@@ -30,7 +30,7 @@ const AuthGuard = ({ children, requireAdmin = false }) => {
     if (status === "loading" || status === "idle") { //로딩 UI
         return ( <LoadingView /> ); 
     }
-    return status === "authorized" ? children : null; //확인 끝나면 페이지 노출
+    return status === "authorized" ? <Outlet /> : null; //확인 끝나면 페이지 노출
 };
 
 export default AuthGuard;

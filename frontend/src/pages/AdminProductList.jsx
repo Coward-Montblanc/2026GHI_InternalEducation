@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box, Typography, Paper, Alert, CircularProgress,
+  Box, Typography, Paper, Alert,
   Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Pagination, Chip, Button,
+  TableHead, TableRow, Chip, Button,
+  TextField, MenuItem, Select, FormControl, InputLabel,
+  Stack, Grid, Pagination 
 } from "@mui/material";
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import dayjs from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { getAdminProducts } from "../services/ProductService";
+import { LoadingView } from "../components/LoadingCircle";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -19,28 +25,141 @@ function AdminProductList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
+  const [searchType, setSearchType] = useState("name"); // 기본값 상품명
+  const [filters, setFilters] = useState({
+    product_id: "",
+    name: "",
+    category_id: "",
+    status: "",
+    startDate: null,
+    endDate: null,
+    searchTerm: ""
+  });
+
+  const fetchAdminProducts = useCallback(() => {
     setLoading(true);
-    getAdminProducts(page, ITEMS_PER_PAGE, "")
+    
+    const params = {
+      page,
+      limit: ITEMS_PER_PAGE,
+      status: filters.status || undefined,
+      category_id: filters.category_id || undefined,
+      [searchType]: filters.searchTerm || undefined,
+      startDate: filters.startDate ? filters.startDate.format("YYYY-MM-DD") : undefined,
+      endDate: filters.endDate ? filters.endDate.format("YYYY-MM-DD") : undefined,
+    };
+
+    getAdminProducts(params)
       .then((data) => {
         setProducts(data.products ?? []);
         setTotalPages(data.pagination?.totalPages ?? 1);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, filters, searchType]);
+
+  useEffect(() => {
+    fetchAdminProducts();
+  }, [page]); // 페이지 변경 시에만 자동 호출, 검색은 버튼 클릭 시 호출 권장
+
+  const handleSearch = () => {
+    setPage(1); // 검색 시 첫 페이지로 이동
+    fetchAdminProducts();
+  };
+
+  if (loading) { return ( <LoadingView /> ); }
 
   return (
     <Box sx={{ width: "100%" }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 800 }}>商品管理</Typography>
       </Box>
+
+      <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: "#fcfcfc" }}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Grid container spacing={2} alignItems="center">
+            {/* 대분류 검색 */}
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>検索項目</InputLabel>
+                <Select
+                  value={searchType}
+                  label="検索項目"
+                  onChange={(e) => setSearchType(e.target.value)}
+                >
+                  <MenuItem value="name">商品名</MenuItem>
+                  <MenuItem value="product_id">商品ID</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* 기간 검색 (캘린더) */}
+            <Grid item xs={12} md={4}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <DatePicker
+                  sx={{ width: '150px' }}
+                  label="～から"
+                  slotProps={{ textField: { size: 'small' } }}
+                  value={filters.startDate}
+                  onChange={(v) => setFilters({ ...filters, startDate: v })}
+                />
+                <Typography>~</Typography>
+                <DatePicker
+                  sx={{ width: '150px' }}
+                  label="～まで"
+                  slotProps={{ textField: { size: 'small' } }}
+                  value={filters.endDate}
+                  onChange={(v) => setFilters({ ...filters, endDate: v })}
+                />
+              </Stack>
+            </Grid>
+
+            {/* 상품 상태 : 판매중, 판매중지, 품절 */}
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>状態</InputLabel>
+                <Select
+                  sx={{ width: '100px' }}
+                  value={filters.status}
+                  label="状態"
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                >
+                  <MenuItem value="">すべて</MenuItem>
+                  <MenuItem value="0">販売中</MenuItem>
+                  <MenuItem value="1">販売停止</MenuItem>
+                  <MenuItem value="2">品切れ</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* 검색 텍스트 필드 */}
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                size="small"
+                label="検索キーワード"
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </Grid>
+
+            {/* 검색 버튼 */}
+            <Grid item xs={12} md={1}>
+              <Button 
+                fullWidth 
+                variant="contained"
+                onClick={handleSearch}
+                sx={{ height: '40px' }}
+              >
+                検索
+              </Button>
+            </Grid>
+          </Grid>
+        </LocalizationProvider>
+      </Paper>
+
       <Paper elevation={0} variant="outlined" sx={{ borderRadius: 4, p: { xs: 2, md: 4 }, bgcolor: "#fff" }}>
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-            <CircularProgress />
-          </Box>
-        )}
         {error && <Alert severity="error">{error}</Alert>}
         {!loading && !error && (
           <>
@@ -53,7 +172,8 @@ function AdminProductList() {
                     <TableCell align="center" sx={{ fontWeight: 700 }}>カテゴリー</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>価格</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>在庫</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>ステータス</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>登録日時</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>状態</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>操作</TableCell>
                   </TableRow>
                 </TableHead>
@@ -71,9 +191,10 @@ function AdminProductList() {
                         <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {p.name}
                         </TableCell>
-                        <TableCell align="center">{p.category_name ?? "-"}</TableCell>
+                        <TableCell align="center">{p.category_name?? "-"}</TableCell>
                         <TableCell align="center">{formatPrice(p.price)}</TableCell>
                         <TableCell align="center">{p.stock}個</TableCell>
+                        <TableCell align="center">{dayjs(p.created_at).format("YYYY-MM-DD")}</TableCell>
                         <TableCell align="center">
                           <Chip
                             label={p.status === 0 ? "販売中" : p.status === 2 ? "品切れ" : "販売停止"}
@@ -113,6 +234,15 @@ function AdminProductList() {
             </Box>
           </>
         )}
+        <Box 
+        sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                  <Pagination 
+                    count={totalPages} 
+                    page={page} 
+                    onChange={(e, v) => setPage(v)} 
+                    color="primary" 
+                  />
+        </Box>
       </Paper>
     </Box>
   );

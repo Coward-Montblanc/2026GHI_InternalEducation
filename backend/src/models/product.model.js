@@ -1,5 +1,51 @@
 import db from "../config/db.js";
+import { buildDynamicQuery } from "../utils/queryBuilder.js";
 
+export async function findProducts(filters) {
+    const { limit, offset, ...searchFilters } = filters;
+
+    const baseSql = `
+        SELECT p.*, 
+               c.name as category_name, 
+               (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.category_id
+    `;
+
+    const options = {
+        "p.product_id": 'LIKE',
+        "p.name": 'LIKE',       
+        "p.category_id": '=',
+        "p.status": '=',
+        "p.created_at": 'BETWEEN'
+    };
+
+    const mappedFilters = {};
+    if (searchFilters.product_id) mappedFilters["p.product_id"] = searchFilters.product_id;
+    if (searchFilters.name) mappedFilters["p.name"] = searchFilters.name;
+    if (searchFilters.category_id) mappedFilters["p.category_id"] = searchFilters.category_id;
+    if (searchFilters.status !== undefined) mappedFilters["p.status"] = searchFilters.status;
+    if (searchFilters.created_at) mappedFilters["p.created_at"] = searchFilters.created_at;
+
+    const { sql, params } = buildDynamicQuery(baseSql, mappedFilters, options); 
+    
+    const { sql: countSql, params: countParams } = buildDynamicQuery( 
+        "SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.category_id = c.category_id", 
+        mappedFilters, 
+        options
+    );
+    //조립 유틸 함수로 넘김
+    const finalSql = `${sql} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
+    const finalParams = [...params, Number(limit), Number(offset)];
+
+    const [rows] = await db.query(finalSql, finalParams);
+    const [countResult] = await db.execute(countSql, countParams);
+
+    return {
+        products: rows,
+        totalCount: countResult[0].total
+    };
+}
 
   // 인기상품 조회 (view 30 이상)
   //role1을 메인이미지로 두도록 변경

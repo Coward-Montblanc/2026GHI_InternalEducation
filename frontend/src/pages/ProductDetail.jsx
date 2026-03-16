@@ -1,4 +1,4 @@
-import { Box, Typography, Button, Alert, Stack } from "@mui/material";
+import { Box, Typography, Button, Alert, Stack, Chip  } from "@mui/material";
 import Footer from "../components/Footer";
 import { useProductDetail } from "../hooks/useProductDetail.js";
 import { LoadingView } from "../components/LoadingCircle";
@@ -90,8 +90,16 @@ function ProductDetail() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 View: {product.view ?? 0}회 {/* 프론트/백 동시에 켜져있으니 조회수 증가가 +2로 되고있는 것 같습니다. 확인필요 */}
               </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>カテゴリー: {product.category_name || "가전"}</Typography>
-            
+            <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="body1" color="text.secondary">カテゴリー:</Typography>
+                  <Chip 
+                    label={product.category_name || "가전"} 
+                    color="primary" 
+                    variant="outlined"
+                    clickable
+                    onClick={() => navigate(`/?category=${product.category_id}`)}
+                  />
+            </Box>
             <hr style={{ border: "0", borderTop: "1px solid #eee", margin: "20px 0" }} />
 
             <Typography variant="h4" sx={{ color: "#1976d2", fontWeight: "bold", mb: 4 }}>

@@ -14,7 +14,6 @@ import eventRoutes from "./routes/event.routes.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
