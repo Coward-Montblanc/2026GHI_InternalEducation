@@ -26,7 +26,8 @@ function Banner() {
       sx={{
         position: 'relative',
         height: 400,
-        width: "100%",
+        mx: "auto",
+        width: "1000px",
         backgroundColor: "#c3c3c3",
         color: "white",
         display: "flex",

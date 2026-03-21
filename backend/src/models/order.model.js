@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import * as productModel from "../models/product.model.js"; //판매시 상품 판매량 증가, 상품 이미지를 위한 임포트
 import { buildDynamicQuery } from '../utils/queryBuilder.js';
 
 export const findOrdersAdmin = async (filters) => {
@@ -17,7 +18,7 @@ export const findOrdersAdmin = async (filters) => {
         receiver_name: 'LIKE',
         created_at: 'BETWEEN'
     };
-    
+
     const { sql, params } = buildDynamicQuery(baseSql, searchFilters, options);
     
     const { sql: countSql, params: countParams } = buildDynamicQuery(
@@ -72,11 +73,11 @@ export const createOrderItem = async (order_id, product_id, quantity, price) => 
 export const getOrderWithItems = async (order_id) => {
   const [[order]] = await db.query(`SELECT * FROM orders WHERE order_id = ?`, [order_id]);
   const [items] = await db.query(
-    `SELECT oi.*, p.name AS product_name,
-     (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) AS image_url
-     FROM order_items oi
-     LEFT JOIN products p ON oi.product_id = p.product_id
-     WHERE oi.order_id = ?`,
+    `SELECT oi.*, p.name AS product_name, pi.image_url 
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.product_id
+    LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.role = 1
+    WHERE oi.order_id = ?`,
     [order_id]
   );
   return { order, items: items || [] };
@@ -86,4 +87,65 @@ export const getOrderWithItems = async (order_id) => {
 export const getOrdersByUser = async (login_id) => {
   const [orders] = await db.query(`SELECT * FROM orders WHERE login_id = ? ORDER BY created_at DESC`, [login_id]);
   return orders;
+};
+
+// 주문 상태 및 판매량 업데이트
+export const updateOrderAdmin = async (connection, orderId, updateData) => {
+  const { status: newStatus, receiver_name, address, address_detail, phone, delivery_request } = updateData;
+
+  const [[order]] = await connection.execute(
+    "SELECT status FROM orders WHERE order_id = ?",
+    [orderId]
+  );
+  
+  if (!order) throw new Error("注文が存在しません。");
+
+  const oldStatus = Number(order.status); //주문을 정상적으로 가져오면 상태를 가져옴.
+  const targetStatus = Number(newStatus);
+
+  if (oldStatus !== targetStatus) { //판매가 완료될 경우 재고 업데이트
+    const [items] = await connection.execute(
+      "SELECT product_id, quantity FROM order_items WHERE order_id = ?",
+      [orderId]
+    );
+
+    const DELIVERY_COMPLETED = 3; //배송 완료
+
+    for (const item of items) {
+      if (targetStatus === DELIVERY_COMPLETED) { //배송완료 될경우 판매량 업데이트
+        await productModel.incrementSalesCount(item.product_id, item.quantity);
+      } else if (oldStatus === DELIVERY_COMPLETED && newStatus !== DELIVERY_COMPLETED) { 
+        await productModel.incrementSalesCount(item.product_id, -item.quantity);
+      }
+
+      if (targetStatus === 0 && oldStatus !== 0) { //환불, 반품 등 취소되었을 경우 재고 업데이트
+        await connection.execute(
+          "UPDATE products SET stock = stock + ? WHERE product_id = ?",
+          [item.quantity, item.product_id]
+        );
+
+        await connection.execute( //취소로 품절인 상품 재고가 살아날 경우 판매중으로 바꿔줌
+          "UPDATE products SET status = 0 WHERE product_id = ? AND status = 2",
+          [item.product_id]
+        );
+      }
+      else if (oldStatus === 0 && targetStatus !== 0) { 
+        await connection.execute(
+          "UPDATE products SET stock = stock - ? WHERE product_id = ? AND stock >= ?",
+          [item.quantity, item.product_id, item.quantity]
+        );
+      }
+    }
+  }
+
+  //주문상태 업데이트
+  const [result] = await connection.execute(
+    `UPDATE orders 
+     SET status = ?, receiver_name = ?, address = ?, address_detail = ?, 
+         phone = ?, delivery_request = ?
+     WHERE order_id = ?`,
+    [targetStatus, receiver_name, address, address_detail, phone, delivery_request, orderId]
+  );
+  
+  return result.affectedRows;
 };

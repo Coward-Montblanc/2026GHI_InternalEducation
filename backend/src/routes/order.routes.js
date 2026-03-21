@@ -2,9 +2,10 @@ import express from "express";
 import * as orderController from "../controllers/order.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js"; //로그인 검증 미들웨어 임포트
 
-
-
 const router = express.Router();
+
+router.get('/admin/:orderId', orderController.getOrderDetailAdmin); //관리자용 주문 상세 페이지 라우트
+router.patch('/admin/:orderId', orderController.patchOrderStatusAdmin); //관리자용 주문 상태 수정 라우트
 router.get('/', authenticateToken, orderController.getAdminOrders);
 /**
  * @swagger

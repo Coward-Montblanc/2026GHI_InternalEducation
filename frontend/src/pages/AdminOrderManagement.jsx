@@ -41,7 +41,6 @@ function AdminOrderManagement() {
       startDate: filters.startDate ? filters.startDate.format("YYYY-MM-DD") : undefined,
       endDate: filters.endDate ? filters.endDate.format("YYYY-MM-DD") : undefined,
     };
-    console.log("보내는 파라미터(Params):", params);
 
   if (filters.searchTerm) {
     params[searchType] = filters.searchTerm;
@@ -67,12 +66,12 @@ function AdminOrderManagement() {
 
   const getStatusChip = (status) => {//임시 색상표, 테이블 내 상태에 맞춰서 사용하면 될듯.
     const statusMap = {
-      0: { label: "注文キャンセル", color: "error" },
-      1: { label: "注文完了(準備中)", color: "primary" },
-      2: { label: "配送中", color: "warning" },
-      3: { label: "配送完了", color: "success" },
+      0: { label: "注文キャンセル", color: "error", variant: "outlined" },
+      1: { label: "注文完了(準備中)", color: "primary", variant: "outlined" },
+      2: { label: "配送中", color: "info", variant: "filled" },
+      3: { label: "配送完了", color: "success", variant: "filled" },
     };
-    const target = statusMap[status] || { label: status, color: "default" };
+    const target = statusMap[status] || { label: "不明", color: "default" };
     return <Chip label={target.label} color={target.color} size="small" variant="outlined" />;
   };
 
@@ -184,6 +183,7 @@ function AdminOrderManagement() {
                 <TableCell align="center">連絡先</TableCell>
                 <TableCell align="center">状態</TableCell>
                 <TableCell align="center">注文日</TableCell>
+                <TableCell align="center">管理</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -204,6 +204,20 @@ function AdminOrderManagement() {
                     <TableCell align="center">{row.phone}</TableCell>
                     <TableCell align="center">{getStatusChip(row.status)}</TableCell>
                     <TableCell align="center">{dayjs(row.created_at).format("YYYY-MM-DD")}</TableCell>
+                    <TableCell align="center">
+                        <Button 
+                          variant="outlined" 
+                          size="small"
+                          onClick={() => navigate(`/admin/orders/edit/${row.order_id}`)}
+                          sx={{ 
+                            borderRadius: '20px', 
+                            fontSize: '0.75rem',
+                            textTransform: 'none' 
+                          }}
+                        >
+                          修正
+                        </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}

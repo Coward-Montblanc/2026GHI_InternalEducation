@@ -12,7 +12,7 @@ router.get("/popular", productController.getRankProducts);
 
 router.get("/search", productController.getProducts); //메인화면 상품 검색함수
 router.get("/admin/all", authenticateToken, productController.getAllProductsForAdmin);//관리자용 상품 검색함수
-
+router.patch("/admin/:productId/recommend", productController.patchRecommendStatus);
 // Multer 설정 (이미지 업로드 필수)
 const uploadDir = path.join(path.resolve(), "uploads");
 if (!fs.existsSync(uploadDir)) {

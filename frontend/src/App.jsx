@@ -22,6 +22,8 @@ import OrderConfirmPage from "./pages/OrderConfirmPage";
 import MyPage from "./pages/MyPage";
 import MyProfile from "./pages/MyProfile";
 import MyOrdersPage from "./pages/MyOrdersPage";
+import AdminOrderEdit from "./pages/AdminOrderEditPage"
+import NotFound from "./pages/NotFound"; //
 
 function App() {
   return (
@@ -32,7 +34,6 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/event" element={<EventPage />} />
           <Route path="/event/write" element={<EventWritePage />} />
@@ -54,8 +55,11 @@ function App() {
             <Route element={<AuthGuard requireAdmin/>}>
               <Route path="/admin/product-add" element={ <ProductAddPage /> } />
               <Route path="/admin/product-edit/:id" element={ <AdminProductEditPage /> } />
+              <Route path="/admin/orders" element={<MyPage initialView="adminOrders" />} />
+              <Route path="/admin/orders/edit/:orderId" element={<AdminOrderEdit />} />
             </Route>
           </Route>
+          <Route path="*" element={<NotFound />} /> {/* 라우트 되어있지 않은 페이지들은 NotFound */}
         </Routes>
       </AuthProvider>
     </Router>

@@ -49,15 +49,27 @@ export async function findProducts(filters) {
 
   // 인기상품 조회 (view 30 이상)
   //role1을 메인이미지로 두도록 변경
+  // 추천상품 기준 (조회수 + 판매량 * 10)
+  // 추천상품 점수 변수로 저장할지 로직만으로 끝낼지 고민중.
 export const getRankProducts = async () => {
   const [rows] = await db.query(
     `SELECT p.*,
-      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
+      (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image,
+      ((p.view * 1) + (p.sales_count * 10)) AS popularity_score
      FROM products p
-     WHERE p.status = 0 AND (p.view >= 30 OR p.name LIKE '%人気商品%')
-     ORDER BY p.view DESC`
+     WHERE p.status = 0
+     ORDER BY p.is_recommended DESC, popularity_score DESC
+     LIMIT 10`
   );
   return rows;
+};
+
+//상품이 팔리면(주문의 배송완료 상태) 판매수량 업데이트되는 함수
+export const incrementSalesCount = async (productId, quantity) => { 
+  await db.query(
+    "UPDATE products SET sales_count = sales_count + ? WHERE product_id = ?",
+    [quantity, productId]
+  );
 };
 
   // 상품 상세 조회 시 view 증가
@@ -152,7 +164,7 @@ export const getProductsByCategory = async (categoryId, search = "") => {
 // 상품 생성 (InsertId 반환)
 //BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
 export const createProduct = async (connection, productData) => {
-  const { category_id, name, description, price, stock } = productData;
+  const { category_id, name, description, price, stock, is_recommended = 0 } = productData;
   let status = Number(productData.status ?? 0);
   if (Number(stock) === 0) status = 2;
   const [[rows]] = await connection.execute(
@@ -160,8 +172,8 @@ export const createProduct = async (connection, productData) => {
   );
   const product_id = `PD${rows.n}`;
   await connection.execute(
-    "INSERT INTO products (product_id, category_id, name, description, price, stock, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [product_id, category_id, name, description, price, stock, status]
+    "INSERT INTO products (product_id, category_id, name, description, price, stock, status, is_recommended) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [product_id, category_id, name, description, price, stock, status, is_recommended]
   );
   return product_id;
 };
@@ -179,7 +191,7 @@ export const getAllProductsForAdmin = async (page = 1, limit = 24, search = "") 
 
   const query = `
     SELECT 
-      p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
+      p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at, p.view, p.sales_count, p.is_recommended,
       c.name as category_name,
       (SELECT image_url FROM product_images WHERE product_id = p.product_id AND role = 1 LIMIT 1) as main_image
     FROM products p
@@ -204,15 +216,30 @@ export const getAllProductsForAdmin = async (page = 1, limit = 24, search = "") 
 
 // 상품 정보 수정
 export const updateProduct = async (productId, productData) => {
-  const { category_id, name, description, price, stock } = productData;
+  const { category_id, name, description, price, stock, is_recommended, status: reqStatus } = productData;
   let status = Number(productData.status);
   //재고가 0인 상태에서 판매중 상태로 둬도 자동으로 품절로 뜨도록
   if (Number(stock) === 0) status = 2;
   const [result] = await db.query(
-    `UPDATE products SET category_id = ?, name = ?, description = ?, price = ?, stock = ?, status = ? WHERE product_id = ?`,
-    [category_id, name, description, price, stock, status, productId]
+    `UPDATE products SET category_id = ?, name = ?, description = ?, price = ?, stock = ?, status = ?, is_recommended = ? WHERE product_id = ?`,
+    [category_id, name, description, price, stock, status, is_recommended, productId]
   );
   return result.affectedRows;
+};
+
+// 추천 상태 업데이트 함수
+export const updateRecommendStatus = async (productId, is_recommended) => {
+  try {
+    const [result] = await db.query(
+      "UPDATE products SET is_recommended = ? WHERE product_id = ?",
+      [is_recommended, productId]
+    );
+
+    return result.affectedRows;
+  } catch (error) {
+    console.error("商品修正エラーが発生しました。:", error);
+    throw error;
+  }
 };
 
 // [추가] 논리적 삭제 (Soft Delete): 상태만 변경
@@ -233,3 +260,4 @@ export const createProductImage = async (productId, imageUrl, role, order) => {
   );
   return result.insertId;
 };
+
