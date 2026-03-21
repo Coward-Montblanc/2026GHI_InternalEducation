@@ -48,7 +48,13 @@ function Header() {
 
   return (
     <AppBar position="static" color="primary">
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+      <Toolbar sx={{ 
+        width: "100%", 
+        maxWidth: "1000px", 
+        mx: "auto",
+        justifyContent: "space-between",
+        px: { xs: 2, sm: 0 }
+      }}>
         <Typography
           variant="h6"
           sx={{ cursor: "pointer", fontWeight: "bold" }}

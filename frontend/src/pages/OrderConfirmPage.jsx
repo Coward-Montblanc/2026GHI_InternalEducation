@@ -16,14 +16,20 @@ import { LoadingView } from "../components/LoadingCircle";
 export default function OrderConfirmPage() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  
   const order_id = location.state?.order_id;
 
+  
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(!!order_id);
   const [error, setError] = useState(null);
+  const [orderInfo, setOrderInfo] = useState(null); // order 객체용
+  const [items, setItems] = useState([]);          // items 배열용
 
   useEffect(() => {
     if (!order_id) {
+      
       setError("注文情報がありません。");
       setLoading(false);
       return;
@@ -31,12 +37,16 @@ export default function OrderConfirmPage() {
     const fetchOrder = async () => {
       try {
         const data = await getOrder(order_id);
-        if (data.success && data.order) {
-          setOrder(data.order);
+
+        
+        if (data.success ) {
+          setOrderInfo(data.order); 
+          setItems(data.items || []);
         } else {
           setError("注文の取得に失敗しました。");
         }
       } catch (err) {
+        
         setError(err.response?.data?.message || "注文の取得中にエラーが発生しました。");
       } finally {
         setLoading(false);
@@ -60,11 +70,10 @@ export default function OrderConfirmPage() {
     );
   }
 
-  const { order: orderInfo, items } = order || {};
-  if (!orderInfo) return null;
+  if (!orderInfo) return <LoadingView />;
 
   const url = import.meta.env.VITE_API_URL || "";
-  const listItems = (items || []).map((row) => ({
+  const listItems = items.map((row) => ({
     product_id: row.product_id,
     product_name: row.product_name,
     name: row.product_name,

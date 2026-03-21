@@ -16,7 +16,6 @@ export async function findUsersAdmin(filters) {
         role: '=',
         created_at: 'BETWEEN'
     };
-
     
     const { sql, params } = buildDynamicQuery(baseSql, searchFilters, options);
     
@@ -80,7 +79,7 @@ export async function setDefaultAddress(login_id, address_name) {
   try {
     await connection.beginTransaction(); //트랜잭션 시작
 
-    await connection.execute( `UPDATE delivery_addresses SET is_default = 0 WHERE login_id = ?` ,[login_id] );
+    await connection.execute( `UPDATE delivery_addresses SET is_default = 0 WHERE login_id = ?` ,[login_id] ); //모든 배송지 상태 0 설정 : 일반 배송지
 
     const [result] = await connection.execute(
       `UPDATE delivery_addresses SET is_default = 1 WHERE login_id = ? AND address_name = ?`,

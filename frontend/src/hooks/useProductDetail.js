@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getProductById } from "../services/ProductService";
 import { useParams, useNavigate } from "react-router-dom";
 import { addToCart } from "../services/CartService";
@@ -18,11 +18,15 @@ export const useProductDetail = () => {
 
   const user = storage.get("user"); // 로그인 정보 확인
   const isLoggedIn = !!storage.get("token"); // 로그인 상태 확인
+  const isFetched = useRef(false); // 조회수 두번 방지용 실행여부 체크
+
   useEffect(() => {
+    if (isFetched.current) return; // 이미 실행되었다면 종료
     const getProductDetail = async () => {
       try {
         const data = await getProductById(id);
         setProduct(data);
+        isFetched.current = true; // 성공적으로 호출 시 true로 변경
         if (data.images?.length) {
           const main = data.images.find((i) => i.role === 1) || data.images[0];
           setMainImage(`${url}${main.image_url}`);

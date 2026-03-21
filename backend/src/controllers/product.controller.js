@@ -25,7 +25,15 @@ export const getProductViewUp = async (req, res) => {
     }
     const product = await productModel.getProductById(id);
     if (!product) return response.error(res , "商品が存在しません。" , 404);
-    res.json(product);
+
+    const response_p = { //이미지 리스트 구별
+      ...product,
+      mainImage: product.images.find(img => img.role === 1)?.image_url || null,
+      subImages: product.images.filter(img => img.role === 2).map(img => img.image_url),
+      detailImages: product.images.filter(img => img.role === 3).map(img => img.image_url),
+    };
+
+    return res.json(response_p);
   } catch (error) {
     console.error("商品詳細取得エラー:", error); 
     return response.error(res , "商品詳細取得エラーが発生しました。" , 500);
@@ -35,18 +43,22 @@ export const getProductViewUp = async (req, res) => {
 export const getAllProductsForAdmin = async (req, res) => { //관리자 페이지용 상품검색
   try {
     
-    const { name, product_id, category_id, status, startDate, endDate, page = 1, limit = 10 } = req.query; //한페이지 10개씩 보이게
-    
-    const pageSize = Number(limit) || 10;
-    const offset = (Number(page) - 1) * pageSize;
+    const { name, product_id, category_id, status, startDate, endDate } = req.query; //한페이지 10개씩 보이게
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 10);
+
+    const F_StartDate = startDate ? `${startDate} 00:00:00` : null;
+    const F_EndDate = endDate ? `${endDate} 23:59:59` : null;
+
+    const offset = (Number(page) - 1) * limit;
 
     const filters = { //비우면 전체검색 되게 undefined로 비움
       product_id: product_id || undefined,
       name: name || undefined,
       category_id: category_id || undefined,
       status: (status !== undefined && status !== "") ? status : undefined,
-      created_at: (startDate && endDate) ? [startDate, endDate] : undefined,
-      limit: pageSize,
+      created_at: (F_StartDate && F_EndDate) ? [F_StartDate, F_EndDate] : undefined,
+      limit: limit,
       offset: offset
     };
     const { products, totalCount } = await productModel.findProducts(filters);
@@ -57,7 +69,7 @@ export const getAllProductsForAdmin = async (req, res) => { //관리자 페이�
       pagination: {
         totalItems: totalCount,
         currentPage: Number(page),
-        totalPages: Math.ceil(totalCount / pageSize) || 1 
+        totalPages: Math.ceil(totalCount / limit) || 1 
       }
     });
   } catch (err) {
@@ -68,33 +80,32 @@ export const getAllProductsForAdmin = async (req, res) => { //관리자 페이�
 
 export const getProducts = async (req, res) => { //메인화면용 카테고리 상품검색 함수
   try {
-    const { category, name, page = 1, limit = 24 } = req.query; //한페이지 6X4= 24개
-    
-    const pageSize = Number(limit) || 10;
-    const offset = (Number(page) - 1) * pageSize;
+    const { category, name } = req.query; 
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 24); //한페이지 6X4= 24개
+    const offset = (Number(page) - 1) * limit;
 
     const filters = {
       category_id: category || undefined,
       name: name || undefined,
       status: 0,
-      limit: pageSize,
+      limit: limit,
       offset: offset
     };
 
     const { products, totalCount } = await productModel.findProducts(filters);
-    
-    res.json({
-      success: true,
-      products: products,
-      pagination: { 
-        totalItems: totalCount,
-        currentPage: Number(page),
-        totalPages: Math.ceil(totalCount / pageSize) || 1 
-      }
-    });
+
+    return response.success(res, {
+            products,
+            pagination: {
+                totalItems: totalCount,
+                currentPage: Number(page),
+                totalPages: Math.ceil(totalCount / limit) || 1
+            }
+        }, "商品リストを取得しました。");
   } catch (error) {
     console.error("商品一覧取得エラー:", error);
-    res.status(500).json({ success: false, message: "商品一覧取得エラー" });
+    return response.error(res , "商品一覧取得エラーが発生しました。" , 500);
   }
 };
 
@@ -154,12 +165,12 @@ export const createProduct = async (req, res) => {
 
     await connection.commit(); //트랜잭션 끝. 모든 작업이 성공하면 DB반영
 
-    // 성공 응답 (프론트엔드의 res.data.success 조건과 일치시킴)
-    res.status(201).json({  //response로 변경해야함.
+    return response.success(res, { productId }, "商品が正常に登録されました。", 201);
+    /*res.status(201).json({  
       success: true, 
       message: "商品が正常に登録されました。",
       productId: productId 
-    });
+    });*/
 
   } catch (error) {
     await connection.rollback();
@@ -286,6 +297,30 @@ export const updateProduct = async (req, res) => {
     connection.release();
   }
 };
+
+// 추천 상태 업데이트 함수
+export const patchRecommendStatus = async (req, res) => {
+  const { productId } = req.params;
+  const { is_recommended } = req.body;
+
+  if (is_recommended === undefined || ![0, 1].includes(Number(is_recommended))) {
+    return response.error(res, "商品修正エラーが発生しました。", 400);
+  }
+
+  try {
+    const affectedRows = await productModel.updateRecommendStatus(productId, is_recommended);
+
+    if (affectedRows === 0) {
+      return response.error(res, "商品エラーが発生しました。", 404);
+    }
+
+    return response.success(res, { is_recommended }, "おすすめ状態が更新されました。");
+  } catch (error) {
+    console.error("컨트롤러 에러 (patchRecommendStatus):", error);
+    return response.error(res, "サーバーエラーが発生しました。", 500);
+  }
+};
+
 
 
 /*export const deleteProduct = async (req, res) => {

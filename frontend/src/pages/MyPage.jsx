@@ -21,11 +21,11 @@ const ADMIN_MENU = [
   { key: "adminOrders",   label: "ユーザー注文管理" },
 ];
 
-function MyPage() {
+function MyPage({ initialView }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
 
-  const [view, setView] = useState(isAdmin ? "adminProducts" : "profile");
+  const [view, setView] = useState(initialView || (isAdmin ? "adminProducts" : "profile"));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -110,10 +110,22 @@ function Category({ onCategoryChange, onSearch, onCategoryNameChange }) {
   };
 
   return (
-    <Box sx={{ width: "100%", p: 3 }}>
+    <Box sx={{ 
+      width: "100%",
+      bgcolor: "background.paper",
+
+      }}>
+        <Box sx={{ 
+      maxWidth: "1000px", 
+      mx: "auto", 
+      px: 2,
+      py: 3,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       {/* 検索 */}
       <Box sx={{ mb: 5, display: 'flex', justifyContent: 'center', gap: 1 }}>
-        <Box sx={{ display: 'flex', width: '60%', gap: 0 }}>
+        <Box sx={{ display: 'flex', width: '100%', maxWidth: '600px', gap: 0 }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <Select
             value={searchCategory}
@@ -232,7 +244,8 @@ function Category({ onCategoryChange, onSearch, onCategoryNameChange }) {
         </Paper>
       </Collapse>
     </Box>
-  );
+  </Box>
+ );
 }
 
 export default Category;

@@ -5,12 +5,12 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, Button,
   TextField, MenuItem, Select, FormControl, InputLabel,
-  Stack, Grid, Pagination 
+  Stack, Grid, Pagination ,Switch
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { getAdminProducts } from "../services/ProductService";
+import { getAdminProducts ,updateRecommendStatus } from "../services/ProductService";
 import { LoadingView } from "../components/LoadingCircle";
 
 const ITEMS_PER_PAGE = 10;
@@ -58,9 +58,23 @@ function AdminProductList() {
       .finally(() => setLoading(false));
   }, [page, filters, searchType]);
 
+  //추천 상태 스위치 클릭 함수
+  const handleToggleRecommend = async (productId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 1 ? 0 : 1;
+      await updateRecommendStatus(productId, newStatus);
+
+      setProducts(prev => prev.map(p => 
+        p.product_id === productId ? { ...p, is_recommended: newStatus } : p
+      ));
+    } catch (err) {
+      alert("おすすめ状態の更新に失敗しました。");
+    }
+  };
+
   useEffect(() => {
     fetchAdminProducts();
-  }, [page]); // 페이지 변경 시에만 자동 호출, 검색은 버튼 클릭 시 호출 권장
+  }, [page, fetchAdminProducts]);
 
   const handleSearch = () => {
     setPage(1); // 검색 시 첫 페이지로 이동
@@ -172,6 +186,9 @@ function AdminProductList() {
                     <TableCell align="center" sx={{ fontWeight: 700 }}>カテゴリー</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>価格</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>在庫</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>閲覧数</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>販売数</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>おすすめ</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>登録日時</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>状態</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>操作</TableCell>
@@ -194,6 +211,20 @@ function AdminProductList() {
                         <TableCell align="center">{p.category_name?? "-"}</TableCell>
                         <TableCell align="center">{formatPrice(p.price)}</TableCell>
                         <TableCell align="center">{p.stock}個</TableCell>
+                        <TableCell align="center">{p.view?.toLocaleString() || 0}</TableCell>
+                        <TableCell align="center">
+                          <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                            {p.sales_count || 0}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Switch 
+                            size="small"
+                            checked={p.is_recommended === 1}
+                            onChange={() => handleToggleRecommend(p.product_id, p.is_recommended)}
+                            color="secondary"
+                          />
+                        </TableCell>
                         <TableCell align="center">{dayjs(p.created_at).format("YYYY-MM-DD")}</TableCell>
                         <TableCell align="center">
                           <Chip

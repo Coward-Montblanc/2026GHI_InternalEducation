@@ -49,6 +49,8 @@ CREATE TABLE products (
   price INT NOT NULL,
   stock INT NOT NULL,
   view INT DEFAULT 0, /*view*/
+  sales_count INT DEFAULT 0,         /* 누적 판매수량 */
+  is_recommended TINYINT DEFAULT 0,  /* 0=일반, 1=관리자 추천 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status TINYINT DEFAULT 0, /* 0=販売中, 1=販売停止, 2=品切れ */
   CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES categories(category_id)

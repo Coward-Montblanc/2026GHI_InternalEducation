@@ -2,9 +2,13 @@ import * as orderModel from "../models/order.model.js";
 import db from "../config/db.js";
 import response from "../utils/response.js";
 
-export const getAdminOrders = async (req, res) => {
+export const getAdminOrders = async (req, res) => { //관리자 페이지 주문관리 리스트
   try {
-    const { status, startDate, endDate, order_id, login_id, receiver_name, page = 1, limit = 10 } = req.query;
+    
+    const { status, startDate, endDate, order_id, login_id, receiver_name } = req.query;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 10);
+    
     const offset = (page - 1) * limit;
 
     const filters = {
@@ -29,12 +33,54 @@ export const getAdminOrders = async (req, res) => {
     });
   } catch (error) {
     console.error("Admin Order Error:", error);
-    res.status(500).json({ success: false, message: "サーバーエラーが発生しました。" });
+    return response.error(res, "サーバーエラーが発生しました。", 500);
+  }
+};
+
+export const getOrderDetailAdmin = async (req, res) => { //관리자 페이지 주문 상세 페이지
+  try {
+    const { orderId } = req.params;
+    const { order, items } = await orderModel.getOrderWithItems(orderId);
+
+    if (!order) {
+      return response.error(res, "注文が見つかりません。", 404);
+    }
+
+    return response.success(res, {order, items}, "注文修正成功しました。", 200);
+  } catch (error) {
+    console.error("Admin Order Detail Error:", error);
+    return response.error(res, "サーバーエラーが発生しました。", 500);
+  }
+};
+
+export const patchOrderStatusAdmin = async (req, res) => {
+  const { orderId } = req.params;
+  const updateData = req.body;
+  
+  const connection = await db.getConnection(); //트랜잭션 추가
+  try {
+    await connection.beginTransaction(); //트랜잭션 시작
+
+    const affectedRows = await orderModel.updateOrderAdmin(connection, orderId, updateData);
+
+    if (affectedRows === 0) {
+      await connection.rollback();
+      return response.error(res, "更新に失敗しました。", 404);
+    }
+
+    await connection.commit(); //트랜잭션 끝 
+    return response.success(res, {}, "注文ステータスと販売数量が更新されました。");
+  } catch (error) {
+    await connection.rollback();
+    return response.error(res, "サーバーエラーが発生しました。", 500);
+  } finally {
+    connection.release();
   }
 };
 
 // 주문 생성 (본인만 주문 가능)
 export const createOrder = async (req, res) => {
+  const connection = await db.getConnection(); //트랜잭션 추가
   try {
     const { login_id, items, total_price, receiver_name, address, address_detail,
             phone, delivery_request } = req.body;
@@ -45,11 +91,13 @@ export const createOrder = async (req, res) => {
       return response.error(res , "本人の注文のみ実行できます。" , 403);
     }
 
+    await connection.beginTransaction(); //트랜잭션 시작
+
     // 1. 주문 생성
     const order_id = await orderModel.createOrder(
       login_id,
       total_price,
-      receiver_name, //계정주인의 이름x 수령인 이름o
+      receiver_name,
       address,
       phone,
       address_detail,
@@ -65,7 +113,7 @@ export const createOrder = async (req, res) => {
       );
       const stock = stockRows[0]?.stock ?? null;
       if (stock === null || stock < item.quantity || stock === 0) {
-        return response.error(res , `商品ID ${item.product_id}の在庫が不足しています。` , 400);
+        return response.error(res , "商品在庫が不足しています。" , 400);
       }
       await orderModel.createOrderItem(order_id, item.product_id, item.quantity, item.price);
 
@@ -84,6 +132,8 @@ export const createOrder = async (req, res) => {
         [item.product_id]
       );
     }
+    await connection.commit(); //트랜잭션 끝 
+
     return response.success(res, { order_id }, 201); 
   } catch (err) {
     console.error("注文作成エラー:", err);
@@ -105,7 +155,7 @@ export const getOrder = async (req, res) => {
     if (req.user.role !== "ADMIN" && orderRow.login_id !== req.user.login_id) {
       return response.error(res , "この注文を閲覧する権限がありません。" , 403);
     }
-    res.json({ success: true, order: { order: orderRow, items } });
+    return response.success(res, { order: orderRow, items }, "注文詳細を取得しました。");
   } catch (err) {
     console.error("주문 상세 조회 에러:", err);
     return response.error(res , "サーバーエラーが発生しました。" , 500);
@@ -120,7 +170,7 @@ export const getOrdersByUser = async (req, res) => {
       return response.error(res , "他のユーザーの注文履歴は閲覧できません。" , 403);
     }
     const orders = await orderModel.getOrdersByUser(login_id);
-    res.json({ success: true, orders });
+    return response.success(res, { orders }, "注文履歴を取得しました。");
   } catch (err) {
     return response.error(res , "サーバーエラーが発生しました。" , 500);
   }
