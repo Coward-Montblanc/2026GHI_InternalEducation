@@ -6,15 +6,17 @@ const options = {
     info: {
       title: "Appliance shop api",
       version: "1.0.0",
-      description: "가전제품 판매 홈페이지 api"
+      description: "家電製品販売ホームページapi"
     },
     servers: [
       {
-        url: "http://localhost:3000/api" //포트번호 확인 후 팀원과 일치시키면 편함
+        url: "http://localhost:3000/api" //ポート番号確認後チームメンバーと一致させると楽
       }
     ]
   },
-  apis: ["./src/routes/*.js"] // 여기에 API 주석을 읽음
+  apis: ["./src/routes/*.js",
+    "./src/docs/swagger/*.js"
+  ] // ここでAPIコメントを読む
 };
 
 const swaggerSpec = swaggerJSDoc(options);

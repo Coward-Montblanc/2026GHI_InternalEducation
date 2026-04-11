@@ -8,6 +8,7 @@ import MyProfile from "./MyProfile";
 import AdminProductList from "./AdminProductList";
 import AdminUserList from "./AdminUserList";
 import AdminOrderManagement from "./AdminOrderManagement";
+import AdminSalesStats from "./AdminSalesStats";
 
 const USER_MENU = [
   { key: "profile", label: "会員情報" },
@@ -19,6 +20,7 @@ const ADMIN_MENU = [
   { key: "adminProducts", label: "商品管理" },
   { key: "adminUsers",    label: "ユーザー一覧" },
   { key: "adminOrders",   label: "ユーザー注文管理" },
+  { key: "adminSales",    label: "販売統計" },
 ];
 
 function MyPage({ initialView }) {
@@ -42,7 +44,7 @@ function MyPage({ initialView }) {
     <Box sx={{ p: { xs: 1, md: 4 }, maxWidth: 1400, margin: "0 auto" }}>
       <Box sx={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: { xs: 1, md: 3 } }}>
         
-        {/* 좌측 사이드바 */}
+        {/* 左サイドバー */}
         <Paper
           elevation={0}
           variant="outlined"
@@ -76,16 +78,17 @@ function MyPage({ initialView }) {
           </List>
         </Paper>
 
-        {/* 우측 콘텐츠 영역 */}
+        {/* 右コンテンツ領域 */}
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          {/* 일반 유저 */}
+          {/* 一般ユーザー */}
           {view === "profile"  && <MyProfile />}
           {view === "orders"   && <MyOrdersPage />}
           {view === "withdraw" && <MyWithdraw />}
-          {/* 관리자 */}
+          {/* マネージャー */}
           {view === "adminProducts" && <AdminProductList />}
           {view === "adminUsers"    && <AdminUserList />}
           {view === "adminOrders"   && <AdminOrderManagement />}
+          {view === "adminSales"   && <AdminSalesStats />}
         </Box>
 
       </Box>

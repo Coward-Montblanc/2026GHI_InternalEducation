@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Paper, Typography, Table, TableHead, TableRow, TableCell, TableBody, Box } from "@mui/material";
 import { getFallbackImageUrl } from "../services/ProductService";
 
-function OrderList({ items, url, showImage = true, linkToProduct = false }) { //linkToProduct 기본값 정의
+function OrderList({ items, url, showImage = true, linkToProduct = false }) {
   const displayItems = Array.isArray(items) ? items : [];
   const fallbackImage = getFallbackImageUrl(url);
   return (

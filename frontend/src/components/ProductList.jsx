@@ -27,7 +27,7 @@ function ProductList({ products, loading, page, totalPages, onPageChange }) {
   if (loading) return <LoadingView />;
 
   return (
-    <Box sx={{ p: 4, maxWidth: "1400px", margin: "0 auto", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Box sx={{ p: 4, maxWidth: "1000px", margin: "0 auto", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
       {(!products || products.length === 0) ? (
         <Alert severity="info" sx={{ width: '100%' }}>商品がありません。</Alert>
@@ -38,7 +38,7 @@ function ProductList({ products, loading, page, totalPages, onPageChange }) {
               <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={product.product_id}>
                 <Card
                   sx={{
-                    width: "200px",
+                    width: "100%",
                     height: "350px",
                     cursor: "pointer",
                     display: "flex",
@@ -68,10 +68,11 @@ function ProductList({ products, loading, page, totalPages, onPageChange }) {
                     </Typography>
                   </CardContent>
 
-                  <Box sx={{ px: 2, pb: 2, display: "flex", gap: 1 }}>
+                  <Box sx={{ px: 2, pb: 2, display: "flex", gap: 0.5 }}>
                     <Button
                       variant="outlined"
                       fullWidth
+                      sx={{ fontSize: "0.75rem", px: 0, whiteSpace: "nowrap" }}
                       onClick={async (e) => {
                         e.stopPropagation(); 
                         try {

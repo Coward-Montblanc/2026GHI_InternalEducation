@@ -1,35 +1,36 @@
 import * as categoryModel from "../models/category.model.js";
 import response from "../utils/response.js";
+import { RESPONSE_MESSAGES } from "../config/constants.js";
 
-// 모든 카테고리 조회
+//すべてのカテゴリを検索
 export const getAllCategories = async (req, res) => {
   try {
     const categories = await categoryModel.getAllCategories();
-    res.json(categories);
+    return response.success(res, { categories }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (error) {
     console.error("カテゴリー取得エラー:", error);
-    return response.error(res, "カテゴリー取得中にエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.CATEGORY_FETCH_FAILED);
   }
 };
 
-// 카테고리 상세 조회
+//カテゴリ詳細検索
 export const getCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
     const category = await categoryModel.getCategoryById(id);
 
     if (!category) {
-      return response.error(res, "カテゴリーが存在しません。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    res.json(category);
+    return response.success(res, { category }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (error) {
     console.error("カテゴリー詳細取得エラー:", error);
-    return response.error(res, "カテゴリー詳細取得中にエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.CATEGORY_FETCH_FAILED);
   }
 };
 
-// 카테고리 생성
+//カテゴリの作成
 export const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
@@ -39,49 +40,49 @@ export const createCategory = async (req, res) => {
     }
 
     const categoryId = await categoryModel.createCategory(name);
-    return response.success(res, { category_id: categoryId }, "カテゴリーが作成されました。", 201);
+    return response.success(res, { category_id: categoryId }, RESPONSE_MESSAGES.SUCCESS.CATEGORY_SAVE, 201);
   } catch (error) {
     console.error("カテゴリー作成エラー:", error);
-    return response.error(res, "カテゴリー作成中にエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.CATEGORY_FETCH_FAILED);
   }
 };
 
-// 카테고리 수정
+//カテゴリを編集
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
 
     if (!name) {
-      return response.error(res, "カテゴリー名は必須です。", 400);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.CATEGORY_NAME_NEED);
     }
 
     const affectedRows = await categoryModel.updateCategory(id, name);
 
     if (affectedRows === 0) {
-      return response.error(res, "カテゴリーが存在しません。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    res.json({ message: "カテゴリーが修正されました。" });
+    return response.success(res, {}, RESPONSE_MESSAGES.SUCCESS.CATEGORY_CONTENT_CHANGE);
   } catch (error) {
     console.error("カテゴリー修正エラー:", error);
-    return response.error(res, "カテゴリー修正中にエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-// 카테고리 논리 삭제
+//カテゴリロジックの削除
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const affectedRows = await categoryModel.deleteCategory(id);
 
     if (affectedRows === 0) {
-      return response.error(res, "カテゴリーが存在しません。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.CATEGORY_NOT_FOUND);
     }
 
-    res.json({ message: "カテゴリーが非公開になりました。" });
+    return response.success(res, {}, RESPONSE_MESSAGES.SUCCESS.CATEGORY_CONTENT_CHANGE);
   } catch (error) {
     console.error("カテゴリー非公開エラー:", error);
-    return response.error(res, "カテゴリー非公開中にエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };

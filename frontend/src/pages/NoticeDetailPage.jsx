@@ -6,8 +6,8 @@ import { getNoticeDetail, deleteNotice } from "../services/NoticeService";
 import { useNEDetail } from "../hooks/useNEDetail";
 import NEDetailView from "../components/NEDetailView";
 import { LoadingView } from "../components/LoadingCircle";
+import '../css/style.css';
 
-// 상세 조회·삭제·로딩·에러는 useNEDetail 훅에서 처리 (공지/이벤트 공통)
 function NoticeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ function NoticeDetailPage() {
   const isAdmin = user?.role === "ADMIN";
   const { item, loading, error, handleDelete } = useNEDetail(
     id,
-    getNoticeDetail, //hooks로 끌고가서 판단
+    getNoticeDetail,
     deleteNotice,
     {
       listPath: "/notice",

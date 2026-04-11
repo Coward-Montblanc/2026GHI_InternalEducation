@@ -2,7 +2,7 @@ import db from "../config/db.js";
 import { buildDynamicQuery } from "../utils/queryBuilder.js";
 
 export async function findProducts(filters) {
-    const { limit, offset, ...searchFilters } = filters;
+    const { limit, offset, sortField = 'p.created_at', sortOrder = 'DESC', ...searchFilters } = filters;
 
     const baseSql = `
         SELECT p.*, 
@@ -12,45 +12,82 @@ export async function findProducts(filters) {
         LEFT JOIN categories c ON p.category_id = c.category_id
     `;
 
+    const countBase = "SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.category_id = c.category_id";
+
     const options = {
         "p.product_id": 'LIKE',
         "p.name": 'LIKE',       
-        "p.category_id": '=',
+        "c.name": 'LIKE',
         "p.status": '=',
-        "p.created_at": 'BETWEEN'
+        "p.created_at": 'BETWEEN', 
+        "p.price": 'BETWEEN',      
+        "p.stock": 'BETWEEN',      
+        "p.is_recommended": '=',
+        "p.view": 'BETWEEN',
+        "p.sales_count": 'BETWEEN'
     };
 
     const mappedFilters = {};
     if (searchFilters.product_id) mappedFilters["p.product_id"] = searchFilters.product_id;
     if (searchFilters.name) mappedFilters["p.name"] = searchFilters.name;
-    if (searchFilters.category_id) mappedFilters["p.category_id"] = searchFilters.category_id;
-    if (searchFilters.status !== undefined) mappedFilters["p.status"] = searchFilters.status;
+    if (searchFilters.category_id) mappedFilters["c.name"] = searchFilters.category_id;
+    if (searchFilters.status !== undefined && searchFilters.status !== "all") {
+      mappedFilters["p.status"] = Number(searchFilters.status);
+    }
+    if (searchFilters.is_recommended !== undefined && searchFilters.is_recommended !== "" && searchFilters.is_recommended !== "all") {
+      mappedFilters["p.is_recommended"] = Number(searchFilters.is_recommended);
+    }
+
+    const processRange = (key, min, max, originalArray) => {
+        if (originalArray && Array.isArray(originalArray)) return originalArray;
+        if (min !== undefined || max !== undefined) {
+            return [min ? Number(min) : 0, max ? Number(max) : 9999999];
+        }
+        return null;
+    };
+
+    const viewRange = processRange("view", searchFilters.minView, searchFilters.maxView, searchFilters.view);
+    if (viewRange) mappedFilters["p.view"] = viewRange;
+
+    const salesRange = processRange("sales", searchFilters.minSales, searchFilters.maxSales, searchFilters.sales_count);
+    if (salesRange) mappedFilters["p.sales_count"] = salesRange;
+
+    const priceRange = processRange("price", searchFilters.minPrice, searchFilters.maxPrice, searchFilters.price);
+    if (priceRange) mappedFilters["p.price"] = priceRange;
+
+    const stockRange = processRange("stock", searchFilters.minStock, searchFilters.maxStock, searchFilters.stock);
+    if (stockRange) mappedFilters["p.stock"] = stockRange;
+
     if (searchFilters.created_at) mappedFilters["p.created_at"] = searchFilters.created_at;
 
     const { sql, params } = buildDynamicQuery(baseSql, mappedFilters, options); 
     
-    const { sql: countSql, params: countParams } = buildDynamicQuery( 
-        "SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON p.category_id = c.category_id", 
-        mappedFilters, 
-        options
-    );
-    //조립 유틸 함수로 넘김
-    const finalSql = `${sql} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
-    const finalParams = [...params, Number(limit), Number(offset)];
+    const { sql: countSql, params: countParams } = buildDynamicQuery(countBase, mappedFilters, options);
+    
+    const allowedSortFields = {
+        product_id: "CAST(REPLACE(p.product_id, 'PD', '') AS UNSIGNED)",
+        price: 'p.price',
+        stock: 'p.stock',
+        view: 'p.view',
+        sales_count: 'p.sales_count',
+        created_at: 'p.created_at'
+    };
+    
+    const finalSortField = allowedSortFields[sortField] || 'p.created_at';
+    const finalSortOrder = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
+    const finalSql = `${sql} ORDER BY ${finalSortField} ${finalSortOrder} LIMIT ? OFFSET ?`;
+    const finalParams = [...params, Number(limit), Number(offset)];
     const [rows] = await db.query(finalSql, finalParams);
+    
     const [countResult] = await db.execute(countSql, countParams);
 
     return {
         products: rows,
-        totalCount: countResult[0].total
+        totalCount: countResult[0].total || 0
     };
 }
 
-  // 인기상품 조회 (view 30 이상)
-  //role1을 메인이미지로 두도록 변경
-  // 추천상품 기준 (조회수 + 판매량 * 10)
-  // 추천상품 점수 변수로 저장할지 로직만으로 끝낼지 고민중.
 export const getRankProducts = async () => {
   const [rows] = await db.query(
     `SELECT p.*,
@@ -64,7 +101,7 @@ export const getRankProducts = async () => {
   return rows;
 };
 
-//상품이 팔리면(주문의 배송완료 상태) 판매수량 업데이트되는 함수
+//商品が売れたら（注文の配送完了状態）販売数量更新される関数
 export const incrementSalesCount = async (productId, quantity) => { 
   await db.query(
     "UPDATE products SET sales_count = sales_count + ? WHERE product_id = ?",
@@ -72,28 +109,26 @@ export const incrementSalesCount = async (productId, quantity) => {
   );
 };
 
-  // 상품 상세 조회 시 view 증가
+//商品詳細照会時のビュー増加
 export const incrementView = async (productId) => {
   await db.query("UPDATE products SET view = view + 1 WHERE product_id = ?", [productId]);
 };
 
-  // 모든 상품 조회 (판매 중인 상품만)
+//すべての商品を見る（販売中の商品のみ）
 
 export const getAllProducts = async (page = 1, limit = 24, search = "") => {
   const offset = (page - 1) * limit;
 
-  // search 파라미터 추가
+  // searchパラメータの追加
   const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : ""; // 타이틀에서만 검색
   const searchValue = search && search.trim() !== "" ? `%${search}%` : null;
 
-  // 전체 상품 개수 조회 (검색어 포함)
-  // 일시품절상품도 표시는 되지만 구매버튼 막아둠
+  // 全商品数の照会(検索語を含む)
   const countQuery = `SELECT COUNT(*) as total FROM products p WHERE p.status IN (0, 2) ${searchCond}`;
   const countParams = searchCond ? [searchValue] : []; 
   const [countRows] = await db.query(countQuery, countParams);
   const total = countRows[0].total;
 
-  // 페이지별 상품 조회 (검색어 포함)
   const query = `
     SELECT 
       p.product_id, p.name, p.description, p.price, p.stock, p.status, p.created_at,
@@ -119,7 +154,6 @@ export const getAllProducts = async (page = 1, limit = 24, search = "") => {
   };
 };
 
-// 상품 ID로 상세 조회 (상세 페이지는 status 상관없이 조회 가능하게 유지)
 export const getProductById = async (productId) => {
   const [rows] = await db.query(
     `
@@ -141,10 +175,8 @@ export const getProductById = async (productId) => {
   return { ...rows[0], images };
 };
 
-// 카테고리별 상품 조회 (판매 중인 것만)
 export const getProductsByCategory = async (categoryId, search = "") => {
-  // search 파라미터 추가
-  const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : ""; //서치시 타이틀에서만 검색
+  const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : "";
   const searchValue = search && search.trim() !== "" ? `%${search}%` : null;
   const query = `
     SELECT 
@@ -161,8 +193,6 @@ export const getProductsByCategory = async (categoryId, search = "") => {
   return rows;
 };
 
-// 상품 생성 (InsertId 반환)
-//BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
 export const createProduct = async (connection, productData) => {
   const { category_id, name, description, price, stock, is_recommended = 0 } = productData;
   let status = Number(productData.status ?? 0);
@@ -178,7 +208,6 @@ export const createProduct = async (connection, productData) => {
   return product_id;
 };
 
-// 관리자용 전체 상품 조회 (status 필터 없음)
 export const getAllProductsForAdmin = async (page = 1, limit = 24, search = "") => {
   const offset = (Number(page) - 1) * Number(limit);
   const searchCond = search && search.trim() !== "" ? `AND p.name LIKE ?` : "";
@@ -214,20 +243,22 @@ export const getAllProductsForAdmin = async (page = 1, limit = 24, search = "") 
   };
 };
 
-// 상품 정보 수정
-export const updateProduct = async (productId, productData) => {
-  const { category_id, name, description, price, stock, is_recommended, status: reqStatus } = productData;
+export const updateProduct = async (productId, productData, connection = null) => {
+  const { category_id, name, description, price, stock, is_recommended = 0, status: reqStatus } = productData;
   let status = Number(productData.status);
-  //재고가 0인 상태에서 판매중 상태로 둬도 자동으로 품절로 뜨도록
   if (Number(stock) === 0) status = 2;
-  const [result] = await db.query(
-    `UPDATE products SET category_id = ?, name = ?, description = ?, price = ?, stock = ?, status = ?, is_recommended = ? WHERE product_id = ?`,
+  const executor = connection || db;
+
+  const [result] = await executor.query(
+    `UPDATE products 
+     SET category_id = ?, name = ?, description = ?, price = ?, stock = ?, status = ?, is_recommended = ? 
+     WHERE product_id = ?`,
     [category_id, name, description, price, stock, status, is_recommended, productId]
   );
-  return result.affectedRows;
+
+  return result;
 };
 
-// 추천 상태 업데이트 함수
 export const updateRecommendStatus = async (productId, is_recommended) => {
   try {
     const [result] = await db.query(
@@ -242,7 +273,20 @@ export const updateRecommendStatus = async (productId, is_recommended) => {
   }
 };
 
-// [추가] 논리적 삭제 (Soft Delete): 상태만 변경
+export const bulkUpdateStatus = async (ids, status) => {
+  try {
+    const [result] = await db.query(
+      `UPDATE products SET status = ? WHERE product_id IN (?)`,
+      [status, ids]
+    );
+
+    return result.affectedRows;
+  } catch (error) {
+    console.error("商品修正エラーが発生しました。:", error);
+    throw error;
+  }
+};
+
 export const softDeleteProduct = async (productId) => {
   const [result] = await db.query(
     `UPDATE products SET status = 1 WHERE product_id = ?`,
@@ -251,7 +295,6 @@ export const softDeleteProduct = async (productId) => {
   return result.affectedRows;
 };
 
-//상품 이미지 저장 함수
 export const createProductImage = async (productId, imageUrl, role, order) => {
   const [result] = await db.query(
     `INSERT INTO product_images (product_id, image_url, role, image_order) 

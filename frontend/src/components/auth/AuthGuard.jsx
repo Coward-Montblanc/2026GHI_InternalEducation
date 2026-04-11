@@ -11,7 +11,7 @@ const AuthGuard = ({ requireAdmin = false }) => {
 
     useEffect(() => {
         setStatus("loading");
-        if (!isAuthenticated() || !user) { //토큰 및 유저확인
+        if (!isAuthenticated() || !user) { //トークンとユーザー確認
             if (isAuthenticated()) {
                 alert("ログインが必要です。");
                 logout();
@@ -27,10 +27,10 @@ const AuthGuard = ({ requireAdmin = false }) => {
         setStatus("authorized");
     }, [user, navigate, logout, requireAdmin]);
 
-    if (status === "loading" || status === "idle") { //로딩 UI
+    if (status === "loading" || status === "idle") { //ロードUI
         return ( <LoadingView /> ); 
     }
-    return status === "authorized" ? <Outlet /> : null; //확인 끝나면 페이지 노출
+    return status === "authorized" ? <Outlet /> : null; //確認が終わったらページを公開
 };
 
 export default AuthGuard;

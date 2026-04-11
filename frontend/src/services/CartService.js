@@ -1,17 +1,17 @@
 import api from "../api/axios";
 
-//장바구니 목록 조회 (뱃지 개수는 Header에서 cart.length로 계산)
+//カートリストの照会（バッジの数はHeaderからcart.lengthとして計算）
 export const getCart = async (loginId) => {
   try {
     const { data } = await api.get(`/cart/${loginId}`);
-    return data.items || []; //데이터 배열로 반환하게
+    return data.items || []; 
   } catch (error) {
     console.error("カートリスト取得エラー:", error);
     throw error;
   }
 };
 
-//장바구니에 상품 추가
+//カートに商品を追加
 export const addToCart = async (loginId, productId, quantity) => {
   try {
     const { data } = await api.post("/cart/addcart", {
@@ -26,7 +26,7 @@ export const addToCart = async (loginId, productId, quantity) => {
   }
 };
 
-//장바구니 항목 상태 (삭제/복구) 
+//カートアイテムステータス（削除/修復） 
 export const updateCartItemStatus = async (cartItemId, status) => {
   try {
     const { data } = await api.patch(`/cart/item/${cartItemId}/status`, {

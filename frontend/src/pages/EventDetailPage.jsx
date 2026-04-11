@@ -7,7 +7,7 @@ import { useNEDetail } from "../hooks/useNEDetail";
 import NEDetailView from "../components/NEDetailView";
 import { LoadingView } from "../components/LoadingCircle";
 
-// 상세 조회·삭제·로딩·에러는 useNEDetail 훅에서 처리 (공지/이벤트 공통)
+// 詳細照会・削除・ロード・エラーは useNEDetail フックで処理 (通知/イベント共通)
 function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ function EventDetailPage() {
   const isAdmin = user?.role === "ADMIN";
   const { item, loading, error, handleDelete } = useNEDetail(
     id,
-    getEventDetail, //hooks로 끌고가서 판단
+    getEventDetail,
     deleteEvent,
     {
       listPath: "/event",

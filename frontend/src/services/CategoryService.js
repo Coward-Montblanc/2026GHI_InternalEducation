@@ -1,6 +1,6 @@
 import api from "../api/axios";
 
-//카테고리 목록 조회
+//カテゴリリストの照会
 export const getCategories = async () => {
   try {
   const { data } = await api.get("/categories");

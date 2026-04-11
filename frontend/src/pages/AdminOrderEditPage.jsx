@@ -21,12 +21,12 @@ const AdminOrderEditPage = () => {
   const [searchZip, setSearchZip] = useState('');
     
   // 0=注文キャンセル, 1=注文完了（準備中）, 2=配送中, 3=配送完了 
-  // 반품, 환불 상태도 status에 추가해야함 (예정) 일단 테이블에 있는거만
+  //返品、払い戻しステータスもstatusに追加する必要があります（予定）
   const statusOptions = [
-    { value: 0, label: '注文キャンセル' },
-    { value: 1, label: '注文完了（準備中）' },
-    { value: 2, label: '配送中' },
-    { value: 3, label: '配送完了' }
+    { value: 0, label: '注文キャンセル', color: "error" },
+    { value: 1, label: '注文完了（準備中）', color: "primary" },
+    { value: 2, label: '配送中', color: "info" },
+    { value: 3, label: '配送完了', color: "success" }
   ];
 
   const [orderData, setOrderData] = useState({
@@ -98,7 +98,7 @@ const AdminOrderEditPage = () => {
       const res = await axios.patch(`/api/orders/admin/${orderId}`, orderData);
       if (res.data.success) {
         alert("注文情報が更新されました。");
-        navigate('/admin/orders'); // 목록으로 이동
+        navigate('/admin/orders');
       }
     } catch (err) {
       console.error(err);
@@ -108,7 +108,7 @@ const AdminOrderEditPage = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1000, margin: '0 auto' }}>
-      {/* 상단 헤더 영역 */}
+      {/* 上部ヘッダ領域 */}
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
         <IconButton onClick={() => navigate(-1)}><ArrowBackIcon /></IconButton>
         <Box>
@@ -159,7 +159,7 @@ const AdminOrderEditPage = () => {
                                 bgcolor: '#eee',
                                 border: '1px solid #eee' 
                             }}
-                            onError={(e) => { e.target.src = '/No_Image.png'; }} //상품 이미지가 없거나 로딩이 안될경우
+                            onError={(e) => { e.target.src = '/No_Image.png'; }} //商品画像がない、またはロードできない場合
                         />
 
                         <Box sx={{ flexGrow: 1 }}>
@@ -221,7 +221,7 @@ const AdminOrderEditPage = () => {
                     )}
                 </CardContent>
             </Card>
-            {/* 주문 상태 */}
+            {/* 注文ステータス */}
             <Card elevation={0} variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
@@ -245,7 +245,7 @@ const AdminOrderEditPage = () => {
               </CardContent>
             </Card>
 
-            {/* 배송 정보 */}
+            {/* 配送情報 */}
             <Card elevation={0} variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent sx={{ maxWidth: 700, ml: 0 }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
@@ -301,8 +301,6 @@ const AdminOrderEditPage = () => {
               </CardContent>
             </Card>
           
-
-
             <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2, mb: 5 }}>
             <Button 
                 variant="contained" 

@@ -40,8 +40,8 @@ function CartPage() {
                 {cartItems.map((item) => (
                   <TableRow key={item.cart_item_id}
                     sx={{
-                          bgcolor: item.status === 1 ? "#f9f9f9" : "inherit", // 비활성 시 배경색 변경
-                          opacity: item.status === 1 ? 0.6 : 1 // 비활성 시 반투명 처리
+                          bgcolor: item.status === 1 ? "#f9f9f9" : "inherit",
+                          opacity: item.status === 1 ? 0.6 : 1
                         }}>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
@@ -60,7 +60,7 @@ function CartPage() {
                         )}
                       </Stack>
                     </TableCell>
-                    <TableCell align="center"> {/*상품 수량 늘리고 줄이기*/}
+                    <TableCell align="center">
                       <Stack direction="row" justifyContent="center" alignItems="center">
                         <IconButton size="small" onClick={() => handleUpdateQty(item.cart_item_id, item.quantity - 1, item.stock)} disabled={item.quantity <= 1}>
                           <RemoveIcon fontSize="small" />
@@ -72,11 +72,10 @@ function CartPage() {
                                 if (!isNaN(val) && val >= 1) {
                                     handleUpdateQty(item.cart_item_id, val);
                                     } }} 
-                                onBlur={(e) => {handleUpdateQty(item.cart_item_id, e.target.value, item.stock); }} //마우스를 다른 곳에 클릭했을 시 함수 실행.
+                                onBlur={(e) => {handleUpdateQty(item.cart_item_id, e.target.value, item.stock); }} 
                                 inputProps={{ style: { textAlign: 'center', width: '40px', padding: '5px' }, type: 'number' }}
-                                //증가 감소 화살표 없애기
                                 sx={{ "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": { WebkitAppearance: "none", margin: 0, } }} 
-                                disabled={item.status === 1} />{/*status가 0인지에 따라 비활성화*/}
+                                disabled={item.status === 1} />
                         <IconButton size="small" onClick={() => handleUpdateQty(item.cart_item_id, item.quantity + 1, item.stock)}>
                           <AddIcon fontSize="small" />
                         </IconButton>
@@ -85,8 +84,8 @@ function CartPage() {
                     <TableCell align="right">
                       {(item.price * item.quantity).toLocaleString()}円
                     </TableCell>
-                    <TableCell align="center"> {/*상품 삭제 버튼*/}
-                      <IconButton color={item.status === 1 ? "primary" : "error"} //활성화 상태에 따라 아이콘이 바뀜.
+                    <TableCell align="center">
+                      <IconButton color={item.status === 1 ? "primary" : "error"}
                                   onClick={() => handleToggleStatus(item.cart_item_id, item.status)}>
                                     {item.status === 1 ? <ReplayIcon /> : <DeleteIcon />}
                                   </IconButton>
@@ -106,7 +105,7 @@ function CartPage() {
               size="large" 
               sx={{ px: 10 }}
               onClick={() => BuyPageMany(navigate, cartItems)}
-              disabled={cartItems.length === 0 || totalPrice === 0} //주문할 상품이 없을 시 비활성화.
+              disabled={cartItems.length === 0 || totalPrice === 0}
             >
               注文
             </Button>

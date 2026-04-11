@@ -1,7 +1,6 @@
 import db from "../config/db.js";
 
-// 장바구니 생성 및 확인
-//BIGINT AUTO_INCREMENT방식을 쓰면 DB에 CT1 이런 방식이 아니라 1 이렇게만 들어감. max +1방식으로 변경
+//ショッピングカートの作成と確認
 export async function getOrCreateCart(login_id) {
   const [cart] = await db.query("SELECT cart_id FROM carts WHERE login_id = ?", [login_id]);
   if (cart.length > 0) return cart[0].cart_id;
@@ -13,7 +12,7 @@ export async function getOrCreateCart(login_id) {
   return cart_id; 
 }
 
-// 아이템 추가 및 업데이트
+//アイテムの追加と更新
 export async function addOrUpdateItem(cart_id, product_id, quantity) {
   const [existing] = await db.query(
     "SELECT cart_item_id FROM cart_items WHERE cart_id = ? AND product_id = ?",
@@ -33,7 +32,7 @@ export async function addOrUpdateItem(cart_id, product_id, quantity) {
   }
 }
 
-//장바구니 페이지 상품 수량에 덮어쓰기
+//カートページの商品数量で上書き
 export async function updateItemQuantity(cart_item_id, quantity) { 
   return await db.query(
     "UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?",
@@ -41,7 +40,7 @@ export async function updateItemQuantity(cart_item_id, quantity) {
   );
 }
 
-export async function getCartItemsByLoginId(login_id) { //장바구니 조회
+export async function getCartItemsByLoginId(login_id) { //カートを見る
   const query = `
     SELECT 
         ci.cart_item_id, 
@@ -61,7 +60,7 @@ export async function getCartItemsByLoginId(login_id) { //장바구니 조회
   return rows;
 }
 
-export async function toggleCartItem(status, cart_item_id) { //장바구니 내 상품 상태 변경 시키기
+export async function toggleCartItem(status, cart_item_id) { //カート内の商品の状態を変更する
   const query = "UPDATE cart_items SET status = ? WHERE cart_item_id = ?";
   const [result] = await db.query(query, [status, cart_item_id]);
   return result;

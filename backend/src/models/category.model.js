@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-// 모든 카테고리 조회 (delflag='N'만)
+//すべてのカテゴリルックアップ（delflag = 'N'のみ）
 export const getAllCategories = async () => {
   const [rows] = await db.query(`
     SELECT category_id, name, delflag
@@ -11,7 +11,7 @@ export const getAllCategories = async () => {
   return rows;
 };
 
-// 카테고리 ID로 조회
+//カテゴリIDで検索
 export const getCategoryById = async (categoryId) => {
   const [rows] = await db.query(
     `
@@ -24,7 +24,7 @@ export const getCategoryById = async (categoryId) => {
   return rows[0] || null;
 };
 
-// 카테고리 생성
+//カテゴリの作成
 export const createCategory = async (name) => {
   const [result] = await db.query(
     `
@@ -36,7 +36,7 @@ export const createCategory = async (name) => {
   return result.insertId;
 };
 
-// 카테고리 수정
+//カテゴリを編集
 export const updateCategory = async (categoryId, name) => {
   const [result] = await db.query(
     `
@@ -49,7 +49,7 @@ export const updateCategory = async (categoryId, name) => {
   return result.affectedRows;
 };
 
-// 카테고리 논리삭제 (delflag = 'Y'), 실제 삭제는 없습니다.
+//カテゴリ論理削除（delflag = 'Y'）、実際の削除はありません。
 export const deleteCategory = async (categoryId) => {
   const [result] = await db.query(
     `

@@ -1,6 +1,6 @@
 import api from "../api/axios";
 
-//로그인
+//ログイン
 export const loginApi = async (loginId, password) => {
   try {
   const { data } = await api.post("/auth/login", {
@@ -15,7 +15,7 @@ export const loginApi = async (loginId, password) => {
 };
 
 
-//회원가입
+//会員登録
 export const signupApi = async (userData) => {
   try {
     const data = await api.post("/users", userData);

@@ -2,14 +2,16 @@ import { useNavigate } from "react-router-dom";
 import {  Modal, Box, Typography, TextField, Button, Paper, MenuItem, Select, InputLabel, FormControl } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useSignup } from "../hooks/useSignup";
-
+import Flags from 'country-flag-icons/react/3x2';
 
 function SignupPage() {
   const {
     formData, emailId, setEmailId, emailDomain, setEmailDomain,
-    customDomain, setCustomDomain, open, setOpen,
-    handleChange, Address, handleSignup 
-  } = useSignup(); //임포트해서 리턴한 객체들 가져옴
+    customDomain, setCustomDomain, emailDomains, open, setOpen, errors, setErrors,
+    handleChange, Address, handleSignup,countryCodes, 
+    selectedCountry, setSelectedCountry ,getCountryCode,
+    phonePlaceholder, handlePhoneChange, handleEmailIdChange, handleEmailDomainChange,
+  } = useSignup();
   const navigate = useNavigate();
   
   return (
@@ -26,14 +28,23 @@ function SignupPage() {
         </Box>
         <Typography variant="h5" align="center" gutterBottom>会員登録</Typography>
 
-        <TextField fullWidth label="Name*" name="name" margin="normal" onChange={handleChange} />
+        <TextField 
+          fullWidth 
+          label="Name*" 
+          name="name" 
+          margin="normal" 
+          onChange={handleChange}
+          error={!!errors.name}
+          helperText={errors.name}
+        />
         <TextField
           fullWidth
           label="ID*"
           name="login_id"
           margin="normal"
           onChange={handleChange}
-          helperText="英字(a~z)＋数字(0~9)のみ入力可・4文字以上"
+          error={!!errors.login_id}
+          helperText={errors.login_id}
         />
         
         <TextField
@@ -43,17 +54,34 @@ function SignupPage() {
           name="password"
           margin="normal"
           onChange={handleChange}
-          helperText="英字(a~z)＋数字(0~9)のみ入力可・4文字以上"
+          error={!!errors.password}
+          helperText={errors.password}
         />
-        <TextField fullWidth type="password" label="パスワード確認*" name="passwordConfirm" margin="normal" onChange={handleChange} />
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2, mb: 1 }}> {/*이메일*/}
+        <TextField 
+          fullWidth
+          type="password" 
+          label="パスワード確認*" 
+          name="passwordConfirm" 
+          margin="normal" 
+          onChange={handleChange} 
+          onBlur={() => {
+          if (formData.password !== formData.passwordConfirm) {
+            setErrors(prev => ({ ...prev, passwordConfirm: "パスワードが一致しません。" }));
+            }
+          }}
+          error={!!errors.passwordConfirm}
+          helperText={errors.passwordConfirm} 
+        />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2, mb: 1 }}> {/*Eメール*/}
           <TextField 
             label="メール*" 
             variant="outlined" 
             size="small" 
             sx={{ flex: 1 }} 
             value={emailId}
-            onChange={(e) => setEmailId(e.target.value)}
+            onChange={(e) => handleEmailIdChange(e.target.value)}
+            error={!!errors.email}
+            helperText={errors.email} 
           />
           <Typography>@</Typography>
           {emailDomain !== "custom" ? (
@@ -62,17 +90,20 @@ function SignupPage() {
             <Select 
               value={emailDomain} 
               label="ドメイン"
-              onChange={(e) => setEmailDomain(e.target.value)}
+              onChange={(e) => handleEmailDomainChange(e.target.value)}
+              displayEmpty
             >
-              <MenuItem value="naver.com">naver.com</MenuItem>
-              <MenuItem value="gmail.com">gmail.com</MenuItem>
-              <MenuItem value="daum.net">daum.net</MenuItem>
-              <MenuItem value="hanmail.net">hanmail.net</MenuItem>
+              <MenuItem value="" disabled>ドメイン選択</MenuItem>
+              {emailDomains?.map((domain) => (
+                <MenuItem key={domain.value} value={domain.value}>
+                  {domain.value}
+                </MenuItem>
+              ))}
               <MenuItem value="custom">直接入力</MenuItem>
             </Select>
           </FormControl>
           ) : (
-              <Box sx={{ display: 'flex', gap: 1, flex: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, flex: 1 }}>
               <TextField 
                 label="メール入力*" 
                 size="small" 
@@ -84,55 +115,97 @@ function SignupPage() {
                 variant="outlined" 
                 size="small" 
                 onClick={() => {
-                  setEmailDomain("naver.com"); // 다시 선택 모드로 복귀
+                  setEmailDomain("");
                   setCustomDomain("");
                 }}
               >
                 戻る
               </Button>
-    </Box>
-  )}
+            </Box>
+          )}
         </Box>
-        <TextField fullWidth label="電話番号*" name="phone" margin="normal" onChange={handleChange} />
-        {/* 우편번호와 검색 버튼 */}
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
-      <TextField 
-        							label="郵便番号" 
-        							name="zip_code" 
-        							value={formData.zip_code || ''}
-									onChange={handleChange}
-									placeholder="1234567"
-      							/>
-      							<Button variant="contained"
-										onClick={() => Address(formData.zip_code)}>
-        							住所検索
-      							</Button>
-    </Box>
+        <Box sx={{ display: "flex", gap: 1, mt: 2 }}>
+        {/* 国コードの選択ドロップダウン */}
+        <FormControl sx={{ width: 120 }} size="small">
+          <InputLabel>国家</InputLabel>
+          <Select
+            value={selectedCountry}
+            label="国家"
+            onChange={(e) => setSelectedCountry(e.target.value)}
+            renderValue={(value) => <strong>{value}</strong>} 
+          >
+          {countryCodes?.map((item) => {
+            const countryCode = getCountryCode(item.value); // 例 +82 -> KR
+            const FlagIcon = Flags[countryCode]; // 国コードに合った国旗イメージ
 
-    <TextField 
-      fullWidth 
-      label="住所" 
-      name="address" 
-      value={formData.address || ''} 
-      margin="normal" 
-      InputProps={{ readOnly: true }} 
-    />
+            return (
+              //国旗が検索されない場合は、地球に出力
+              <MenuItem key={item.value} value={item.value} sx={{ display: 'flex', gap: 1 }}>
+                {FlagIcon ? <FlagIcon title={countryCode} style={{ width: '20px' }} /> : '🌐'} 
+                {item.label}
+              </MenuItem>
+            );
+          })}
+          </Select>
+        </FormControl>
 
-    <TextField 
-      fullWidth 
-      label="詳細住所" 
-      name="address_detail" 
-      margin="normal" 
-      onChange={handleChange} 
-    />
+        {/* 電話番号入力 */}
+        <TextField
+          fullWidth
+          label="電話番号*"
+          name="phone"
+          size="small"
+          placeholder={phonePlaceholder}
+          onChange={handlePhoneChange}
+          value={formData.phone}
+          inputProps={{ 
+            inputMode: 'numeric', 
+            pattern: '[0-9]*' 
+          }}
+          error={!!errors.phone}
+          helperText={errors.phone}
+        />
+        </Box>
+        {/* 郵便番号と検索ボタン */}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
+          <TextField 
+        		label="郵便番号" 
+        		name="zip_code" 
+        		value={formData.zip_code || ''}
+						onChange={handleChange}
+            error={!!errors.zip_code}
+						placeholder="1234567"
+      		/>
+      		<Button variant="contained"
+						onClick={() => Address(formData.zip_code)}>
+        		住所検索
+      		</Button>
+        </Box>
 
-    <Modal open={open} onClose={() => setOpen(false)}>
-      <Box sx={{ 
-        position: 'absolute', top: '50%', left: '50%', 
-        transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 1 
-      }}>
-      </Box>
-    </Modal>
+        <TextField 
+          fullWidth 
+          label="住所" 
+          name="address" 
+          value={formData.address || ''} 
+          margin="normal" 
+          InputProps={{ readOnly: true }} 
+        />
+
+        <TextField 
+          fullWidth 
+          label="詳細住所" 
+          name="address_detail" 
+          margin="normal" 
+          onChange={handleChange} 
+        />
+
+        <Modal open={open} onClose={() => setOpen(false)}>
+          <Box sx={{ 
+            position: 'absolute', top: '50%', left: '50%', 
+            transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', p: 1 
+          }}>
+          </Box>
+        </Modal>
 
         <Button fullWidth variant="contained" size="large" sx={{ mt: 3 }} onClick={handleSignup}>
           登録する

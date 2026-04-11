@@ -8,7 +8,7 @@ import {
   Alert,
   Divider,
 } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"; //주문 완료 아이콘
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { getOrder, getOrderStatusLabel } from "../services/OrderService";
 import OrderList from "../components/OrderList";
 import { LoadingView } from "../components/LoadingCircle";
@@ -24,8 +24,8 @@ export default function OrderConfirmPage() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(!!order_id);
   const [error, setError] = useState(null);
-  const [orderInfo, setOrderInfo] = useState(null); // order 객체용
-  const [items, setItems] = useState([]);          // items 배열용
+  const [orderInfo, setOrderInfo] = useState(null);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     if (!order_id) {
@@ -86,7 +86,7 @@ export default function OrderConfirmPage() {
     <Box sx={{ p: 4, maxWidth: 800, margin: "0 auto" }}>
       <Paper elevation={2} sx={{ p: 4 }}>
         <Box sx={{ textAlign: "center", mb: 3 }}>
-          <CheckCircleOutlineIcon sx={{ fontSize: 64, color: "green" }} /> {/* 주문 완료 아이콘 */}
+          <CheckCircleOutlineIcon sx={{ fontSize: 64, color: "green" }} />
           <Typography variant="h5" sx={{ mt: 1, fontWeight: "bold" }}>
             注文が完了しました
           </Typography>

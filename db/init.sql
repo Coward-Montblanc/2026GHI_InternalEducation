@@ -28,7 +28,7 @@ CREATE TABLE users (
   zip_code VARCHAR(10),
   address VARCHAR(255),
   address_detail VARCHAR(255),
-  status TINYINT DEFAULT 0,  /* 0=회원, 1=탈퇴 */
+  status TINYINT DEFAULT 0,  /* 0=会員、1=脱退 */
   role VARCHAR(20) DEFAULT 'USER',  /* USER=一般, ADMIN=管理者 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -45,12 +45,12 @@ CREATE TABLE products (
   product_id VARCHAR(10) PRIMARY KEY,
   category_id BIGINT NOT NULL,
   name VARCHAR(100) NOT NULL,
-  description TEXT,
+  description LONGTEXT,
   price INT NOT NULL,
   stock INT NOT NULL,
   view INT DEFAULT 0, /*view*/
-  sales_count INT DEFAULT 0,         /* 누적 판매수량 */
-  is_recommended TINYINT DEFAULT 0,  /* 0=일반, 1=관리자 추천 */
+  sales_count INT DEFAULT 0,         /* 累積販売数量 */
+  is_recommended TINYINT DEFAULT 0,  /* 0=一般、1=管理者推奨 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   status TINYINT DEFAULT 0, /* 0=販売中, 1=販売停止, 2=品切れ */
   CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES categories(category_id)
@@ -62,7 +62,7 @@ CREATE TABLE product_images (
   product_id VARCHAR(10) NOT NULL,
   role TINYINT DEFAULT 2, /* 1=メイン, 2=サブ ,　3＝詳細*/
   image_url VARCHAR(255) NOT NULL,
-  image_order INT DEFAULT 1, /* 1=メイン, 2=サブ */
+  image_order INT DEFAULT 1,
   CONSTRAINT fk_image_product FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -98,6 +98,7 @@ CREATE TABLE orders (
   delivery_request VARCHAR(200) DEFAULT NULL,
   status TINYINT DEFAULT 1, /* 0=注文キャンセル, 1=注文完了（準備中）, 2=配送中, 3=配送完了 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_order_user FOREIGN KEY (login_id) REFERENCES users(login_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -116,8 +117,15 @@ CREATE TABLE order_items (
 CREATE TABLE notices (
   notice_id VARCHAR(10) PRIMARY KEY,
   title VARCHAR(100) NOT NULL,
-  content TEXT NOT NULL,
+  content LONGTEXT NOT NULL,
   is_pinned TINYINT DEFAULT 0, /* 0=未固定, 1=固定 */
+  is_banner TINYINT DEFAULT 0,      /* 0=無効、1=メインバナーの横 */
+  banner_start_at DATETIME NULL,    /*バナー露出開始日時*/
+  banner_end_at DATETIME NULL,      /* バナー露出終了日時 */
+  banner_priority INT DEFAULT 1,
+  banner_link_url VARCHAR(255) DEFAULT NULL,
+  thumbnail_path VARCHAR(255) DEFAULT NULL,
+  banner_path VARCHAR(255) DEFAULT NULL,  
   login_id VARCHAR(50) DEFAULT NULL,
   status TINYINT DEFAULT 0, /* 0=表示中, 1=非表示 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -139,8 +147,15 @@ CREATE TABLE notice_images (
 CREATE TABLE events (
   event_id VARCHAR(10) PRIMARY KEY,
   title VARCHAR(100) NOT NULL,
-  content TEXT NOT NULL,
-  is_pinned TINYINT DEFAULT 0, /* 0=未固定, 1=固定 */
+  content LONGTEXT NOT NULL,
+  is_pinned TINYINT DEFAULT 0,      /* 0=未固定, 1=固定 */
+  is_banner TINYINT DEFAULT 0,      /* 0=無効、1=メインバナーの横 */
+  banner_start_at DATETIME NULL,    /*バナー露出開始日時*/
+  banner_end_at DATETIME NULL,      /* バナー露出終了日時 */
+  banner_priority INT DEFAULT 1,
+  banner_link_url VARCHAR(255) DEFAULT NULL,
+  thumbnail_path VARCHAR(255) DEFAULT NULL,  
+  banner_path VARCHAR(255) DEFAULT NULL,     
   login_id VARCHAR(50) DEFAULT NULL,
   status TINYINT DEFAULT 0, /* 0=表示中, 1=非表示 */
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -176,3 +191,13 @@ CREATE TABLE delivery_addresses (
   PRIMARY KEY (login_id, address_name),
   FOREIGN KEY (login_id) REFERENCES users(login_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE common_codes (
+    code_id INT AUTO_INCREMENT PRIMARY KEY,
+    group_code VARCHAR(50) NOT NULL,
+    code_value VARCHAR(50) NOT NULL,
+    code_name VARCHAR(100) NOT NULL,
+    attr1 VARCHAR(255) DEFAULT NULL,
+    sort_order INT DEFAULT 0,
+    is_used BOOLEAN DEFAULT TRUE
+);

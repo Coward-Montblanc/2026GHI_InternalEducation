@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { signupApi } from "../services/LoginService";
-import { fetchJapaneseAddress } from "../utils/address"; //주소 찾기 API
-
+import { fetchJapaneseAddress } from "../utils/address"; 
+import { parsePhoneNumberWithError } from 'libphonenumber-js';
+import { validateSignupForm } from "../utils/validation";
+import { formatPhoneNumber } from "../utils/phoneFormatter";
+import api from "../api/axios";
 
 export const useSignup = () => {
   const navigate = useNavigate();
+  const [emailDomains, setEmailDomains] = useState([]);
   const [formData, setFormData] = useState({
     login_id: "",
     password: "",
@@ -20,10 +24,53 @@ export const useSignup = () => {
   });
 
   const [emailId, setEmailId] = useState("");
-  const [emailDomain, setEmailDomain] = useState("naver.com");
-  const [customDomain, setCustomDomain] = useState(""); // 직접 입력한 도메인 저장용
+  const [emailDomain, setEmailDomain] = useState("");
+  const [customDomain, setCustomDomain] = useState("");
+  const [countryCodes, setCountryCodes] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState("+82");
+  const [phonePlaceholder, setPhonePlaceholder] = useState('010-0000-0000');
   const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState({});
+  
+  useEffect(() => {
+  const getInitialData = async () => {
+    try {
+      const [domainRes, countryRes] = await Promise.all([
+        api.get("/common/codes/EMAIL_DOMAIN"),
+        api.get("/common/codes/PHONE_COUNTRY_CODE")
+      ]);
+      
+      if (domainRes.data.success) setEmailDomains(domainRes.data.codes);
+      if (countryRes.data.success) {
+        setCountryCodes(countryRes.data.codes);
+        
+        const defaultCountry = countryRes.data.codes.find(c => c.value === selectedCountry);
+        if (defaultCountry?.format) setPhonePlaceholder(defaultCountry.format);
+      }
+    } catch (error) {
+      console.error("データエラー:", error);
+    }
+  };
+  getInitialData();
+}, []);
 
+  const handlePhoneChange = (e) => {
+    const cleanCountry = String(selectedCountry).replace("+", "");
+    const formatted = formatPhoneNumber(e.target.value, cleanCountry);
+
+    setFormData(prev => ({ ...prev, phone: formatted }));
+    if (errors.phone) { setErrors(prev => ({ ...prev, phone: "" })); }
+  };
+
+  const handleEmailIdChange = (val) => {
+    setEmailId(val);
+    if (errors.email) { setErrors(prev => ({ ...prev, email: "" })); }
+  };
+
+  const handleEmailDomainChange = (val) => {
+    setEmailDomain(val);
+    if (errors.email) { setErrors(prev => ({ ...prev, email: "" })); }
+  };
 
   const Address = async () => {
     try {
@@ -34,6 +81,7 @@ export const useSignup = () => {
                 address: result.address,
                 zip_code: result.zip_code
             }));
+            setErrors(prev => ({ ...prev, address: "", zip_code: "" }));
         } else {
             alert("該当する住所が見つかりませんでした。");
         }
@@ -42,48 +90,33 @@ export const useSignup = () => {
     }
 	};
 
-  //제약 조건 (영문+숫자 혼합, 4자 이상)
-  const validateFormat = (value) => {
-    const regex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/;
-    return regex.test(value);
-  };
 
   // 入力値変更ハンドラー
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   // 登録ボタンクリック時にバックエンド呼び出し
   const handleSignup = async () => {
+    const emailData = { emailId, emailDomain, customDomain };
+    const { isValid, errors: validationErrors } = validateSignupForm(formData, emailData);
+
+    if (!isValid) {
+      setErrors(validationErrors);
+      return;
+    }
+
     const finalDomain = emailDomain === "custom" ? customDomain : emailDomain; //이메일 도메인부분 직접 입력을 클릭하는지에 따라 바뀜.
     const fullEmail = `${emailId}@${finalDomain}`;
-    
-    if (!emailId || !finalDomain) { 
-      alert("ドメインを選択してください。");
-      return;
-    }
-    if (emailDomain === "custom" && !customDomain) { //도메인을 비우고 가입할 경우
-      alert("ドメインを選択または入力してください。");
-      return;
-    }
 
-    if (!validateFormat(formData.login_id)) { //아이디,비밀번호 제약
-      alert("IDは英文と数字を含む4文字以上にしてください。");
-      return;
-    }
-    if (!validateFormat(formData.password)) {
-      alert("パスワードは英文と数字を含む4文字以上にしてください。");
-      return;
-    }
-
-    if (formData.password !== formData.passwordConfirm) {
-      alert("パスワードが一致しません。");
-      return;
-    }
-    if (!emailId) {
-      alert("メールアドレスを入力してください。");
-      return;
-    }
+    const pureCountry = String(selectedCountry).replace(/[^0-9]/g, "");
+    const purePhone = formData.phone.replace(/[^0-9]/g, "");
+    const fullPhoneNumber = `${pureCountry} ${purePhone}`;
 
     try {
       const response = await signupApi({
@@ -91,7 +124,7 @@ export const useSignup = () => {
         password: formData.password,
         name: formData.name,
         email: fullEmail,
-        phone: formData.phone,
+        phone: fullPhoneNumber,
         zip_code: formData.zip_code,
         address: formData.address,
         address_detail: formData.address_detail,
@@ -108,16 +141,31 @@ export const useSignup = () => {
     }
   };
 
-
+  const getCountryCode = (callingCode) => {
+  try {
+    const phoneNumber = parsePhoneNumberWithError(`${callingCode}1012345678`);
+    return phoneNumber.country;
+  } catch (error) {
+    return null;
+  }
+};
 
   return {
   formData, 
   emailId, setEmailId, 
   emailDomain, setEmailDomain,
-  customDomain, setCustomDomain, 
+  emailDomains,
+  customDomain, setCustomDomain,
+  errors, setErrors,
   open, setOpen,
   handleChange, 
   Address,
-  handleSignup
+  handleSignup,
+  countryCodes, 
+  selectedCountry, 
+  setSelectedCountry, getCountryCode,
+  phonePlaceholder, handlePhoneChange,
+  handleEmailIdChange,
+  handleEmailDomainChange,
     };
 };

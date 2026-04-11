@@ -1,31 +1,39 @@
 import * as userModel from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import response from "../utils/response.js";
+import { RESPONSE_MESSAGES, DATA_CONSTRAINTS } from "../config/constants.js";
+
 export async function getUsers(req, res) {
   try {
     const users = await userModel.findAllUsers();
     res.json(users);
   } catch (err) {
     console.error("ユーザー取得エラー:", err);
-    return response.error(res, "DB エラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 }
 
 export const getAdminUsers = async (req, res) => {
     try {
-        const { name, login_id, email, phone, zip_code, status, role, startDate, endDate } = req.query;
+
+        const { name, login_id, email, phone, zip_code, status, role, startDate, endDate, sortField, sortOrder } = req.query;
         const page = Math.max(1, Number(req.query.page) || 1);
         const limit = Math.max(1, Number(req.query.limit) || 10);
-        const currentPage = parseInt(page) || 1;
-        const offset = (currentPage - 1) * limit;
+        const offset = (Number(page) - 1) * limit;
 
         const filters = {
-            name, login_id, email, phone, zip_code,
-            status: status !== "" ? status : undefined,
-            role: role !== "" ? role : undefined,
+            name: name || undefined,
+            login_id: login_id || undefined,
+            email: email || undefined,
+            phone: phone || undefined,
+            zip_code: zip_code || undefined,
+            status: (status && status !== "all") ? status : undefined,
+            role: (role && role !== "all") ? role : undefined,
             created_at: (startDate && endDate) ? [startDate, endDate] : undefined,
             limit: limit,
-            offset: offset
+            offset: offset,
+            sortField: sortField || 'created_at',
+            sortOrder: sortOrder || 'DESC'
         };
 
         const { users, totalCount } = await userModel.findUsersAdmin(filters);
@@ -34,13 +42,13 @@ export const getAdminUsers = async (req, res) => {
             users,
             pagination: {
                 totalItems: totalCount,
-                currentPage: currentPage,
+                currentPage: Number(page),
                 totalPages: Math.ceil(totalCount / limit) || 1
             }
-        }, "ユーザーリストを取得しました。");
+        }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
     } catch (error) {
-        console.error("User Admin Error:", error);
-        return response.error(res, "サーバーエラーが発生しました。", 500);
+        console.error("ユーザー取得エラー:", error);
+        return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
     }
 };
 
@@ -49,17 +57,16 @@ export async function createUser(req, res) {
   const { login_id, password, name, email, phone, zip_code, address, address_detail, role } = req.body;
   
   if (!login_id || !password || !name || !email || !phone) {
-    return response.error(res, "必須情報(ID、パスワード、名前、メール、電話番号)が不足しています。",400);
+    return response.error(res, DATA_CONSTRAINTS.SIGNUP.DEFAULT);
   }
 
-  const regex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/; //영문(a-z), 숫자(0~9) 혼합 4글자 이상 제약
+  const regex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{4,}$/; //英語（a-z）、数字（0〜9）混合4文字以上の制約
   
-  if(!regex.test(login_id)){ return response.error(res, "IDは英字と数字を含む4文字以上である必要があります。", 400);}
-  if(!regex.test(password)){ return response.error(res, "パスワードは英字と数字を含む4文字以上である必要があります。", 400);}
-  if (!email.includes('@')) { return response.error(res, "有効なメール形式ではありません。", 400);}  //이메일에 @필수
+  if(!regex.test(login_id)){ return response.error(res, DATA_CONSTRAINTS.SIGNUP.ID);}
+  if(!regex.test(password)){ return response.error(res, DATA_CONSTRAINTS.SIGNUP.PASSWORD);}
+  if (!email.includes('@')) { return response.error(res, DATA_CONSTRAINTS.SIGNUP.MAIL);}  
 
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  const hashedPassword = await bcrypt.hash(password, DATA_CONSTRAINTS.SIGNUP.SALTROUNDS);
   try {
     const result = await userModel.createUser({
       login_id,
@@ -74,7 +81,7 @@ export async function createUser(req, res) {
     });
 
     try {
-        await userModel.createAddress({ //회원가입시 기본배송지 생성
+        await userModel.createAddress({ //会員登録時に基本配送先を作成
           login_id,
           address_name: '基本配送先',
           name,
@@ -83,42 +90,41 @@ export async function createUser(req, res) {
           address_detail,
           phone
         });
-        console.log(`配送先登録完了。 ID: ${login_id}`);
     } catch (addrErr) {
-        console.error("配送先登録エラー:", addrErr);
+        console.error(RESPONSE_MESSAGES.CLIENT_ERROR.DELIVERY_ADDRESS_ERROR, addrErr);
     }
-    return response.success(res, { login_id, name }, "会員登録成功", 201);
+    return response.success(res, { login_id, name }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({ message: "重複したIDまたはメールが存在します。" });
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.DATA_OVERLAP);
     }
     console.error(err);
-    return response.error(res, "DB エラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 }
 
 export async function getUserAddresses(req, res) {
-  const login_id = req.user.login_id; //라우터 미들웨어에서 유저 데이터 받아옴
+  const login_id = req.user.login_id; //ルーターミドルウェアからユーザーデータを受け取る
   
   try {
     const addresses = await userModel.findAddressesByLoginId(login_id);
     res.json(addresses);
   } catch (err) {
     console.error(err);
-    return response.error(res, "配送先リストの取得中にエラーが発生しました。(DBエラー)", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 }
 
 export async function addUserAddress(req, res) {
-    const login_id = req.user.login_id; //라우터 미들웨어에서 유저 데이터 받아옴
+    const login_id = req.user.login_id; //ルーターミドルウェアからユーザーデータを受け取る
     const { address_name, receiver_name, zip_code, address, address_detail, phone } = req.body;
 
     if (!address_name || !receiver_name || !zip_code || !address || !phone) {
-      return response.error(res, "必須情報がありません。", 400);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_ENTERED);
     }
 
     try {
-        await userModel.createAddress({　//해당 이름의 배송지가 있는지 확인
+        await userModel.createAddress({　//該当する名前の配送先があることを確認する
             login_id,
             address_name, 
             name: receiver_name,
@@ -126,15 +132,15 @@ export async function addUserAddress(req, res) {
             address,
             address_detail,
             phone,
-            is_default: 0 // 새로 추가하는 건 기본적으로 0
+            is_default: 0 //新しく追加するのはデフォルトで0
         });
-        return response.success(res, {}, "配送先登録成功。", 201);
+        return response.success(res, {}, RESPONSE_MESSAGES.SUCCESS.DELIVERY_ADDRESS_CREATE_SUCCESS, 201);
     } catch (err) {
         if (err.code === "ER_DUP_ENTRY") {
-          return response.error(res, "同じ名前の配送先が存在します。", 409);
+          return response.error(res, DATA_CONSTRAINTS.SIGNUP.DELIVERY_ADDRESS);
         }
         console.error(err);
-        return response.error(res, "サーバーエラーが発生しました。", 500);
+        return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
     }
 }
 
@@ -144,33 +150,32 @@ export async function updateDefaultAddress(req, res) {
 
   try {
     await userModel.setDefaultAddress(login_id, address_name);
-    res.json({ message: "メイン配送先が変更されました。" });
+    return response.success(res, {}, RESPONSE_MESSAGES.SUCCESS.DELIVERY_ADDRESS_CHANGE_SUCCESS);
   } catch (err) {
     console.error(err);
-    return response.error(res, "変更中にエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 }
 
-export async function deleteUser(req, res) { //회원 삭제
+export async function deleteUser(req, res) { //会員の削除
   const { id } = req.params;
 
   try {
-    const result2 = await userModel.deleteUserById(id); //중복실행되는거같아서 잠시 변수 이름 바꿈.
+    const result2 = await userModel.deleteUserById(id);
     if (result2.affectedRows === 0) {
-      return response.error(res, "会員が存在しません。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND_USER);
     }
     return response.success(res, {}, "", 200);
   } catch (err) {
     console.error(err);
-    return response.error(res, "DB エラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 }
 
-export async function updateUser(req, res) { //회원정보 수정
+export async function updateUser(req, res) { //会員情報の修正
   const id = req.params.id || req.user?.login_id;
   if (!id) {
-    console.error("変更先 IDエラー");
-    return response.error(res, "変更先 ID が見つかりません。", 400);
+    return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
   }
 
   const { name, email, phone, zip_code, address, address_detail, role, password, status } = req.body;
@@ -178,7 +183,7 @@ export async function updateUser(req, res) { //회원정보 수정
   try {
     const User = await userModel.findByLoginId(id);
     if (!User) {
-        return response.error(res, "登録された会員が存在しません。", 404);
+        return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND_USER);
     }
     const updateData = {
       name: name ?? User.name,
@@ -188,7 +193,7 @@ export async function updateUser(req, res) { //회원정보 수정
       address: address ?? User.address,
       address_detail: address_detail ?? User.address_detail,
       role: role ?? User.role,
-      status: (status !== undefined) ? status : User.status //탈퇴할때만 수정되게
+      status: (status !== undefined) ? status : User.status
     };
 
     if (password) {
@@ -199,16 +204,16 @@ export async function updateUser(req, res) { //회원정보 수정
     const result = await userModel.updateUser(id, updateData);
 
     if (result.affectedRows === 0) {
-      return response.error(res, "登録された会員が存在しません。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND_USER);
     }
 
-    res.json({ message: "会員情報の修正が完了しました。" });
+    return response.success(res, {}, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
-      return response.error(res, "データベース内に重複する値が存在します。", 409);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.DATA_OVERLAP);
     }
     console.error(err);
-    return response.error(res, "DB エラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 }
 

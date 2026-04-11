@@ -1,11 +1,4 @@
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  Alert,
-} from "@mui/material";
+import { Box, Typography, TextField, Button, Paper, Alert } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useLogin } from "../hooks/useLogin";
 
@@ -49,7 +42,6 @@ function LoginPage() {
           ログイン
         </Typography>
 
-        {/* 에러 발생 시 알림창 */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -78,7 +70,7 @@ function LoginPage() {
 
           <Button
             fullWidth
-            type="submit" // form의 onSubmit을 실행시킴
+            type="submit"
             variant="contained"
             size="large"
             sx={{ mt: 3, py: 1.5, fontWeight: "bold" }}
@@ -87,7 +79,6 @@ function LoginPage() {
           </Button>
         </form>
 
-        {/* 추가 기능 버튼들 */}
         <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 1 }}>
           <Button variant="text" size="small" color="inherit">IDのお忘れの方</Button>
           <Typography sx={{ color: "#ccc" }}>|</Typography>
@@ -97,7 +88,7 @@ function LoginPage() {
             variant="text" 
             size="small" 
             color="primary"
-            onClick={() => navigate("/signup")} // 회원가입 페이지 이동
+            onClick={() => navigate("/signup")}
           >
             会員登録
           </Button>

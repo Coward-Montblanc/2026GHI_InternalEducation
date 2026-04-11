@@ -1,6 +1,6 @@
-export const fetchJapaneseAddress = async (zipCode) => { //일본 우편번호 검색하는 함수
-    const cleanZip = zipCode.toString().replace(/[^0-9]/g, ''); //숫자만 입력받음
-    if (cleanZip.length !== 7) {//7자리 숫자로만 우편번호 검색
+export const fetchJapaneseAddress = async (zipCode) => { //日本郵便番号検索する関数
+    const cleanZip = zipCode.toString().replace(/[^0-9]/g, ''); //数字のみを受け取る
+    if (cleanZip.length !== 7) {//7桁の数字でのみ郵便番号を検索
         
         return;} 
     try {

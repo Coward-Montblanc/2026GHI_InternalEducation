@@ -5,17 +5,42 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, Button,
   TextField, MenuItem, Select, FormControl, InputLabel,
-  Stack, Grid, Pagination ,Switch
+  Stack, Grid, Pagination ,Switch, TableSortLabel, Collapse, Checkbox
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
+import { ExpandMore, ExpandLess, Search, RestartAlt } from '@mui/icons-material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { getAdminProducts ,updateRecommendStatus } from "../services/ProductService";
+import { getAdminProducts ,updateRecommendStatus, bulkUpdateProductStatus } from "../services/ProductService";
 import { LoadingView } from "../components/LoadingCircle";
+import api from "../api/axios";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 10; //1ページ内に表示する商品の数
 
 const formatPrice = (price) => new Intl.NumberFormat("ja-JP").format(price) + "円";
+
+const fetchCommonCodes = async (groupCode) => {
+  const response = await api.get(`/common/codes/${groupCode}`); 
+  return response.data;
+};
+
+const initialFilters = { //初期化用
+    product_id: "",
+    name: "",
+    category_id: "",
+    status: "all",
+    startDate: null,
+    endDate: null,
+    searchTerm: "",
+    is_recommended: "all",
+    minPrice: "", maxPrice: "",
+    minStock: "", maxStock: "",
+    minView: "", maxView: "",
+    minSales: "", maxSales: "",
+    minView: "", maxView: "",
+    minSales: "", maxSales: "",
+    
+  };
 
 function AdminProductList() {
   const navigate = useNavigate();
@@ -24,17 +49,58 @@ function AdminProductList() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [order, setOrder] = useState("desc"); 
+  const [orderBy, setOrderBy] = useState("created_at"); 
+  const [bulkStatus, setBulkStatus] = useState("");
 
-  const [searchType, setSearchType] = useState("name"); // 기본값 상품명
+  const [searchType, setSearchType] = useState(""); 
+  const [showDetail, setShowDetail] = useState(false);
+  const [productStatusList, setProductStatusList] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+
   const [filters, setFilters] = useState({
     product_id: "",
     name: "",
     category_id: "",
-    status: "",
+    status: "all",
     startDate: null,
     endDate: null,
-    searchTerm: ""
+    searchTerm: "",
+    is_recommended: "all",
+    minPrice: "", maxPrice: "",
+    minStock: "", maxStock: "",
+    minView: "", maxView: "",
+    minSales: "", maxSales: "",
   });
+
+  const handleSelectAll = (e) => {
+  if (e.target.checked) {
+      setSelectedIds(products.map((p) => p.product_id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const [searchQuery, setSearchQuery] = useState(filters);
+
+  useEffect(() => {
+    fetchCommonCodes("PRODUCT_STATUS_CODE")
+      .then((data) => {
+        if (data && Array.isArray(data.codes)) {
+        setProductStatusList(data.codes);
+        }else { setSearchType("name"); }
+      })
+      .catch((err) => {
+      console.error("コードの読み込みに失敗しました。", err);
+      setSearchType("name");
+    });
+  }, []);
 
   const fetchAdminProducts = useCallback(() => {
     setLoading(true);
@@ -42,12 +108,47 @@ function AdminProductList() {
     const params = {
       page,
       limit: ITEMS_PER_PAGE,
-      status: filters.status || undefined,
-      category_id: filters.category_id || undefined,
-      [searchType]: filters.searchTerm || undefined,
-      startDate: filters.startDate ? filters.startDate.format("YYYY-MM-DD") : undefined,
-      endDate: filters.endDate ? filters.endDate.format("YYYY-MM-DD") : undefined,
+      status: searchQuery.status === "all" ? undefined : searchQuery.status,
+      category_id: searchQuery.category_id || undefined,
+      is_recommended: searchQuery.is_recommended === "all" ? undefined : searchQuery.is_recommended,
+      name: searchQuery.name || (searchType === 'name' ? searchQuery.searchTerm : undefined),
+      product_id: searchQuery.product_id || (searchType === 'product_id' ? searchQuery.searchTerm : undefined),
+      startDate: searchQuery.startDate ? searchQuery.startDate.format("YYYY-MM-DD") : undefined,
+      endDate: searchQuery.endDate ? searchQuery.endDate.format("YYYY-MM-DD") : undefined,
+      minPrice: searchQuery.minPrice || undefined,
+      maxPrice: searchQuery.maxPrice || undefined,
+      minStock: searchQuery.minStock || undefined,
+      maxStock: searchQuery.maxStock || undefined,
+      minView: searchQuery.minView || undefined,
+      maxView: searchQuery.maxView || undefined,
+      minSales: searchQuery.minSales || undefined,
+      maxSales: searchQuery.maxSales || undefined,
+      sortField: orderBy,
+      sortOrder: order.toUpperCase(),
     };
+
+    const addFilter = (key, value) => {
+    if (value !== undefined && value !== null && value !== "" && value !== "all") {
+        params[key] = value;
+      }
+    };
+
+    addFilter("status", searchQuery.status);
+    addFilter("category_id", searchQuery.category_id);
+    addFilter("is_recommended", searchQuery.is_recommended);
+  
+    if (searchQuery.startDate) params.startDate = searchQuery.startDate.format("YYYY-MM-DD");
+    if (searchQuery.endDate) params.endDate = searchQuery.endDate.format("YYYY-MM-DD");
+
+    addFilter("name", searchQuery.name);
+    addFilter("product_id", searchQuery.product_id);
+
+    if (searchQuery.searchTerm && !params[searchType]) {
+      params[searchType] = searchQuery.searchTerm;
+    }
+
+    addFilter("minPrice", searchQuery.minPrice);
+    addFilter("maxPrice", searchQuery.maxPrice);
 
     getAdminProducts(params)
       .then((data) => {
@@ -56,9 +157,9 @@ function AdminProductList() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [page, filters, searchType]);
+  }, [page, searchQuery, order, orderBy]);
 
-  //추천 상태 스위치 클릭 함수
+  //推奨ステータススイッチクリック機能
   const handleToggleRecommend = async (productId, currentStatus) => {
     try {
       const newStatus = currentStatus === 1 ? 0 : 1;
@@ -72,14 +173,53 @@ function AdminProductList() {
     }
   };
 
-  useEffect(() => {
-    fetchAdminProducts();
-  }, [page, fetchAdminProducts]);
+  //整列状態を変更する関数
+  const handleRequestSort = (property) => { 
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setFilters(initialFilters);
+    setSearchQuery(initialFilters);
+    setPage(1);
+  };
 
   const handleSearch = () => {
-    setPage(1); // 검색 시 첫 페이지로 이동
-    fetchAdminProducts();
+  setPage(1); 
+  setSearchQuery({
+    ...filters,
+    searchType: searchType
+    });
   };
+
+  const handleBulkUpdate = async () => {
+    if (selectedIds.length === 0 || bulkStatus === "") return;
+
+    const statusText = bulkStatus === 0 ? "販売中" : bulkStatus === 1 ? "販売停止" : "品切れ";
+    if (!window.confirm(`${selectedIds.length}個の商品を「${statusText}」に変更しますか？`)) return;
+
+    try {
+      setLoading(true);
+      await bulkUpdateProductStatus(selectedIds, bulkStatus);
+    
+      alert("正常に更新されました。");
+    
+      setSelectedIds([]);
+      setBulkStatus("");
+      fetchAdminProducts(); 
+    } catch (err) {
+      alert("更新に失敗しました。");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminProducts();
+  }, [fetchAdminProducts]);
 
   if (loading) { return ( <LoadingView /> ); }
 
@@ -91,88 +231,251 @@ function AdminProductList() {
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: "#fcfcfc" }}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
+          {/* 簡易検索エリア */}
           <Grid container spacing={2} alignItems="center">
-            {/* 대분류 검색 */}
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>検索項目</InputLabel>
-                <Select
-                  value={searchType}
-                  label="検索項目"
-                  onChange={(e) => setSearchType(e.target.value)}
-                >
-                  <MenuItem value="name">商品名</MenuItem>
-                  <MenuItem value="product_id">商品ID</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* 기간 검색 (캘린더) */}
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <DatePicker
-                  sx={{ width: '150px' }}
-                  label="～から"
-                  slotProps={{ textField: { size: 'small' } }}
-                  value={filters.startDate}
-                  onChange={(v) => setFilters({ ...filters, startDate: v })}
-                />
-                <Typography>~</Typography>
-                <DatePicker
-                  sx={{ width: '150px' }}
-                  label="～まで"
-                  slotProps={{ textField: { size: 'small' } }}
-                  value={filters.endDate}
-                  onChange={(v) => setFilters({ ...filters, endDate: v })}
-                />
-              </Stack>
-            </Grid>
-
-            {/* 상품 상태 : 판매중, 판매중지, 품절 */}
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>状態</InputLabel>
-                <Select
-                  sx={{ width: '100px' }}
-                  value={filters.status}
-                  label="状態"
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                >
-                  <MenuItem value="">すべて</MenuItem>
-                  <MenuItem value="0">販売中</MenuItem>
-                  <MenuItem value="1">販売停止</MenuItem>
-                  <MenuItem value="2">品切れ</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* 검색 텍스트 필드 */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={1.5}>
               <TextField
-                fullWidth
                 size="small"
-                label="検索キーワード"
-                value={filters.searchTerm}
-                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                label="商品ID"
+                value={filters.product_id}
+                onChange={(e) => setFilters({ ...filters, product_id: e.target.value })}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
             </Grid>
 
-            {/* 검색 버튼 */}
-            <Grid item xs={12} md={1}>
-              <Button 
+            {/* 商品名入力欄 */}
+            <Grid item xs={12} md={1.5}>
+              <TextField
+                size="small"
+                label="商品名"
+                value={filters.name}
+                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </Grid>
+            <Grid item xs={12} md={1.5}>
+              <TextField 
                 fullWidth 
-                variant="contained"
-                onClick={handleSearch}
-                sx={{ height: '40px' }}
-              >
-                検索
-              </Button>
+                size="small" 
+                label="カテゴリー" 
+                value={filters.category_id || ""} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFilters({...filters, category_id: val});
+                }}
+                onFocus={(e) => { if(e.target.value === "") setFilters({...filters, category_id: ""}) }}
+              />
+            </Grid>
+            <Grid item xs={12} md={1.5}>
+              <FormControl 
+                fullWidth 
+                size="small" 
+                >
+                <InputLabel>おすすめ</InputLabel>
+                <Select value={filters.is_recommended} label="おすすめ"
+                  onChange={(e) => setFilters({...filters, is_recommended: e.target.value})}>
+                  <MenuItem value="all">すべて</MenuItem>
+                  <MenuItem value="1">おすすめ(ON)</MenuItem>
+                  <MenuItem value="0">おすすめ(OFF)</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <TextField
+                fullWidth
+                size="small"
+                label="キーワード入力"
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="検索語を入力してください。"
+              />
+            </Grid>
+            <Grid item xs={12} md={2.5}>
+              <Stack direction="row" spacing={1}>
+                <Button fullWidth variant="contained" startIcon={<Search />} onClick={handleSearch} >検索</Button>
+                <Button variant="outlined" color="inherit" onClick={() => setShowDetail(!showDetail)}>
+                  {showDetail ? <ExpandLess /> : <ExpandMore />}
+                </Button>
+              </Stack>
             </Grid>
           </Grid>
+
+          {/* 詳細検索エリア(Collapse) */}
+          <Collapse in={showDetail}>
+            <Box sx={{ mt: 3, pt: 3, borderTop: "1px dashed #ddd" }}>
+              <Grid container spacing={2}>
+                {/* 価格範囲 */}
+                <Grid item xs={12} md={4}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>価格範囲 (円)</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField size="small" placeholder="最小" value={filters.minPrice} onChange={(e)=>setFilters({...filters, minPrice: e.target.value})}/>
+                    <Typography>~</Typography>
+                    <TextField size="small" placeholder="最大" value={filters.maxPrice} onChange={(e)=>setFilters({...filters, maxPrice: e.target.value})}/>
+                  </Stack>
+                </Grid>
+                {/* 在庫範囲 */}
+                <Grid item xs={12} md={4}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>在庫数</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField size="small" placeholder="最小" value={filters.minStock} onChange={(e)=>setFilters({...filters, minStock: e.target.value})}/>
+                    <Typography>~</Typography>
+                    <TextField size="small" placeholder="最大" value={filters.maxStock} onChange={(e)=>setFilters({...filters, maxStock: e.target.value})}/>
+                  </Stack>
+                </Grid>
+                {/* 販売状況 */}
+                <Grid item xs={12} md={4}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block', width : "110px" }}>販売状態</Typography>
+                  <FormControl fullWidth size="small">
+                    <Select 
+                    displayEmpty
+                    notched
+                    value={filters.status} 
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+                      <MenuItem value="all">すべて</MenuItem>
+                      <MenuItem value="0">販売中</MenuItem>
+                      <MenuItem value="1">販売停止</MenuItem>
+                      <MenuItem value="2">品切れ</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>閲覧数 (View)</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      label="最小"
+                      type="number"
+                      size="small"
+                      fullWidth
+                      value={filters.minView}
+                      onChange={(e) => setFilters({ ...filters, minView: e.target.value })}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    />
+                  <Typography>~</Typography>
+                    <TextField
+                      label="最大"
+                      type="number"
+                      size="small"
+                      fullWidth
+                      value={filters.maxView}
+                      onChange={(e) => setFilters({ ...filters, maxView: e.target.value })}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    />
+                  </Stack>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>販売数 (Sales)</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TextField
+                      label="最小"
+                      type="number"
+                      size="small"
+                      fullWidth
+                      value={filters.minSales}
+                      onChange={(e) => setFilters({ ...filters, minSales: e.target.value })}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    />
+                  <Typography>~</Typography>
+                    <TextField
+                      label="最大"
+                      type="number"
+                      size="small"
+                      fullWidth
+                      value={filters.maxSales}
+                      onChange={(e) => setFilters({ ...filters, maxSales: e.target.value })}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    />
+                  </Stack>
+                </Grid>
+                {/* 登録日の範囲 */}
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>登録日</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <DatePicker 
+                      slotProps={{ textField: { size: 'small' } }} 
+                      value={filters.startDate} 
+                      onChange={(v) => setFilters({ ...filters, startDate: v })} 
+                    />
+                  <Typography>~</Typography>
+                    <DatePicker 
+                      slotProps={{ textField: { size: 'small' } }} 
+                      value={filters.endDate} 
+                      onChange={(v) => setFilters({ ...filters, endDate: v })} 
+                    />
+                  </Stack>
+                </Grid>
+              </Grid>
+              <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, pt: 2 }} >
+                <Button 
+                  variant="contained" 
+                  color="error" 
+                  size="large"
+                  startIcon={<RestartAlt />} 
+                  onClick={handleReset}
+                  sx={{ 
+                    minWidth: '130px', 
+                    height: '50px', 
+                    fontSize: '1.05rem',
+                    fontWeight: 'bold',
+                    borderRadius: '12px', 
+                    boxShadow: '0 4px 12px rgba(211, 47, 47, 0.2)', 
+                    '&:hover': {
+                      backgroundColor: '#d32f2f',
+                      boxShadow: '0 6px 16px rgba(211, 47, 47, 0.3)',
+                    }
+                  }}
+                >
+                  リセット
+                </Button>
+              </Box>
+              </Grid>
+            </Box>
+          </Collapse>
         </LocalizationProvider>
       </Paper>
-
+      {selectedIds.length > 0 && (
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 2, mb: 2, 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            bgcolor: '#e3f2fd', border: '1px solid #90caf9', borderRadius: 2 
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+              {selectedIds.length}個の商品が選択されました
+            </Typography>
+            
+            <FormControl size="small" sx={{ minWidth: 150, bgcolor: 'white' }}>
+              <InputLabel>状態変更</InputLabel>
+              <Select
+                label="状態変更"
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+              >
+                {productStatusList.map((status) => (
+                  <MenuItem key={status.value} value={status.value}>
+                    {status.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+      
+            <Button 
+              variant="contained" 
+              onClick={handleBulkUpdate}
+              disabled={bulkStatus === ""}
+            >
+              一括更新
+            </Button>
+          </Stack>
+          
+          <Button size="small" onClick={() => setSelectedIds([])}>選択解除</Button>
+        </Paper>
+      )}
       <Paper elevation={0} variant="outlined" sx={{ borderRadius: 4, p: { xs: 2, md: 4 }, bgcolor: "#fff" }}>
         {error && <Alert severity="error">{error}</Alert>}
         {!loading && !error && (
@@ -180,16 +483,125 @@ function AdminProductList() {
             <TableContainer>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>商品ID</TableCell>
+                  <TableRow sx={{ bgcolor: "#f5f5f5", "& th": { whiteSpace: "nowrap" } }}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        indeterminate={selectedIds.length > 0 && selectedIds.length < products.length}
+                        checked={products.length > 0 && selectedIds.length === products.length}
+                        onChange={handleSelectAll}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700,  }}>
+                      <TableSortLabel
+                        active={orderBy === "product_id"}
+                        direction={orderBy === "product_id" ? order : "asc"}
+                        onClick={() => handleRequestSort("product_id")}
+                        hideSortIcon={false}
+                        sx={{"& .MuiTableSortLabel-icon": {
+                          opacity: 1,
+                          display: 'inline-block !important',
+                        },
+                          "&.Mui-active .MuiTableSortLabel-icon": {
+                          color: "primary.main",
+                        }
+                        }}
+                      >
+                        商品ID
+                      </TableSortLabel>
+                    </TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>商品名</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>カテゴリー</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>価格</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>在庫</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>閲覧数</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>販売数</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableSortLabel
+                        active={orderBy === "price"}
+                        direction={orderBy === "price" ? order : "asc"}
+                        onClick={() => handleRequestSort("price")}
+                        hideSortIcon={false}
+                        sx={{"& .MuiTableSortLabel-icon": {
+                          opacity: 1,
+                          display: 'inline-block !important',
+                        },
+                          "&.Mui-active .MuiTableSortLabel-icon": {
+                          color: "primary.main",
+                        }
+                        }}
+                      >
+                        価格
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableSortLabel
+                        active={orderBy === "stock"}
+                        direction={orderBy === "stock" ? order : "asc"}
+                        onClick={() => handleRequestSort("stock")}
+                        hideSortIcon={false}
+                        sx={{"& .MuiTableSortLabel-icon": {
+                          opacity: 1,
+                          display: 'inline-block !important',
+                        },
+                          "&.Mui-active .MuiTableSortLabel-icon": {
+                          color: "primary.main",
+                        }
+                        }}
+                      >
+                        在庫
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableSortLabel
+                        active={orderBy === "view"}
+                        direction={orderBy === "view" ? order : "asc"}
+                        onClick={() => handleRequestSort("view")}
+                        hideSortIcon={false}
+                        sx={{"& .MuiTableSortLabel-icon": {
+                          opacity: 1,
+                          display: 'inline-block !important',
+                        },
+                          "&.Mui-active .MuiTableSortLabel-icon": {
+                          color: "primary.main",
+                        }
+                        }}
+                      >
+                        閲覧数
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableSortLabel
+                        active={orderBy === "sales_count"}
+                        direction={orderBy === "sales_count" ? order : "asc"}
+                        onClick={() => handleRequestSort("sales_count")}
+                        hideSortIcon={false}
+                        sx={{"& .MuiTableSortLabel-icon": {
+                          opacity: 1,
+                          display: 'inline-block !important',
+                        },
+                          "&.Mui-active .MuiTableSortLabel-icon": {
+                          color: "primary.main",
+                        }
+                        }}
+                      >
+                        販売数
+                      </TableSortLabel>
+                    </TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>おすすめ</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 700 }}>登録日時</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableSortLabel
+                        active={orderBy === "created_at"}
+                        direction={orderBy === "created_at" ? order : "asc"}
+                        onClick={() => handleRequestSort("created_at")}
+                        hideSortIcon={false}
+                        sx={{"& .MuiTableSortLabel-icon": {
+                          opacity: 1,
+                          display: 'inline-block !important',
+                        },
+                          "&.Mui-active .MuiTableSortLabel-icon": {
+                          color: "primary.main",
+                        }
+                        }}
+                      >
+                        登録日時
+                      </TableSortLabel>
+                    </TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>状態</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700 }}>操作</TableCell>
                   </TableRow>
@@ -204,6 +616,12 @@ function AdminProductList() {
                   ) : (
                     products.map((p) => (
                       <TableRow key={p.product_id} hover>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            checked={selectedIds.includes(p.product_id)}
+                            onChange={() => handleSelectOne(p.product_id)}
+                          />
+                        </TableCell>
                         <TableCell align="center">{p.product_id}</TableCell>
                         <TableCell sx={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {p.name}
@@ -265,15 +683,6 @@ function AdminProductList() {
             </Box>
           </>
         )}
-        <Box 
-        sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                  <Pagination 
-                    count={totalPages} 
-                    page={page} 
-                    onChange={(e, v) => setPage(v)} 
-                    color="primary" 
-                  />
-        </Box>
       </Paper>
     </Box>
   );

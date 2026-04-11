@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { getCategories } from "../services/CategoryService";
 import { createProduct } from "../services/ProductService";
 
-//메인서브/디테일 따로따로 불러오니 위에 선언하는거로 변경
 const MAX_SIZE  = 250 * 1024;
 const MAX_COUNT = 5;
 
@@ -29,6 +28,8 @@ export const useProductFiles = () => {
     setSelectedFiles((prev) => [...prev, ...newFiles]);
     e.target.value = "";
   };
+
+  
 
   const handleDetailFileChange = (e) => {
     if (!e.target.files) return;
@@ -61,62 +62,69 @@ export const useProductAdd = () => {
         description: "",
         price: "",
         stock: "",
+        status: 0
     });
 
-    //저장 / 수정 두가지로
     const { selectedFiles, selectedDetailFiles, handleFileChange, handleDetailFileChange } = useProductFiles();
     const [loading ,setLoading] = useState(true);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setLoading(true);
-        const data = await getCategories();
-        setCategories(data);
-        if (data.length > 0) {
-          setProduct(prev => ({ ...prev, category_id: data[0].category_id }));
-        }
-      } catch (err) {
-        console.error("カテゴリー読み込み失敗:", err);
-      } finally {
-        setLoading(false);
+      setLoading(true);
+      const res = await getCategories();
+
+      const categoryList = res.categories || []; 
+      
+      setCategories(categoryList);
+
+      if (categoryList.length > 0) {
+        setProduct(prev => ({ ...prev, category_id: categoryList[0].category_id }));
       }
+    } catch (err) {
+      console.error("カテゴリー読み込み失敗:", err);
+    } finally {
+      setLoading(false);
+    }
     };
     fetchCategories();
   }, []);
   
   const handleChange = (e) => {
-    setProduct({ ...product, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+        setProduct((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditorChange = (content) => {
+    setProduct((prev) => ({ ...prev, description: content }));
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const formData = new FormData();
+    const formData = new FormData();
   
-  // product 객체에서 각각의 값을 꺼내서 append 해야 함
-  formData.append("category_id", product.category_id);
-  formData.append("name", product.name);
-  formData.append("description", product.description);
-  formData.append("price", product.price);
-  formData.append("stock", product.stock);
+    formData.append("category_id", product.category_id);
+    formData.append("name", product.name);
+    formData.append("description", product.description);
+    formData.append("price", product.price);
+    formData.append("stock", product.stock);
+    formData.append("status", product.status);
 
-  // 파일 추가
-  selectedFiles.forEach((file) => {
-    formData.append("images", file);
-  });
-  selectedDetailFiles.forEach((file) => { //role3으 이미지도 추가
-    formData.append("detail_images", file);
-  });
-  //console.log("실제 파일 객체 확인:", selectedFiles);
-  try {
-    const res = await createProduct(formData);
-    if (res.success) {
-      alert("商品が登録されました。");
-      navigate("/");
+    selectedFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+    selectedDetailFiles.forEach((file) => { 
+      formData.append("detail_images", file);
+    });
+    try {
+      const res = await createProduct(formData);
+      if (res.success) {
+        alert("商品が登録されました。");
+        navigate("/mypage", { replace: true });
+      }
+    } catch (err) {
+      console.error("エラーコード:", err.response?.data);
     }
-  } catch (err) {
-    console.error("エラーコード:", err.response?.data);
-  }
   };
 
   return {
@@ -127,6 +135,8 @@ export const useProductAdd = () => {
     handleChange,
     handleFileChange,
     handleDetailFileChange,
+    handleEditorChange,
     handleSubmit,
+    loading
   };
 };
