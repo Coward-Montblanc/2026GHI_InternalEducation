@@ -3,86 +3,126 @@ import * as productModel from "../models/product.model.js";
 import response from "../utils/response.js";
 import fs from "fs";
 import path from "path";
+import { RESPONSE_MESSAGES } from "../config/constants.js";
 
-// 인기상품 조회 (view 10 이상) 프론트엔드로는 아직 미구현
+//人気商品を見る（view 10以上）フロントエンドではまだ未実装
 export const getRankProducts = async (req, res) => {
   try {
     const products = await productModel.getRankProducts();
-    res.json(products);
+    return response.success(res, { products });
   } catch (err) {
-    return response.error(res , "人気商品取得エラー" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-// 상품 상세 조회 시 view 증가
+//商品詳細照会時のビュー増加
 export const getProductViewUp = async (req, res) => {
   try {
     const { id } = req.params;
-    // GET 요청일 때만 조회수 증가 Options에서 확인과정에서 조회수가 한번 더 증가하기도 함. GET 요청이 아닐 때는 증가하지 않도록 조건 추가
-    // +2이었던 원인 자체는 main.tsx에 있습니다. 
+    // GETリクエストの場合にのみヒット数が増加するOptionsでは、確認プロセスでヒット数がもう1度増加します。 
+    // GETリクエストではない場合は増加しないように条件を追加
+    // +2だった原因自体はmain.tsxにあります。
     if (req.method === "GET") {
       await productModel.incrementView(id);
     }
     const product = await productModel.getProductById(id);
-    if (!product) return response.error(res , "商品が存在しません。" , 404);
+    if (!product) return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
 
-    const response_p = { //이미지 리스트 구별
+    const response_p = { //画像リストの区別
       ...product,
       mainImage: product.images.find(img => img.role === 1)?.image_url || null,
       subImages: product.images.filter(img => img.role === 2).map(img => img.image_url),
       detailImages: product.images.filter(img => img.role === 3).map(img => img.image_url),
     };
 
-    return res.json(response_p);
+    return response.success(res, { response_p });
   } catch (error) {
     console.error("商品詳細取得エラー:", error); 
-    return response.error(res , "商品詳細取得エラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT, 500);
   }
 };
 
-export const getAllProductsForAdmin = async (req, res) => { //관리자 페이지용 상품검색
+export const getAllProductsForAdmin = async (req, res) => { //管理者ページの商品検索
   try {
     
-    const { name, product_id, category_id, status, startDate, endDate } = req.query; //한페이지 10개씩 보이게
+    const { name, product_id, category_id, status, is_recommended, startDate, endDate, sortField, sortOrder,
+      minPrice, maxPrice, minStock, maxStock, minView, maxView, minSales, maxSales
+     } = req.query;
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.max(1, Number(req.query.limit) || 10);
+    
 
     const F_StartDate = startDate ? `${startDate} 00:00:00` : null;
     const F_EndDate = endDate ? `${endDate} 23:59:59` : null;
 
     const offset = (Number(page) - 1) * limit;
 
-    const filters = { //비우면 전체검색 되게 undefined로 비움
+    const filters = { //空にすると、全体が検索されるようにundefinedで空にする
       product_id: product_id || undefined,
       name: name || undefined,
       category_id: category_id || undefined,
       status: (status !== undefined && status !== "") ? status : undefined,
+      is_recommended: (is_recommended !== undefined && is_recommended !== "" && is_recommended !== "all") ? is_recommended : undefined,
       created_at: (F_StartDate && F_EndDate) ? [F_StartDate, F_EndDate] : undefined,
       limit: limit,
-      offset: offset
+      offset: offset,
+      sortField: sortField || 'created_at',
+      sortOrder: sortOrder || 'DESC',
+      price: (minPrice || maxPrice) ? [
+        minPrice ? Number(minPrice) : 0, 
+        maxPrice ? Number(maxPrice) : 999999999
+      ] : undefined,
+
+      stock: (minStock || maxStock) ? [
+        minStock ? Number(minStock) : 0, 
+        maxStock ? Number(maxStock) : 999999
+      ] : undefined,
+
+      view: (minView || maxView) ? [
+        minView ? Number(minView) : 0,
+        maxView ? Number(maxView) : 9999999
+      ] : undefined,
+
+      sales_count: (minSales || maxSales) ? [
+        minSales ? Number(minSales) : 0,
+        maxSales ? Number(maxSales) : 999999
+      ] : undefined,
     };
-    const { products, totalCount } = await productModel.findProducts(filters);
+
+    const filterOptions = {
+      name: 'LIKE',
+      created_at: 'BETWEEN',
+      price: 'BETWEEN',
+      stock: 'BETWEEN'
+    };
+
+    const paginationOptions = {
+      limit,
+      offset,
+      sortField: sortField || 'created_at',
+      sortOrder: sortOrder || 'DESC'
+    };
+    const { products, totalCount } = await productModel.findProducts(filters, filterOptions, paginationOptions);
     
-    res.json({
-      success: true,
-      products: products,
+    return response.success(res, {
+      products,
       pagination: {
         totalItems: totalCount,
         currentPage: Number(page),
-        totalPages: Math.ceil(totalCount / limit) || 1 
+        totalPages: Math.ceil(totalCount / limit) || 1
       }
-    });
+    }, );
   } catch (err) {
     console.error("管理者商品一覧取得エラー:", err);
-    return response.error(res, "商品一覧取得エラー", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-export const getProducts = async (req, res) => { //메인화면용 카테고리 상품검색 함수
+export const getProducts = async (req, res) => { //メイン画面用カテゴリ商品検索機能
   try {
     const { category, name } = req.query; 
     const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.max(1, Number(req.query.limit) || 24); //한페이지 6X4= 24개
+    const limit = Math.max(1, Number(req.query.limit) || 20);
     const offset = (Number(page) - 1) * limit;
 
     const filters = {
@@ -105,36 +145,32 @@ export const getProducts = async (req, res) => { //메인화면용 카테고리 
         }, "商品リストを取得しました。");
   } catch (error) {
     console.error("商品一覧取得エラー:", error);
-    return response.error(res , "商品一覧取得エラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
 export const createProduct = async (req, res) => {
-  // デバッグログ
-  console.log("受信したBODY:", req.body);
-  console.log("受信したFILES:", req.files);
 
   const { category_id, name, description, price, stock } = req.body;
   const files = Array.isArray(req.files?.images) ? req.files.images : [];
   const detailFiles = Array.isArray(req.files?.detail_images) ? req.files.detail_images : [];
 
-  // 이미지 파일 유무 확인
+  // 画像ファイルの有無の確認
   if (!files || files.length === 0) {
-    return response.error(res , "画像ファイルがありません。" , 400);
+    return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.IMAGE_FILE_ERROR);
   }
 
-  // 필수 텍스트 데이터가 비어있는지 확인
+  // 必須テキストデータが空であることを確認する
   if (!category_id || !name || !price) {
-    return response.error(res , "必須情報が不足しています。" , 400);
+    return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_ENTERED);
   }
 
-  const connection = await db.getConnection(); //이미지가 없을 경우를 대비한 트랜잭션 커넥션
+  //画像がない場合に備えたトランザクションコネクション
+  const connection = await db.getConnection(); 
 
   try { 
-    //상품 기본 정보 저장
-    await connection.beginTransaction(); //트랜잭션 시작, 
+    await connection.beginTransaction(); //トランザクションの開始 
 
-      //상품 아이디 지정방식이 varchar로 바뀌면서 바꿔야했습니다. 
     const productId = await productModel.createProduct(connection, {
       category_id,
       name,
@@ -143,18 +179,17 @@ export const createProduct = async (req, res) => {
       stock,
       status: 0,
     });
-    console.log("生成された商品ID:", productId);
 
-    // 사진 저장 메인1 서브2
-    for (let i = 0; i < files.length; i++) { //첫번째 이미지를 메인으로 저장해주는 부분, for문을 통해서 번호 지정
+    //最初の画像をメインに保存する部分、for文を介して番号付け
+    for (let i = 0; i < files.length; i++) { 
       const imageUrl = `/uploads/${files[i].filename}`;
-      const role = i === 0 ? 1 : 2; //main sub에서 12로 변경
+      const role = i === 0 ? 1 : 2;
       await connection.execute(
         `INSERT INTO product_images (product_id, image_url, image_order, role) VALUES (?, ?, ?, ?)`,
         [productId, imageUrl, i + 1, role]
       );
     }
-    // role3은 상세 이미지로
+
     for (let i = 0; i < detailFiles.length; i++) {
       const imageUrl = `/uploads/${detailFiles[i].filename}`;
       await connection.execute(
@@ -163,19 +198,14 @@ export const createProduct = async (req, res) => {
       );
     }
 
-    await connection.commit(); //트랜잭션 끝. 모든 작업이 성공하면 DB반영
+    await connection.commit(); //トランザクションの終わり。すべての操作が成功すると、DBを反映
 
-    return response.success(res, { productId }, "商品が正常に登録されました。", 201);
-    /*res.status(201).json({  
-      success: true, 
-      message: "商品が正常に登録されました。",
-      productId: productId 
-    });*/
+    return response.success(res, { productId }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
 
   } catch (error) {
     await connection.rollback();
     console.error("登録エラー詳細:", error);
-    return response.error(res , "サーバー保存中にエラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   } finally {
     connection.release();
   }
@@ -187,32 +217,31 @@ export const getAllProducts = async (req, res) => {
     const limit = parseInt(req.query.limit) || 24;
     const search = req.query.search || "";
     const result = await productModel.getAllProducts(page, limit, search);
-    res.json(result);
+    return response.success(res, { result });
   } catch (error) {
     console.error("商品取得エラー:", error?.message || error);
-    return response.error(res , "商品取得中にエラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await productModel.getProductById(id); // 모델에서 이미지를 가져옴
+    const product = await productModel.getProductById(id);
     
-    if (!product) return response.error(res , "商品が存在しません。" , 404);
+    if (!product) return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
 
     const response_p = {
-      product,
+      ...product,
       mainImage: product.images.find(img => img.role === 1)?.image_url || null,
       subImages: product.images.filter(img => img.role === 2).map(img => img.image_url),
       detailImages: product.images.filter(img => img.role === 3).map(img => img.image_url),
-      view: product.view // 조회수 추가
     };
 
-    res.json(response_p);
+    return response.success(res, response_p);
   } catch (error) {
     console.error("商品詳細取得エラー:", error);
-    return response.error(res , "商品詳細取得中にエラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
@@ -224,11 +253,10 @@ export const getProductsByCategory = async (req, res) => {
     res.json(products);
   } catch (error) {
     console.error("カテゴリ別商品取得エラー:", error);
-    return response.error(res , "商品取得中にエラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-//상품수정
 export const updateProduct = async (req, res) => {
   const { id } = req.params;
   const files       = req.files?.images        ?? [];
@@ -238,14 +266,12 @@ export const updateProduct = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // 텍스트 정보 수정
-    const affectedRows = await productModel.updateProduct(id, req.body);
-    if (affectedRows === 0) {
-      await connection.rollback();
-      return response.error(res, "商品が存在しません。", 404);
+    const result = await productModel.updateProduct(id, req.body, connection);
+    if (!result) {
+      throw new Error(RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
     }
+    
 
-    // 일단 이미지를 새로 추가해야만 바뀌는 방식,x버튼등을 클릭해서 삭제하는 방식을 고려중
     if (files.length > 0) {
       const [oldImages] = await connection.execute(
         `SELECT image_url FROM product_images WHERE product_id = ? AND role IN (1, 2)`, [id]
@@ -288,36 +314,57 @@ export const updateProduct = async (req, res) => {
     }
 
     await connection.commit();
-    res.json({ success: true, message: "商品が修正されました。" });
+    return response.success(res, {}, "商品が修正されました。");
   } catch (error) {
     await connection.rollback();
     console.error("商品修正エラー:", error);
-    return response.error(res, "商品修正エラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   } finally {
     connection.release();
   }
 };
 
-// 추천 상태 업데이트 함수
+//おすすめステータス更新関数
 export const patchRecommendStatus = async (req, res) => {
   const { productId } = req.params;
   const { is_recommended } = req.body;
 
   if (is_recommended === undefined || ![0, 1].includes(Number(is_recommended))) {
-    return response.error(res, "商品修正エラーが発生しました。", 400);
+    return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
   }
 
   try {
     const affectedRows = await productModel.updateRecommendStatus(productId, is_recommended);
 
     if (affectedRows === 0) {
-      return response.error(res, "商品エラーが発生しました。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
     }
 
-    return response.success(res, { is_recommended }, "おすすめ状態が更新されました。");
+    return response.success(res, { is_recommended }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (error) {
-    console.error("컨트롤러 에러 (patchRecommendStatus):", error);
-    return response.error(res, "サーバーエラーが発生しました。", 500);
+    console.error("コントローラエラー：", error);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
+  }
+};
+
+// チェックされた商品の状態（在庫状態など）を一括変更
+export const bulkUpdateStatus = async (req, res) => {
+  const { ids, status } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
+  }
+
+  try {
+    const affectedRows = await productModel.bulkUpdateStatus(ids, status);
+
+    if (affectedRows === 0) {
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
+    }
+
+    return response.success(res, { affectedRows }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
+  } catch (error) {
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 

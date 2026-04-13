@@ -13,7 +13,7 @@ export const getAdminOrders = async (params) => {
   }
 };
 
-// 단일(갯수 상관x 한 상품) 상품저장
+//シングル（本数相関×1商品）商品保存
 export function singleProductToItems(product, quantity) {
   try {
     return [{
@@ -29,13 +29,13 @@ export function singleProductToItems(product, quantity) {
   }
 }
 
-// 단일 상품 구매 페이지로 이동
+// 単一商品購入ページに移動
 export function BuyPageSingle(navigate, product, quantity) {
   const items = singleProductToItems(product, quantity);
   navigate("/buy", { state: { items } });
 }
 
-// 장바구니 상품 구매 페이지로 이동
+//ショッピングカート商品購入ページに移動
 export function BuyPageMany(navigate, cartItems) {
   const items = (Array.isArray(cartItems) ? cartItems : [])
     .filter(item => item?.status !== 1)
@@ -49,7 +49,7 @@ export function BuyPageMany(navigate, cartItems) {
   navigate("/buy", { state: { items } });
 }
 
-// 주문 생성
+//オーダー作成
 export async function createOrder(orderData) {
   try {
     const { data } = await api.post("/orders", orderData);
@@ -60,7 +60,7 @@ export async function createOrder(orderData) {
   }
 }
 
-// 주문 상세 조회 (확인 페이지용)
+//注文詳細照会（確認ページ用）
 export async function getOrder(orderId) {
   try {
     const { data } = await api.get(`/orders/${orderId}`);
@@ -71,7 +71,7 @@ export async function getOrder(orderId) {
   }
 }
 
-// 회원별 주문 목록 조회
+// 会員別注文リストの照会
 export async function getOrdersByUser(loginId) {
   try {
     const { data } = await api.get(`/orders/user/${loginId}`);
@@ -89,7 +89,7 @@ export const ORDER_STATUS_LABELS = {
   3: "配送完了",
 };
 
-export function getOrderStatusLabel(status) { //숫자에 맞게 String을 number로 번경. 방어코드로도 작동가능
+export function getOrderStatusLabel(status) { 
   if (status === null || status === undefined) return ORDER_STATUS_LABELS[1];
   const n = Number(status);
   return ORDER_STATUS_LABELS[n] ?? status;

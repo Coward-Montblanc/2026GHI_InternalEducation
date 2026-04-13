@@ -14,11 +14,10 @@ function Login() {
     try {
       const res = await loginApi(loginId, password);
 
-      // 서버에서 준 토큰과 유저 정보를 컨텍스트에 저장
       login(res.user, res.token);
       
       alert("ログイン成功！");
-      navigate("/"); // 메인 페이지로 이동
+      navigate("/");
     } catch (err) {
       alert("ログイン失敗: " + err.response.data.message);
     }

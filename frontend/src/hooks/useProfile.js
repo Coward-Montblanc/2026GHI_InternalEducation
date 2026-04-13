@@ -9,8 +9,8 @@ export const useProfile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
-    const [isVerified, setIsVerified] = useState(false); //본인 확인용
-    const [confirmInput, setConfirmInput] = useState(""); // 확인용 비번 입력값
+    const [isVerified, setIsVerified] = useState(false);
+    const [confirmInput, setConfirmInput] = useState("");
     const [formData, setFormData] = useState({
             password: "",
             confirmPassword: "",
@@ -38,12 +38,12 @@ export const useProfile = () => {
     }, [user]);
 
     const handleVerify = async () => {
-        const success = await checkPasswordApi(confirmInput); //받은 비밀번호 검증
+        const success = await checkPasswordApi(confirmInput);
 
-        if (success) { //연결 성공시
+        if (success) {
             setIsVerified(true);
             setIsEditing(true);
-            setConfirmInput(""); // 입력값 초기화
+            setConfirmInput("");
             setError("");
         } else {
             alert("パスワードが正しくありません。"); 
@@ -52,7 +52,7 @@ export const useProfile = () => {
         }
     };
 
-    const cancelEdit = () => {// 데이터 초기화
+    const cancelEdit = () => {
     setIsEditing(false);
     setIsVerified(false);
     setConfirmInput("");
@@ -87,30 +87,30 @@ export const useProfile = () => {
 
     const handleSave = async () => {
         setError("");
-        if (formData.password && formData.password !== formData.confirmPassword) {//비밀번호 일치하는지 확인
-          setError("パスワードが一致しません。"); //alert로 나타낼지 고민중.
+        //パスワードが一致することを確認
+        if (formData.password && formData.password !== formData.confirmPassword) {
+          setError("パスワードが一致しません。");
           return;
         }
     
-        const zipRegex = /^\d{7}$/; //우편번호 7글자
+        const zipRegex = /^\d{7}$/; //郵便番号7文字
         if (formData.zip_code && !zipRegex.test(formData.zip_code)) {
-          setError("郵便番号は7桁の数字で入力してください。"); //alert로 나타낼지 고민중.
+          setError("郵便番号は7桁の数字で入力してください。");
           return;
         }
-        const pureZip = String(formData.zip_code).replace(/\D/g, ""); //공백, - 등 전부 제거
+        const pureZip = String(formData.zip_code).replace(/\D/g, ""); //ブランク、 - などすべて削除
         console.log("전송 데이터 확인:", { ...formData, zip_code: pureZip });
         try {
         const response = await api.put("/users/update-profile", {
             ...formData,
-            zip_code: pureZip // 서버에는 숫자만 보냄
+            zip_code: pureZip
         });
 
         if (response.data.success || response.status === 200) {
             setSuccess(true);
             setIsEditing(false);
-            setIsVerified(false); // 수정 완료 후 다시 본인인증 모드로
+            setIsVerified(false);
             
-            // 비밀번호 필드만 초기화
             setFormData(prev => ({ 
                 ...prev, 
                 password: "", 
@@ -125,8 +125,6 @@ export const useProfile = () => {
             setError(err.response?.data?.message || "情報の更新に失敗しました。");
         }
     };
-    
-    
     
     return{
         isEditing,

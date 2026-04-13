@@ -11,7 +11,6 @@ export const useAddressSelection = (setFormData) => {
 
         setFormData(prev => ({
             ...prev,
-            // 구매페이지와 마이페이지 공통 필드
             receiver_name: selectedAddr.receiver_name,
             zip_code: selectedAddr.zip_code,
             address: selectedAddr.address,

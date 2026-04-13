@@ -4,9 +4,10 @@ export const buildDynamicQuery = (baseSql, filters = {}, options = {}) => {
 
     Object.keys(filters).forEach((key) => {
         const value = filters[key];
-        const operator = options[key] || '='; // 기본값은 '='
+        const operator = options[key] || '='; // デフォルトは '='
 
-        if (value !== undefined && value !== null && value !== '') { //타입에 맞춰서 쿼리문에 합쳐짐
+        //タイプに合わせてクエリステートメントにまとめる
+        if (value !== undefined && value !== null && value !== '') {
             if (operator === 'LIKE') {
                 sql += ` AND ${key} LIKE ?`;
                 params.push(`%${value}%`);

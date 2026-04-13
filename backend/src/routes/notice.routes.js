@@ -1,158 +1,36 @@
 import express from "express";
 import * as noticeController from "../controllers/notice.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import response from "../utils/response.js";
+import { RESPONSE_MESSAGES, DATA_CONSTRAINTS } from "../config/constants.js";
+import { upload } from "../config/multer.config.js";
 
 const router = express.Router();
 
-/**
- * @swagger
- * /notices:
- *   get:
- *     summary: お知らせ一覧取得
- *     tags: [Notices]
- *     responses:
- *       200:
- *         description: お知らせ一覧
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 notices:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       notice_id:
- *                         type: string
- *                         example: NT1
- *                       title:
- *                         type: string
- *                       content:
- *                         type: string
- *                       is_pinned:
- *                         type: integer
- *                       created_at:
- *                         type: string
- *                       author_name:
- *                         type: string
- */
+const handleUpload = (req, res, next) => {
+  upload.fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "banner_image", maxCount: 1 },
+  ])(req, res, (err) => {
+    if (err) {
+      console.error("Multer エラー発生:", err);
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return response.error(res, DATA_CONSTRAINTS.FILE.SIZE_LIMIT, 400);
+      }
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.FILE_UPLOAD_ERROR, 400);
+    }
+    next();
+  });
+};
+
 router.get("/", noticeController.getNotices);
 
-/**
- * @swagger
- * /notices/{id}:
- *   get:
- *     summary: お知らせ詳細取得
- *     tags: [Notices]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: お知らせID
- *     responses:
- *       200:
- *         description: お知らせ詳細
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 notice:
- *                   type: object
- *       404:
- *         description: お知らせが見つかりません
- */
 router.get("/:id", noticeController.getNoticeDetail);
 
-/**
- * @swagger
- * /notices:
- *   post:
- *     summary: お知らせ登録
- *     tags: [Notices]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - content
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               is_pinned:
- *                 type: integer
- *                 example: 0
- *     responses:
- *       201:
- *         description: 登録完了
- *       403:
- *         description: 管理者のみ投稿できます
- */
-router.post("/", authenticateToken, noticeController.createNotice);
+router.post("/", authenticateToken, handleUpload, noticeController.createNotice);
 
-/**
- * @swagger
- * /notices/{id}:
- *   put:
- *     summary: お知らせ更新
- *     tags: [Notices]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               is_pinned:
- *                 type: integer
- *     responses:
- *       200:
- *         description: 更新完了
- *       404:
- *         description: お知らせが見つかりません
- */
-router.put("/:id", authenticateToken, noticeController.updateNotice);
+router.put("/:id", authenticateToken, handleUpload, noticeController.updateNotice);
 
-/**
- * @swagger
- * /notices/{id}:
- *   delete:
- *     summary: お知らせ削除
- *     tags: [Notices]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 削除完了
- *       404:
- *         description: お知らせが見つかりません
- */
 router.delete("/:id", authenticateToken, noticeController.deleteNotice);
 
 export default router;

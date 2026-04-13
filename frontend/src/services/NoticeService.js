@@ -29,3 +29,19 @@ export const deleteNotice = async (id) => {
   const { data } = await api.delete(`/notices/${id}`);
   return data;
 };
+
+export const uploadImage = async (formData) => {
+  const { data } = await api.post("/common/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
+export const deleteImage = async (fileName) => {
+  const { data } = await api.delete("/common/delete-image", {
+    data: { 
+      fileNames: fileName
+    }
+  });
+  return data;
+};

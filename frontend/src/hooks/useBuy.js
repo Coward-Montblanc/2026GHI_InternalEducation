@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createOrder } from "../services/OrderService";
 import { useAuth } from "../contexts/AuthContext";
-import { fetchJapaneseAddress } from "../utils/address"; //주소 찾기 API
+import { fetchJapaneseAddress } from "../utils/address";
+import { validateOrderForm } from "../utils/validation";
 
 export const useBuy = () => {
     const navigate = useNavigate();
@@ -17,22 +18,34 @@ export const useBuy = () => {
 		payment_method: ""
     });
 
-	// BuyService에서 항상 items 배열로 넘기도록 통일
 	const { items = [] } = location.state || {};
 	
-	const url = import.meta.env.VITE_API_URL; //.env파일에서 가져온 url
+	const url = import.meta.env.VITE_API_URL; //.envファイルから取得したurl
+	const [errors, setErrors] = useState({});
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState(false);
 	const [deliveryRequest, setDeliveryRequest] = useState("");
 	const [deliveryRequestText, setDeliveryRequestText] = useState("");
 	const [open, setOpen] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-
+	
 	const handleOrder = async (e) => {
-		e.preventDefault();
+		if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    	}
+    
 		setError("");
+		setErrors({});
 		setSuccess(false);
 		setIsSubmitting(true);
+
+		const { isValid, errors: tempErrors } = validateOrderForm(formData, paymentMethod);
+
+        if (!isValid) {
+            setErrors(tempErrors);
+			setIsSubmitting(false);
+            return;
+        }
 
 		const {
 			receiver_name,
@@ -86,8 +99,6 @@ export const useBuy = () => {
 		}
 	};
 
-	
-
 	const Address = async () => {
     try {
         const result = await fetchJapaneseAddress(formData.zip_code);
@@ -98,19 +109,18 @@ export const useBuy = () => {
                 zip_code: result.zip_code
             }));
 			//alert창 중복표시, 삭제
+			setErrors(prev => ({ ...prev, address: "", zip_code: "" }));
         }
-    } catch (error) {
-        console.error("Address fetch error:", error);
-    }
+    	} catch (error) {
+        	console.error("Address fetch error:", error);
+    	}
 	};
-
-
 
 	const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+		if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
     };
-
 
 	const deliveryOptions = [
 		"選択しない",
@@ -120,8 +130,8 @@ export const useBuy = () => {
 		"宅配ボックスに入れてください。",
 		"犬が吠えます。注意してください。",
 		"直接入力"
-
 	];
+
 	const paymentOptions = [
 		"クレジットカード",
 		"銀行振込",
@@ -131,10 +141,11 @@ export const useBuy = () => {
 		"アマゾンペイ",
 		"楽天ペイ"
 	];
+
 	const [paymentMethod, setPaymentMethod] = useState("");
 
     return {
-    url, items, success, error, isSubmitting,
+    url, items, success, error, isSubmitting,errors, setErrors,
     deliveryRequest, setDeliveryRequest, deliveryRequestText,
     setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
 	paymentMethod, setPaymentMethod, open ,setOpen, formData, handleChange,

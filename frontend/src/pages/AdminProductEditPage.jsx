@@ -7,6 +7,8 @@ import {
 import { getCategories } from "../services/CategoryService";
 import { getProductById, updateProduct } from "../services/ProductService";
 import { useProductFiles } from "../hooks/useProductAdd";
+import CommonEditor from "../components/CommonEditor";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 
 function AdminProductEditPage() {
   const { id } = useParams();
@@ -21,16 +23,43 @@ function AdminProductEditPage() {
   const [error, setError] = useState(null);
   const { selectedFiles, selectedDetailFiles, handleFileChange, handleDetailFileChange } = useProductFiles();
 
+  const handleEditorChange = (content) => {
+  setProduct((prev) => {
+    if (prev.description === content) return prev;
+    return { ...prev, description: content };
+  });
+  };
+
+  const statusTagStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  bgcolor: 'rgba(0,0,0,0.6)',
+  color: 'white',            
+  padding: '2px 6px',      
+  fontSize: '10px',          
+  fontWeight: 'bold',         
+  borderTopLeftRadius: 4,     
+  borderBottomRightRadius: 4,
+  zIndex: 1                  
+};
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catData, productData] = await Promise.all([
+        const [catRes, productRes] = await Promise.all([
           getCategories(),
           getProductById(id),
         ]);
-        setCategories(catData);
+        if (catRes && catRes.success) {
+          setCategories(catRes.categories); 
+        }else if (Array.isArray(catRes)) {
+        setCategories(catRes);
+        }
 
-        const p = productData;
+        if (productRes && productRes.success) {
+        const p = productRes.response_p;
+
         setProduct({
           category_id: p.category_id ?? "",
           name: p.name ?? "",
@@ -39,8 +68,11 @@ function AdminProductEditPage() {
           stock: p.stock ?? "",
           status: p.status ?? 0,
         });
-        setExistingImages((p.images ?? []).filter((img) => img.role === 1 || img.role === 2));
-        setExistingDetailImages((p.images ?? []).filter((img) => img.role === 3));
+
+        const images = p.images ?? [];
+        setExistingImages(images.filter((img) => img.role === 1 || img.role === 2));
+        setExistingDetailImages(images.filter((img) => img.role === 3));
+      }
       } catch (err) {
         setError("商品データの読み込みに失敗しました。");
       } finally {
@@ -72,7 +104,7 @@ function AdminProductEditPage() {
       const res = await updateProduct(id, formData);
       if (res.success) {
         alert("商品が修正されました。");
-        navigate("/mypage");
+        navigate("/mypage", { replace: true });
       }
     } catch (err) {
       alert("修正中にエラーが発生しました。");
@@ -102,45 +134,37 @@ function AdminProductEditPage() {
 
         <Box component="form" onSubmit={handleSubmit} noValidate>
 
-          {/* 메인·서브 이미지 */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>商品画像（メイン・サブ）</Typography>
+          <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fcfcfc', borderStyle: 'dashed', mb: 3 }}>
+              <Stack direction="row" spacing={2} flexWrap="wrap">
+                <Button variant="outlined" component="label" sx={{ width: 100, height: 100, flexDirection: 'column', borderStyle: 'dashed', bgcolor: '#fff' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>追加</Typography>
+                  <input type="file" hidden multiple accept="image/*" onChange={handleFileChange} />
+                </Button>
 
-            {/* 기존 이미지 미리보기 */}
-            {existingImages.length > 0 && (
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
                 {existingImages.map((img, i) => (
-                  <Box
-                    key={i}
-                    component="img"
-                    src={`${url}${img.image_url}`}
-                    alt={`既存画像${i + 1}`}
-                    sx={{ width: 80, height: 80, objectFit: "cover", borderRadius: 1, border: "1px solid #ddd" }}
-                  />
+                  <Box key={`ex-main-${i}`} sx={{ position: 'relative' }}>
+                    <Box 
+                      component="img" 
+                      src={`${url}${img.image_url}`} 
+                      sx={{ width: 100, height: 100, objectFit: "cover", borderRadius: 2, border: "1px solid #1976d2" }} 
+                    />
+                    <Box sx={statusTagStyle}>既存</Box>
+                  </Box>
                 ))}
-              </Box>
-            )}
 
-            <Button variant="outlined" component="label" fullWidth>
-              ファイル選択 (最大5枚まで、各250KB制限)
-              <input type="file" hidden multiple accept="image/*" onChange={handleFileChange} />
-            </Button>
-            {selectedFiles.length > 0 && (
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
                 {selectedFiles.map((file, i) => (
-                  <Box
-                    key={i}
-                    component="img"
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    sx={{ width: 80, height: 80, objectFit: "cover", borderRadius: 1, border: "1px solid #ddd" }}
-                  />
+                  <Box key={`new-main-${i}`} sx={{ position: 'relative' }}>
+                    <Box 
+                      component="img" 
+                      src={URL.createObjectURL(file)} 
+                      sx={{ width: 100, height: 100, objectFit: "cover", borderRadius: 2, border: "1px solid #4caf50" }} 
+                    />
+                    <Box sx={{ ...statusTagStyle, bgcolor: "#4caf50" }}>NEW</Box>
+                  </Box>
                 ))}
-              </Box>
-            )}
-          </Box>
+              </Stack>
+            </Paper>
 
-          {/* 카테고리 */}
           <TextField
             select fullWidth label="カテゴリー" name="category_id"
             value={product.category_id} onChange={handleChange}
@@ -151,19 +175,22 @@ function AdminProductEditPage() {
             ))}
           </TextField>
 
-          {/* 상품명 */}
           <TextField fullWidth label="商品名" name="name" value={product.name} onChange={handleChange} required margin="normal" />
 
-          {/* 상품설명 */}
-          <TextField fullWidth label="商品説明" name="description" value={product.description} onChange={handleChange} multiline rows={4} margin="normal" />
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>商品説明</Typography>
+            <CommonEditor 
+              value={product.description || ""} 
+              onChange={handleEditorChange} 
+              height="400px"
+            />
+          </Box>
 
-          {/* 가격·재고 */}
           <Stack direction="row" spacing={2}>
             <TextField fullWidth type="number" label="価格" name="price" value={product.price} onChange={handleChange} required margin="normal" />
             <TextField fullWidth type="number" label="在庫" name="stock" value={product.stock} onChange={handleChange} required margin="normal" />
           </Stack>
 
-          {/* 공개 상태 */}
           <TextField
             select fullWidth label="公開状態" name="status"
             value={product.status} onChange={handleChange}
@@ -174,42 +201,45 @@ function AdminProductEditPage() {
             <MenuItem value={2}>品切れ</MenuItem>
           </TextField>
 
-          {/* 상세 이미지 */}
-          <Box sx={{ mt: 3, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>詳細画像（任意）</Typography>
-
-            {/* 기존 상세 이미지 미리보기 */}
-            {existingDetailImages.length > 0 && (
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
+          <Box sx={{ mt: 4, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold", display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <PhotoCameraIcon fontSize="small" color="secondary" />
+              詳細説明用画像 (任意, 最大5枚)
+            </Typography>
+  
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f9f9f9', borderStyle: 'dashed' }}>
+              <Stack direction="row" spacing={2} alignItems="flex-start" flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  component="label"
+                  color="secondary"
+                  sx={{ width: 80, height: 80, flexDirection: 'column', borderStyle: 'dashed', bgcolor: '#fff', minWidth: 80 }}
+                >
+                  <Typography variant="caption" sx={{ mt: 1, fontWeight: 'bold', fontSize: '10px' }}>追加</Typography>
+                  <input type="file" hidden multiple accept="image/*" onChange={handleDetailFileChange} />
+                </Button>
                 {existingDetailImages.map((img, i) => (
-                  <Box
-                    key={i}
-                    component="img"
-                    src={`${url}${img.image_url}`}
-                    alt={`既存詳細画像${i + 1}`}
-                    sx={{ width: 80, height: 80, objectFit: "cover", borderRadius: 1, border: "1px solid #ddd" }}
-                  />
+                  <Box key={`ex-detail-${i}`} sx={{ position: 'relative' }}>
+                    <Box
+                      component="img"
+                      src={`${url}${img.image_url}`}
+                      sx={{ width: 80, height: 80, objectFit: "cover", borderRadius: 1, border: "1px solid #9c27b0" }}
+                    />
+                    <Box sx={statusTagStyle}>既存</Box>
+                  </Box>
                 ))}
-              </Box>
-            )}
-
-            <Button variant="outlined" component="label" fullWidth>
-              ファイル選択 (最大5枚まで、各250KB制限)
-              <input type="file" hidden multiple accept="image/*" onChange={handleDetailFileChange} />
-            </Button>
-            {selectedDetailFiles.length > 0 && (
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-                {selectedDetailFiles.map((file, i) => (
-                  <Box
-                    key={i}
-                    component="img"
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    sx={{ width: 80, height: 80, objectFit: "cover", borderRadius: 1, border: "1px solid #ddd" }}
-                  />
+                {selectedDetailFiles.map((file, index) => (
+                  <Box key={`new-detail-${index}`} sx={{ position: 'relative' }}>
+                    <Box
+                      component="img"
+                      src={URL.createObjectURL(file)}
+                      sx={{ width: 80, height: 80, objectFit: "cover", borderRadius: 1, border: "1px solid #4caf50" }}
+                    />
+                    <Box sx={{ ...statusTagStyle, bgcolor: "#4caf50" }}>NEW</Box>
+                  </Box>
                 ))}
-              </Box>
-            )}
+              </Stack>
+            </Paper>
           </Box>
 
           <Button type="submit" fullWidth variant="contained" color="primary" size="large" sx={{ mt: 2 }}>

@@ -11,9 +11,9 @@ export const useCart = () => {
 
   const totalPrice = cartItems.reduce((acc, item) => { 
   if (item.status === 0) { return acc + item.price * item.quantity; }
-  return acc; }, 0);// status가 0일 때만 금액을 더하고, 1이면 무시
+  return acc; }, 0);
 
-  const fetchCartItems = async () => { //장바구니 데이터 불러오기
+  const fetchCartItems = async () => { //カートデータを読み込む
     if (!user?.login_id) return;
     try {
       const data = await getCart(user.login_id);
@@ -30,23 +30,23 @@ export const useCart = () => {
   }, [user?.login_id]);
 
  
-  const handleUpdateQty = (itemId, newQty, stock) => {  //수량 변경
-    if (parseInt(newQty) > stock) {  //상품 현 재고 이상으로 수량을 올릴 시 에러
+  const handleUpdateQty = (itemId, newQty, stock) => { 
+    if (parseInt(newQty) > stock) {
     alert(`現在の在庫(${stock}個)までしか注文できません。`);
     setCartItems(items => items.map(item => 
-      item.cart_item_id === itemId ? { ...item, quantity: stock } : item //최대 갯수를 재고수량으로 조정 
+      item.cart_item_id === itemId ? { ...item, quantity: stock } : item //最大数を在庫数量に調整 
     ));  return; }
 
-        if (newQty < 1) return; //1보다 작은 숫자로 내려갈려 할경우
+        if (newQty < 1) return;
         if (newQty > stock) { newQty = stock; }
         setCartItems(items => items.map(item => 
-        item.cart_item_id === itemId ? { ...item, quantity: newQty } : item //갯수 조정
+        item.cart_item_id === itemId ? { ...item, quantity: newQty } : item
         ));
     };
 
     const handleToggleStatus = async (cartItemId, currentStatus) => {
     const token = storage.get("token");
-    if (!token) { //토큰이 발견되지 않을 시 = undefined
+    if (!token) {
         alert("ログイン情報がありません。再度ログインしてください。");
         return;
      }

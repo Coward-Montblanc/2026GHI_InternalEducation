@@ -1,51 +1,21 @@
 // Header.jsx
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   AppBar, Toolbar,
-  Typography, Button,
-  Box, Badge,      // 장바구니 버튼용 추가
-  IconButton
+  Typography,
+  Box
 } from "@mui/material";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart"; // 추가
-import { useNavigate, useLocation } from "react-router-dom"; // useLocation 추가
-import { useAuth } from "../contexts/AuthContext"; // 로그인 상태를 가져옴
-import { getCart } from "../services/CartService";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"; 
 
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth(); // 유저 정보, 로그아웃 함수 호출
-  const [cartCount, setCartCount] = useState(0);
+  const { user, logout } = useAuth();
 
-  const fetchCartCount = async () => { //장바구니 버튼 + 숫자표시
-    if (user?.login_id) {
-      try {
-        const cart = await getCart(user.login_id);
-        setCartCount(Array.isArray(cart) ? cart.length : 0);
-      } catch (err) {
-        console.error("Cart error:", err);
-        setCartCount(0);
-      }
-    } else {
-      setCartCount(0);
-    }
-  };
-
-  useEffect(() => { //페이지 바뀔 때마다 갱신
-    fetchCartCount();
+  useEffect(() => {
   }, [user, location.pathname]);
-
-  const handleLogout = () => {
-    logout();
-    alert("ログアウトしました。");
-    navigate("/");
-  };
-
-  const handleMypage = () => {
-    navigate("/mypage");
-  };
   
-
   return (
     <AppBar position="static" color="primary">
       <Toolbar sx={{ 
@@ -57,49 +27,27 @@ function Header() {
       }}>
         <Typography
           variant="h6"
-          sx={{ cursor: "pointer", fontWeight: "bold" }}
+          sx={{ cursor: "pointer", fontWeight: "bold", ml: 2 }}
           onClick={() => navigate("/")}
         >
           ByeMart
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>{/* 로그인 여부에 따라 다르게 나타남. */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {user ? (
             <>
-              
-              <IconButton //장바구니 버튼
-                color="inherit" 
-                sx={{ mr: 2 }} 
-                onClick={() => navigate("/cart")}
-              >
-                <Badge badgeContent={cartCount} color="error">
-                  <ShoppingCartIcon />
-                </Badge>
-              </IconButton>
-
               <Typography variant="body1" sx={{ mr: 2 }}>
                 <strong>{user.name || user.login_id}</strong>様、ようこそ！
               </Typography>
-              <Button color="inherit" onClick={handleMypage}>
-                {user.role === "ADMIN" ? "管理ページ" : "マイページ"}
-              </Button>
-              <Button color="inherit" onClick={handleLogout}>
-                ログアウト
-              </Button>
             </>
           ) : (
             <>
-              <Button color="inherit" onClick={() => navigate("/login")}>
-                ログイン
-              </Button>
-              <Button color="inherit" onClick={() => navigate("/signup")}>
-                会員登録
-              </Button>
             </>
           )}
         </Box>
       </Toolbar>
     </AppBar>
+    
   );
 }
 

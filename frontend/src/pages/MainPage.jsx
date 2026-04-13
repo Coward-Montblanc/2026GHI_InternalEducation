@@ -12,7 +12,7 @@ function MainPage() {
 
   const { products, loading, fetchProducts } = useProductSearch();
 
-  useEffect(() => {//카테고리 id와 검색어를 가져옴
+  useEffect(() => {
     const categoryId = searchParams.get("category"); 
     const searchTerm = searchParams.get("search");
 
@@ -30,11 +30,12 @@ function MainPage() {
   
   return (
     <>
-      <Banner />
       <Category 
-        onSearch={handleSearchTrigger} // 통합 검색 함수
+        onSearch={handleSearchTrigger}
         onCategoryNameChange={setSelectedCategoryName}
       />
+      <Banner />
+      
       <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.7rem', margin: '25px 0' }}> {/*선택된 카테고리명 표시*/}
         {selectedCategoryName === 'カテゴリー' ? '全商品' : selectedCategoryName}
       </div>

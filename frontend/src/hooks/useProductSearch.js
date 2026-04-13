@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import api from '../api/axios'; // 설정하신 axios 인스턴스
+import api from '../api/axios';
 
 export const useProductSearch = (initialParams = {}) => {
     const [products, setProducts] = useState([]);
@@ -17,17 +17,15 @@ export const useProductSearch = (initialParams = {}) => {
                 }
             });
             if (res.data && res.data.products) {
-                // { products: [], pagination: {} } 형태인 경우
                 setProducts(res.data.products);
                 setPagination(res.data.pagination);
             } else {
-                // [ {}, {} ] 배열 형태인 경우
                 setProducts(Array.isArray(res.data) ? res.data : []);
                 setPagination(null);
             }
             setError(null);
         } catch (err) {
-            console.error("검색 실패:", err);
+            console.error("検索に失敗しました：", err);
             setError(err);
             setProducts([]);
         } finally {

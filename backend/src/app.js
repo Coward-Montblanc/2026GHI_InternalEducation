@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
 import { fileURLToPath } from "url";
+
 import authRoutes from "./routes/auth.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
@@ -11,6 +12,7 @@ import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import noticeRoutes from "./routes/notice.routes.js";
 import eventRoutes from "./routes/event.routes.js";
+import commonRoutes from './routes/common.routes.js';
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 
@@ -21,10 +23,9 @@ dotenv.config({
   path: path.resolve(__dirname, "../.env"),
 });
 
-
 const app = express();
 
-app.use(cors()); // CORS 허용
+app.use(cors()); // CORSを許可
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
@@ -38,14 +39,16 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/events", eventRoutes);
-app.get("/", (req, res) => {
-  res.send("API running");
-});
+app.use('/api/common', commonRoutes);
+app.get("/", (req, res) => { res.send("API running");});
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
 
 console.log("APP START");
 

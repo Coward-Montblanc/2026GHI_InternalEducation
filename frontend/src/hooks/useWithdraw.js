@@ -5,7 +5,7 @@ import { storage } from "../utils/storage";
 
 export const useWithdraw = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth(); // AuthContext에 로그아웃 함수가 있다고 가정
+  const { logout } = useAuth();
   const url = import.meta.env.VITE_API_URL;
   const withdraw = async () => {
     try {

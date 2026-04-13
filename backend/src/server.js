@@ -1,4 +1,4 @@
-import app from "./app.js"; //서버
+import app from "./app.js";
 
 const PORT = 3000;
 

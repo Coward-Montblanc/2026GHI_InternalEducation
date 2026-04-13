@@ -10,7 +10,7 @@ export const useOrder = () =>{
     const [error, setError] = useState(null);
     
     const fetchOrders = useCallback(async () => {
-    // AuthGuard가 이미 걸러주지만 데이터 호출 전 안전장치
+    // AuthGuardはすでにフィルタリングしていますが、データ呼び出し前の安全装置
     if (!user?.login_id) return;
 
     try {
@@ -19,7 +19,7 @@ export const useOrder = () =>{
       setOrders(data.orders || []);
       setError(null);
     } catch (err) {
-      console.error("注文 로딩 에러:", err);
+      console.error("注文ローディングエラー：", err);
       setError(err.response?.data?.message || "注文一覧の取得に失敗しました。");
       setOrders([]);
     } finally {

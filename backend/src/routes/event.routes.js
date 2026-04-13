@@ -1,158 +1,38 @@
 import express from "express";
 import * as eventController from "../controllers/event.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import response from "../utils/response.js";
+import { RESPONSE_MESSAGES, DATA_CONSTRAINTS } from "../config/constants.js";
+import { upload } from "../config/multer.config.js";
 
 const router = express.Router();
 
-/**
- * @swagger
- * /events:
- *   get:
- *     summary: イベント一覧取得
- *     tags: [Events]
- *     responses:
- *       200:
- *         description: イベント一覧
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 events:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       event_id:
- *                         type: string
- *                         example: EV1
- *                       title:
- *                         type: string
- *                       content:
- *                         type: string
- *                       is_pinned:
- *                         type: integer
- *                       created_at:
- *                         type: string
- *                       author_name:
- *                         type: string
- */
+const handleUpload = (req, res, next) => {
+  upload.fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "banner_image", maxCount: 1 },
+  ])(req, res, (err) => {
+    if (err) {
+      console.error("Multer エラー発生:", err);
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return response.error(res, DATA_CONSTRAINTS.FILE.SIZE_LIMIT, 400);
+      }
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.FILE_UPLOAD_ERROR, 400);
+    }
+    next();
+  });
+};
+
+router.get('/banners', eventController.getBannerList);
+
 router.get("/", eventController.getEvents);
 
-/**
- * @swagger
- * /events/{id}:
- *   get:
- *     summary: イベント詳細取得
- *     tags: [Events]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: イベントID
- *     responses:
- *       200:
- *         description: イベント詳細
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 event:
- *                   type: object
- *       404:
- *         description: イベントが見つかりません
- */
 router.get("/:id", eventController.getEventDetail);
 
-/**
- * @swagger
- * /events:
- *   post:
- *     summary: イベント登録
- *     tags: [Events]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - content
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               is_pinned:
- *                 type: integer
- *                 example: 0
- *     responses:
- *       201:
- *         description: 登録完了
- *       403:
- *         description: 管理者のみ投稿できます
- */
-router.post("/", authenticateToken, eventController.createEvent);
+router.post("/", authenticateToken, handleUpload, eventController.createEvent);
 
-/**
- * @swagger
- * /events/{id}:
- *   put:
- *     summary: イベント更新
- *     tags: [Events]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               is_pinned:
- *                 type: integer
- *     responses:
- *       200:
- *         description: 更新完了
- *       404:
- *         description: イベントが見つかりません
- */
-router.put("/:id", authenticateToken, eventController.updateEvent);
+router.put("/:id", authenticateToken, handleUpload, eventController.updateEvent);
 
-/**
- * @swagger
- * /events/{id}:
- *   delete:
- *     summary: イベント削除
- *     tags: [Events]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 削除完了
- *       404:
- *         description: イベントが見つかりません
- */
 router.delete("/:id", authenticateToken, eventController.deleteEvent);
 
 export default router;

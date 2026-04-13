@@ -1,7 +1,7 @@
-import storage from "./storage"; // 스토리지 임포트
+import storage from "./storage";
 
 export const isAuthenticated = () => { 
-    const token = storage.get("token"); // 토큰 존재 체크
+    const token = storage.get("token"); 
     return !!token; 
 };
 

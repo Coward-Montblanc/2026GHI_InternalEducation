@@ -1,55 +1,62 @@
 import * as orderModel from "../models/order.model.js";
 import db from "../config/db.js";
 import response from "../utils/response.js";
+import { RESPONSE_MESSAGES } from "../config/constants.js";
 
-export const getAdminOrders = async (req, res) => { //관리자 페이지 주문관리 리스트
+export const getAdminOrders = async (req, res) => { //管理者ページ注文管理リスト
   try {
     
-    const { status, startDate, endDate, order_id, login_id, receiver_name } = req.query;
+    const { 
+      status, order_id, login_id, receiver_name, searchTerm, address, phone, minPrice, maxPrice,
+      startDate, endDate, startUpdateDate, endUpdateDate, sortField, sortOrder 
+    } = req.query;
+    
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.max(1, Number(req.query.limit) || 10);
-    
     const offset = (page - 1) * limit;
 
     const filters = {
-      status, startDate, endDate, order_id,
-      login_id, receiver_name,
+      status, order_id, login_id, receiver_name, searchTerm,
+      address, phone, minPrice, maxPrice,
+      startDate, endDate, startUpdateDate, endUpdateDate,
       offset: parseInt(offset),
-      limit: parseInt(limit)
+      limit: parseInt(limit),
+      sortField: sortField || 'created_at',
+      sortOrder: sortOrder || 'DESC'
     };
 
-    const { rows : orders, totalCount } = await orderModel.findOrdersAdmin(filters); //페이지용 숫자
+    const { rows : orders, totalCount } = await orderModel.findOrdersAdmin(filters);
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    res.json({
-      success: true,
-      orders,
-      pagination: {
-        totalItems: totalCount,
-        totalPages,
-        currentPage: parseInt(page)
-      }
-    });
+    return response.success(res,{ 
+      orders, 
+      pagination: { 
+        totalItems: totalCount, 
+        totalPages, 
+        currentPage: parseInt(page) 
+        } 
+      }, RESPONSE_MESSAGES.SUCCESS.DEFAULT
+    );
   } catch (error) {
     console.error("Admin Order Error:", error);
-    return response.error(res, "サーバーエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-export const getOrderDetailAdmin = async (req, res) => { //관리자 페이지 주문 상세 페이지
+export const getOrderDetailAdmin = async (req, res) => { //管理者ページ注文詳細ページ
   try {
     const { orderId } = req.params;
     const { order, items } = await orderModel.getOrderWithItems(orderId);
 
     if (!order) {
-      return response.error(res, "注文が見つかりません。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
     }
 
-    return response.success(res, {order, items}, "注文修正成功しました。", 200);
+    return response.success(res, {order, items}, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (error) {
-    console.error("Admin Order Detail Error:", error);
-    return response.error(res, "サーバーエラーが発生しました。", 500);
+    console.error("管理者注文詳細エラー", error);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
@@ -57,43 +64,42 @@ export const patchOrderStatusAdmin = async (req, res) => {
   const { orderId } = req.params;
   const updateData = req.body;
   
-  const connection = await db.getConnection(); //트랜잭션 추가
+  const connection = await db.getConnection(); //トランザクションを追加
   try {
-    await connection.beginTransaction(); //트랜잭션 시작
+    await connection.beginTransaction(); //トランザクションの開始
 
     const affectedRows = await orderModel.updateOrderAdmin(connection, orderId, updateData);
 
     if (affectedRows === 0) {
       await connection.rollback();
-      return response.error(res, "更新に失敗しました。", 404);
+      return response.error(res, RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
     }
 
-    await connection.commit(); //트랜잭션 끝 
-    return response.success(res, {}, "注文ステータスと販売数量が更新されました。");
+    await connection.commit(); //トランザクションの終了
+    return response.success(res, {}, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (error) {
     await connection.rollback();
-    return response.error(res, "サーバーエラーが発生しました。", 500);
+    return response.error(res, RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   } finally {
     connection.release();
   }
 };
 
-// 주문 생성 (본인만 주문 가능)
+// オーダー作成(本人のみオーダー可能)
 export const createOrder = async (req, res) => {
-  const connection = await db.getConnection(); //트랜잭션 추가
+  const connection = await db.getConnection(); //トランザクションを追加
   try {
     const { login_id, items, total_price, receiver_name, address, address_detail,
             phone, delivery_request } = req.body;
     if (!login_id || !Array.isArray(items) || items.length === 0 || !receiver_name || !address || !phone) {
-      return response.error(res , "必要な情報が不足しています。" , 400);
+      return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_ENTERED);
     }
     if (req.user?.login_id !== login_id) {
-      return response.error(res , "本人の注文のみ実行できます。" , 403);
+      return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND_USER);
     }
 
-    await connection.beginTransaction(); //트랜잭션 시작
+    await connection.beginTransaction(); //トランザクションの開始
 
-    // 1. 주문 생성
     const order_id = await orderModel.createOrder(
       login_id,
       total_price,
@@ -104,44 +110,42 @@ export const createOrder = async (req, res) => {
       delivery_request
     );
     
-    // 2. 주문 상품 등록 및 재고 차감 (1,2가 한 트랜잭션)
     for (const item of items) {
-      // 주문 전, 재고 확인
       const [stockRows] = await db.query(
         "SELECT stock FROM products WHERE product_id = ?",
         [item.product_id]
       );
       const stock = stockRows[0]?.stock ?? null;
       if (stock === null || stock < item.quantity || stock === 0) {
-        return response.error(res , "商品在庫が不足しています。" , 400);
+        return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.PRODUCT_STOCK_OUT );
       }
       await orderModel.createOrderItem(order_id, item.product_id, item.quantity, item.price);
 
-      // 재고 차감 (동시에 주문이 들어오거나 재고가 부족한 경우를 대비하여, 재고가 충분한 경우에만 차감하도록 조건 추가)
+      //在庫を差し引く（同時に注文が入っているか在庫が足りない場合に備えて、在庫が十分な場合にのみ差し引くように条件を追加）
       const [updateResult] = await db.query(
         "UPDATE products SET stock = stock - ? WHERE product_id = ? AND stock >= ?",
         [item.quantity, item.product_id, item.quantity]
       );
       if (updateResult.affectedRows === 0) {
-        return response.error(res , `商品ID ${item.product_id}の在庫が不足しているため、注文に失敗しました。` , 400);
+        return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.STOCK_SHORTAGE);
       }
 
-      //재고 차감으로인해 재고수가 0으로 바뀌었을 때 스테이터스를 바꿈
+      //在庫控除により在庫数が0に変わったときのステータスを変更
       await db.query(
         "UPDATE products SET status = 2 WHERE product_id = ? AND stock = 0 AND status = 0",
         [item.product_id]
       );
     }
-    await connection.commit(); //트랜잭션 끝 
+    await connection.commit(); //トランザクションの終了
 
-    return response.success(res, { order_id }, 201); 
+    return response.success(res, { order_id }, RESPONSE_MESSAGES.SUCCESS.DEFAULT); 
   } catch (err) {
     console.error("注文作成エラー:", err);
-    return response.error(res , "サーバーエラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-// 주문 상세 조회 본인 주문이 아니면 볼 수 없도록 방어
+// 注文詳細の照会 本人の注文でなければ見えないように防御
 export const getOrder = async (req, res) => {
   try {
     const { order_id } = req.params;
@@ -149,29 +153,46 @@ export const getOrder = async (req, res) => {
     const orderRow = orderData?.order;
     const items = orderData?.items;
     if (!orderRow || !items || items.length === 0) {
-      return response.error(res , "注文が存在しません。" , 404);
+      return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND);
     }
-    // 본인 주문이 아니면 403 (관리자 제외)
+    // ご本人注文でなければ403(管理者除く)
     if (req.user.role !== "ADMIN" && orderRow.login_id !== req.user.login_id) {
-      return response.error(res , "この注文を閲覧する権限がありません。" , 403);
+      return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_PERMISSION);
     }
-    return response.success(res, { order: orderRow, items }, "注文詳細を取得しました。");
+    return response.success(res, { order: orderRow, items }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (err) {
-    console.error("주문 상세 조회 에러:", err);
-    return response.error(res , "サーバーエラーが発生しました。" , 500);
+    console.error("注文詳細エラー:", err);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };
 
-// 유저별 주문 목록 (방어2)
+//ユーザー別注文リスト（防御2）
 export const getOrdersByUser = async (req, res) => {
   try {
     const { login_id } = req.params;
     if (req.user.role !== "ADMIN" && req.user.login_id !== login_id) {
-      return response.error(res , "他のユーザーの注文履歴は閲覧できません。" , 403);
+      return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NOT_FOUND_USER);
     }
     const orders = await orderModel.getOrdersByUser(login_id);
-    return response.success(res, { orders }, "注文履歴を取得しました。");
+    return response.success(res, { orders }, RESPONSE_MESSAGES.SUCCESS.DEFAULT);
   } catch (err) {
-    return response.error(res , "サーバーエラーが発生しました。" , 500);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
+  }
+};
+
+//販売量統計
+export const getAdminSalesStats = async (req, res) => {
+  try {
+    const trend = await orderModel.getSalesTrend();
+    
+    const summary = {
+      todaySales: trend[trend.length - 1]?.daily_orders || 0,
+      totalTrend: trend
+    };
+
+    return res.json(summary);
+  } catch (error) {
+    console.error("統計の読み込みに失敗しました。: ", error);
+    return response.error(res , RESPONSE_MESSAGES.SERVER_ERROR.DEFAULT);
   }
 };

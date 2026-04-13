@@ -34,9 +34,7 @@ function ProductDetail() {
       <Box sx={{ p: "40px 20px", maxWidth: "1200px", margin: "0 auto" }}>
         <Box sx={{ display: "flex", gap: "40px", mb: 8, flexDirection: { xs: "column", md: "row" } }}>
           
-          {/* 좌측: 이미지 영역 */}
           <Box sx={{ flex: "1" }}>
-            {/* 큰 이미지 표시부분 */}
             <Box sx={{
               width: "100%",
               height: "500px",
@@ -56,9 +54,7 @@ function ProductDetail() {
               />
             </Box>
 
-            {/* 메인이미지 서브이미지　Role: 1,2 */}
             <Box sx={{ display: "flex", gap: "10px", mt: 2, flexWrap: "wrap" }}>
-              {/* 메인이미지와 서브이미지를 결정하는 부분 */}
               {(product.images?.filter((img) => img.role === 1 || img.role === 2) || []).map((img, index) => (
                 <Box
                   key={index}
@@ -83,17 +79,15 @@ function ProductDetail() {
             </Box>
           </Box>
 
-          {/* 우측: 상품 정보 구매 섹션 */}
           <Box sx={{ flex: "1" }}>
             <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1 }}>{product.name}</Typography>
-              {/* 조회수 표시 */}
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                View: {product.view ?? 0}회 {/* 프론트/백 동시에 켜져있으니 조회수 증가가 +2로 되고있는 것 같습니다. 확인필요 */}
+                View: {product.view ?? 0}回
               </Typography>
             <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1 }}>
               <Typography variant="body1" color="text.secondary">カテゴリー:</Typography>
                   <Chip 
-                    label={product.category_name || "가전"} 
+                    label={product.category_name || "家電"} 
                     color="primary" 
                     variant="outlined"
                     clickable
@@ -153,14 +147,29 @@ function ProductDetail() {
           </Box>
         </Box>
 
-        {/* 하단: 상품 상세 설명 + 상세 이미지 */}
         <Box sx={{ mt: 10 }}>
           <Typography variant="h5" sx={{ fontWeight: "bold", mb: 3, borderBottom: "2px solid #333", pb: 1 }}>商品詳細</Typography>
           <Box sx={{ p: 4, border: "1px solid #eee", borderRadius: "8px" }}>
-            <Typography sx={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}>
-              {product.description || "商品詳細説明がありません。"}
-            </Typography>
-            {/* 상세이미지 / role: 3） */}
+            <Box 
+              className="editor-content-view ql-editor"
+              sx={{ 
+                lineHeight: 1.8,
+                "& img": { 
+                  maxWidth: "100% !important", 
+                  height: "auto !important", 
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  my: 2 
+                },
+                overflowWrap: "break-word",
+                wordBreak: "break-all",
+                "& table": { borderCollapse: "collapse", width: "100%" },
+                "& th, & td": { border: "1px solid #ddd", p: 1 }
+              }}
+              dangerouslySetInnerHTML={{ 
+                __html: product.description || "<p>商品詳細説明がありません。</p>" 
+              }} 
+            />
             {(product.images?.filter((img) => img.role === 3).length > 0) && (
               <Box sx={{ mt: 4 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>詳細画像</Typography>

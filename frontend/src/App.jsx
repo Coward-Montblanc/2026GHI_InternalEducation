@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext"; //로그인 토큰용 함수
+import { AuthProvider } from "./contexts/AuthContext";
 import AuthGuard from "./components/auth/AuthGuard"; 
 import MainPage from "./pages/MainPage";
 import LoginPage from "./pages/LoginPage";
@@ -25,6 +25,7 @@ import MyOrdersPage from "./pages/MyOrdersPage";
 import AdminOrderEdit from "./pages/AdminOrderEditPage"
 import NotFound from "./pages/NotFound"; //
 
+
 function App() {
   return (
     <Router>
@@ -36,30 +37,30 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/event" element={<EventPage />} />
-          <Route path="/event/write" element={<EventWritePage />} />
-          <Route path="/event/:id/edit" element={<EventEditPage />} />
           <Route path="/event/:id" element={<EventDetailPage />} />
           <Route path="/notice" element={<NoticePage />} />
-          <Route path="/notice/write" element={<NoticeWritePage />} />
-          <Route path="/notice/:id/edit" element={<NoticeEditPage />} />
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
           <Route path="/buy" element={<BuyPage />} />
-          {/* 로그인이 필요한 페이지들 = AuthGuard로 감싸기 */}
+          {/* ログインが必要なページ = AuthGuard で囲む */}
           <Route element={<AuthGuard />}>
             <Route path="/cart" element={ <CartPage /> } />
             <Route path="/order-confirm" element={<OrderConfirmPage />} />
-            <Route path="/mypage" element={ <MyPage /> }> {/* 마이페이지 버튼 */}
+            <Route path="/mypage" element={ <MyPage /> }> {/*マイページボタン*/}
               <Route index element={<MyProfile />} />
-              <Route path="orders" element={<MyOrdersPage />} /> {/* 주문 내역 페이지를 마이페이지 안으로 넣음*/}
+              <Route path="orders" element={<MyOrdersPage />} /> {/*注文履歴ページをマイページに挿入*/}
             </Route>
             <Route element={<AuthGuard requireAdmin/>}>
+              <Route path="/event/write" element={<EventWritePage />} />
+              <Route path="/event/edit/:id" element={<EventEditPage />} />
+              <Route path="/notice/write" element={<NoticeWritePage />} />
+              <Route path="/notice/edit/:id" element={<NoticeEditPage />} />
               <Route path="/admin/product-add" element={ <ProductAddPage /> } />
               <Route path="/admin/product-edit/:id" element={ <AdminProductEditPage /> } />
               <Route path="/admin/orders" element={<MyPage initialView="adminOrders" />} />
               <Route path="/admin/orders/edit/:orderId" element={<AdminOrderEdit />} />
             </Route>
           </Route>
-          <Route path="*" element={<NotFound />} /> {/* 라우트 되어있지 않은 페이지들은 NotFound */}
+          <Route path="*" element={<NotFound />} /> {/* Routeされていないページは NotFound */}
         </Routes>
       </AuthProvider>
     </Router>

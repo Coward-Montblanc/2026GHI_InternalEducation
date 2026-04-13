@@ -1,16 +1,18 @@
-//로그인 토큰 검증
+//ログイントークン検証
 import jwt from "jsonwebtoken";
+import { RESPONSE_MESSAGES } from "../config/constants.js";
+import response from "../utils/response.js";
 
 export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization']; //요청 헤더에서 토큰 꺼내기
+  const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.status(401).json({ message: "로그인이 필요합니다." }); //토큰이 없을경우
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => { //토큰 검증하기
-    if (err) return res.status(403).json({ message: "유효하지 않은 토큰입니다." });
+  if (!token) return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NEED_LOGIN, 401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => { //トークンを検証する
+    if (err) return response.error(res , RESPONSE_MESSAGES.CLIENT_ERROR.NEED_TOKEN, 403);
     
-    req.user = user; //유저 정보  저장 
-    next(); //검증 완료
+    req.user = user;
+    next();
   });
 };

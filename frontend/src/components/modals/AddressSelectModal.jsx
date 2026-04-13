@@ -25,7 +25,7 @@ export const AddressSelectModal = ({ open, onClose, onSelect }) => {
     try {
         await api.patch("/users/addresses/default", { address_name: addrName });
         alert("メイン配送先が変更されました。");
-        fetchAddresses(); // 목록 새로고침
+        fetchAddresses();
     } catch (err) {
         console.error("変更中にエラーが発生しました : ", err);
         alert("変更中にエラーが発生しました。");
@@ -92,7 +92,7 @@ export const AddressSelectModal = ({ open, onClose, onSelect }) => {
                 <AddressEditModal 
                     open={isEditOpen} 
                     onClose={() => setIsEditOpen(false)} 
-                    onSave={fetchAddresses} // 저장 성공 시 목록 다시 불러오기
+                    onSave={fetchAddresses} 
                 />
             </DialogContent>
         </Dialog>

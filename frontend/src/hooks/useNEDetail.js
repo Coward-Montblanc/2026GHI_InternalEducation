@@ -12,7 +12,7 @@ export function useNEDetail(id, getDetailFn, deleteFn, options = {}) {
   const [item, setItem] = useState(null);
   const [error, setError] = useState(null);
 
-  const fetch = useCallback(async () => { //데이터 바꿔끼우기
+  const fetch = useCallback(async () => {
     if (!id) {
       setLoading(false);
       return;
@@ -20,7 +20,7 @@ export function useNEDetail(id, getDetailFn, deleteFn, options = {}) {
     try {
       setLoading(true);
       setError(null);
-      const data = await getDetailFn(id); //Notice라면 노티스로, Detail은 이벤트로
+      const data = await getDetailFn(id);
       setItem(data?.[itemKey] ?? data);
     } catch (err) {
       setError(err.response?.data?.message || notFoundMessage);

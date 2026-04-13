@@ -18,7 +18,7 @@ import { formatDate } from "../utils/date";
 import { LoadingView } from "../components/LoadingCircle";
 
 export default function MyOrdersPage() {
-  const navigate = useNavigate(); // navigate는 컴포넌트에서 직접 선언
+  const navigate = useNavigate();
   const { loading, orders, error } = useOrder();
 
   if (loading) { return ( <LoadingView /> ); }

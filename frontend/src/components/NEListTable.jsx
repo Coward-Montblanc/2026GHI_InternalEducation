@@ -1,94 +1,98 @@
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Alert,
-} from "@mui/material";
+import { Box, Typography, CircularProgress, Alert } from "@mui/material";
+import PushPinIcon from "@mui/icons-material/PushPin";
 import { formatDate } from "../utils/date";
-
+import { LoadingView } from "../components/LoadingCircle";
 function NEListTable({
-  title,
-  emptyMessage,
   items = [],
   idKey,
   basePath,
   error,
   loading,
-  isAdmin,
   onNavigate,
 }) {
+
   return (
-    <Box sx={{ minHeight: "60vh", p: 4, maxWidth: 1200, margin: "0 auto" }}>
-      <Typography variant="h4" align="center" sx={{ fontWeight: "bold", mb: 3 }}>
-        {title}
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : items.length === 0 ? (
-        <Typography color="text.secondary">{emptyMessage}</Typography>
+    <Box sx={{ width: "100%", margin: "0 auto" }}>
+      {error && ( <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> )}
+      {loading ? ( <LoadingView />
       ) : (
-        <TableContainer component={Paper} elevation={1}>
-          <Table sx={{ tableLayout: "fixed", "& .MuiTableCell-root": { py: 1.5 } }}>
-            <TableHead>
-              <TableRow sx={{ bgcolor: "grey.100" }}>
-                <TableCell sx={{ fontWeight: "bold", width: "15%" }}>No.</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: "50%" }}>タイトル</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: "20%" }}>作成日</TableCell>
-                <TableCell sx={{ fontWeight: "bold", width: "15%" }}>作成者</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item) => (
-                <TableRow
-                  key={item[idKey]}
-                  hover
-                  sx={{
-                    cursor: "pointer",
-                    bgcolor: item.is_pinned ? "grey.50" : "white",
-                  }}
-                  onClick={() => onNavigate(`${basePath}/${item[idKey]}`)}
-                >
-                  <TableCell sx={{ width: "15%", fontWeight: item.is_pinned ? "bold" : "normal" }}>
-                    {item[idKey]}
-                  </TableCell>
-                  <TableCell sx={{ width: "50%", fontWeight: item.is_pinned ? "bold" : "normal" }}>
-                    {item.title}
-                  </TableCell>
-                  <TableCell sx={{ width: "20%", fontWeight: item.is_pinned ? "bold" : "normal" }}>
-                    {formatDate(item.created_at)}
-                  </TableCell>
-                  <TableCell sx={{ width: "15%", fontWeight: item.is_pinned ? "bold" : "normal" }}>
-                    {item.author_name || "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+        <Box sx={{ borderTop: "2px solid #333" }}>
+          <Box sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            py: 1.5, 
+            px: 2, 
+            bgcolor: "#fcfcfc", 
+            borderBottom: "1px solid #eee",
+            color: "text.secondary"
+          }}>
+            <Typography variant="caption" sx={{ width: "80px", textAlign: "center", fontWeight: "bold" }}>No.</Typography>
+            <Typography variant="caption" sx={{ flexGrow: 1, fontWeight: "bold", px: 2 }}>タイトル</Typography>
+            <Typography variant="caption" sx={{ width: "150px", textAlign: "center", fontWeight: "bold" }}>作成日</Typography>
+            <Typography variant="caption" sx={{ width: "100px", textAlign: "center", fontWeight: "bold" }}>作成者</Typography>
+          </Box>
 
-      {isAdmin && (
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-          <Button variant="contained" onClick={() => onNavigate(`${basePath}/write`)}>
-            新規投稿
-          </Button>
+          {items.map((item) => (
+            <Box
+              key={item[idKey]}
+              onClick={() => onNavigate(`${basePath}/${item[idKey]}`)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                py: 1.8,
+                px: 2,
+                cursor: "pointer",
+                borderBottom: "1px solid #f0f0f0",
+                bgcolor: item.is_pinned ? "#fff9f9" : "white",
+                transition: "background-color 0.1s",
+                "&:hover": {
+                  bgcolor: "#f8f9fa",
+                },
+              }}
+            >
+              <Box sx={{ width: "80px", textAlign: "center", flexShrink: 0 }}>
+                {item.is_pinned ? (
+                  <PushPinIcon sx={{ fontSize: 16, color: "error.main" }} />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    {item[idKey].replace(/^(NT|EV)/, "")}
+                  </Typography>
+                )}
+              </Box>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  flexGrow: 1,
+                  fontWeight: item.is_pinned ? "bold" : 400,
+                  color: "#333",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  px: 2,
+                  fontSize: "0.95rem"
+                }}
+              >
+                {item.title}
+              </Typography>
+
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                sx={{ width: "150px", textAlign: "center", flexShrink: 0 }}
+              >
+                {formatDate(item.created_at)}
+              </Typography>
+
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                sx={{ width: "100px", textAlign: "center", flexShrink: 0 }}
+              >
+                {item.author_name || "Admin"}
+              </Typography>
+            </Box>
+          ))}
         </Box>
       )}
     </Box>

@@ -1,0 +1,133 @@
+.editor-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.editor-toolbar {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    gap: 8px;
+}
+
+.editor-toolbar button {
+    padding: 5px 12px;
+    cursor: pointer;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+
+.editor-toolbar button:hover {
+    background-color: #e9ecef;
+}
+
+.font-size-select {
+  height: 30px;
+  padding: 2px 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.font-size-select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.separator {
+    display: inline-block;
+    width: 1px;
+    height: 20px;
+    background: #ccc;
+    margin: 0 5px;
+    align-self: center;
+}
+
+#editor-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+    margin: 10px auto; 
+}
+#editor-body img:focus,
+#editor-body img:active {
+    outline: 3px solid #007bff;
+    border-radius: 4px;
+}
+
+.selected-img {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+    border-radius: 4px;
+    transition: outline 0.1s ease;
+}
+
+.size-buttons {
+    display: flex;
+    gap: 2px;
+}
+
+.size-buttons button {
+    font-size: 11px;
+    padding: 2px 5px;
+    background: #f0f0f0;
+}
+
+#editor-body {
+    padding: 20px;
+    min-height: 400px;
+    outline: none;
+    line-height: 1.6;
+    background: #fff;
+    text-align: left;
+}
+
+#editor-body img:hover {
+    outline: 2px solid #ddd;
+}
+
+.editor-content-view {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+.editor-content-view img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: inline-block !important;
+  vertical-align: middle;
+  margin: 10px 0;
+}
+
+.editor-content-view div[style*="text-align: right"] {
+  text-align: right !important;
+}
+.editor-content-view div[style*="text-align: center"] {
+  text-align: center !important;
+}
+
+.editor-content-view p {
+  margin-bottom: 1em;
+}
+
+.editor-body .ql-editor {
+  min-height: 300px;
+  max-height: 600px;
+  overflow-y: auto;
+}

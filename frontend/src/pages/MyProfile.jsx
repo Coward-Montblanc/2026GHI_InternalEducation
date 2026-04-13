@@ -1,15 +1,4 @@
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  Grid,
-  Divider,
-  Alert,
-  Chip,
-  InputAdornment,
-} from "@mui/material";
+import { Box, Typography, TextField, Button, Paper, Grid, Divider, Alert, Chip, InputAdornment } from "@mui/material";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../hooks/useProfile";
 import { useAddressSelection } from "../hooks/useAddressSelection";
@@ -18,20 +7,11 @@ import AddressSelectModal from '../components/modals/AddressSelectModal';
 
 export default function MyProfile() {
     const {
-    isEditing,
-    isVerified,      
-    confirmInput,  
-    setConfirmInput,
-    formData,
-    error,
-    success,
-    handleChange,
-    handleSave,
-    setIsEditing,
-    handleVerify,    
-    Address,
-    cancelEdit,
-    setFormData       
+    isEditing, isVerified, confirmInput,  
+    setConfirmInput, formData, error,
+    success, handleChange, handleSave,
+    setIsEditing, handleVerify,    
+    Address, cancelEdit, setFormData       
   } = useProfile();
 
   const {
@@ -70,7 +50,7 @@ export default function MyProfile() {
               value={confirmInput}
               onChange={(e) => setConfirmInput(e.target.value)}
               sx={{ mb: 3 }}
-              onKeyPress={(e) => e.key === 'Enter' && handleVerify()} // 엔터키로도 가능
+              onKeyPress={(e) => e.key === 'Enter' && handleVerify()} 
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button fullWidth variant="outlined" onClick={cancelEdit}>
@@ -81,9 +61,8 @@ export default function MyProfile() {
               </Button>
             </Box>
           </Box>
-        ) : ( //비밀번호 일치할경우 편집화면
+        ) : (
           <>
-            {/* 고정 정보 영역 (ID, 이름, 권한) */}
             <Box sx={{ mb: 4, display: 'flex', flexWrap: 'wrap', gap: { xs: 2, md: 10 }, bgcolor: '#f9f9f9', p: 3, borderRadius: 3 }}>
               <Box>
                 <Typography variant="caption" color="text.secondary">ログインID</Typography>
@@ -106,10 +85,7 @@ export default function MyProfile() {
             </Box>
 
             <Divider sx={{ mb: 4 }} />
-
-            {/* 정보 입력/표시 영역 */}
             <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {/* 수정 모드일 때만 비밀번호 변경 필드 노출 */}
               {isVerified && (
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
@@ -131,8 +107,6 @@ export default function MyProfile() {
                   <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
                 </Grid>
               )}
-
-              {/* 공통 연락처/주소 필드 */}
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>メールアドレス</Typography>
                 <TextField fullWidth name="email" size="small" value={formData.email} onChange={handleChange} disabled={!isVerified} />
@@ -173,8 +147,6 @@ export default function MyProfile() {
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>詳細住所</Typography>
                 <TextField fullWidth name="address_detail" size="small" value={formData.address_detail} onChange={handleChange} disabled={!isVerified} />
               </Box>
-
-              {/* 하단 버튼 제어 */}
               <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, gap: 2 }}>
                 {!isVerified ? (
                   <Button variant="contained" onClick={() => setIsEditing(true)} sx={{ px: 4, py: 1, fontWeight: 700 }}>編集</Button>

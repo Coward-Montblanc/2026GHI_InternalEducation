@@ -16,24 +16,29 @@ export const useProductDetail = () => {
   const fallbackImage = getFallbackImageUrl(url);
   const [mainImage, setMainImage] = useState(fallbackImage);
 
-  const user = storage.get("user"); // 로그인 정보 확인
-  const isLoggedIn = !!storage.get("token"); // 로그인 상태 확인
-  const isFetched = useRef(false); // 조회수 두번 방지용 실행여부 체크
+  const user = storage.get("user"); 
+  const isLoggedIn = !!storage.get("token");
+  const isFetched = useRef(false);
 
   useEffect(() => {
-    if (isFetched.current) return; // 이미 실행되었다면 종료
+    if (isFetched.current) return;
     const getProductDetail = async () => {
       try {
-        const data = await getProductById(id);
-        setProduct(data);
-        isFetched.current = true; // 성공적으로 호출 시 true로 변경
-        if (data.images?.length) {
-          const main = data.images.find((i) => i.role === 1) || data.images[0];
+      const response = await getProductById(id);
+      const actualData = response.response_p || response.data?.response_p || response; 
+
+      if (actualData) {
+        setProduct(actualData); 
+        isFetched.current = true;
+
+        if (actualData.images?.length) {
+          const main = actualData.images.find((i) => i.role === 1) || actualData.images[0];
           setMainImage(`${url}${main.image_url}`);
         } else {
-          setMainImage(getFallbackImageUrl(url)); //이미지가 없다면 fallback을 불러옴
+          setMainImage(getFallbackImageUrl(url));
         }
-      } catch (err) {
+      }
+    } catch (err) {
         if (err.response) {
           if (err.response.status === 404) {
             setError("商品がありません。");
@@ -53,7 +58,7 @@ export const useProductDetail = () => {
 
   const AddToCart = async () => {
     if (!isLoggedIn) {
-      alert("ログイン後に実行してください"); //비회원 주문 탭필요
+      alert("ログイン後に実行してください");
       return;
     }
     try {
@@ -70,7 +75,7 @@ export const useProductDetail = () => {
 
   const BuyNow = () => {
     if (!isLoggedIn) {
-      alert("ログイン後に実行してください"); //비회원 주문 탭필요
+      alert("ログイン後に実行してください");
       return;
     }
     alert(`「${product.name}」${quantity}個を購入します。購入ページへ移動します。`);

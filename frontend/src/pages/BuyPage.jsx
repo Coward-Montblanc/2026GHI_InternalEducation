@@ -5,7 +5,7 @@ import {
 	Stack, Alert,
 	FormControl,
 	InputLabel, Select,
-	MenuItem
+	MenuItem, FormHelperText
 } from "@mui/material";
 import { useBuy } from "../hooks/useBuy";
 import { useAddressSelection } from "../hooks/useAddressSelection";
@@ -19,9 +19,9 @@ function BuyPage() {
 		deliveryRequest, setDeliveryRequest, deliveryRequestText,
 		setDeliveryRequestText, handleOrder, deliveryOptions, paymentOptions,
 		paymentMethod, setPaymentMethod, open, setOpen, formData, handleChange,
-		Address, setFormData
+		Address, setFormData, errors, error: serverError, setErrors, 
 	} = useBuy();
-
+	
 	const {
         isAddrModalOpen,
         openAddrModal,
@@ -29,17 +29,17 @@ function BuyPage() {
         handleSelectAddress
     } = useAddressSelection(setFormData);
 
-	return ( //로딩 오버레이
+	return ( 
 		<Box sx={{ p: 5, maxWidth: 1200, margin: "40px auto", position: "relative" }}>
 			{isSubmitting && ( <LoadingView/> )}
 			<Stack spacing={4}>
-				{/* 상품 정보 상자 */}
+				{/* 商品情報  */}
 					<OrderList items={items} url={url} linkToProduct={true} />
 
 				<form onSubmit={handleOrder}>
 					<Stack spacing={4}>
 						{error && <Alert severity="error">{error}</Alert>}
-						{/* 배송지 정보 입력 상자 */}
+						{/* 配送先情報入力ボックス */}
 						<Paper sx={{ p: 4 }} elevation={2}>
 							<Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>配送先</Typography>
 							<Divider sx={{ mb: 3 }} />
@@ -53,16 +53,18 @@ function BuyPage() {
 								<TextField
 									label="名前"
 									name="receiver_name"
-									required
+									error={!!errors.receiver_name}
+    								helperText={errors.receiver_name}
 									fullWidth
-									value={formData.receiver_name} //폼데이터 저장
+									value={formData.receiver_name}
         							onChange={handleChange}
 								/>
 								<Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 2 }}>
       							<TextField 
         							label="郵便番号" 
         							name="zip_code"
-									required 
+									error={!!errors.zip_code}
+    								helperText={errors.zip_code}
         							value={formData.zip_code || ''}
 									onChange={handleChange}
 									placeholder="1234567"
@@ -76,7 +78,8 @@ function BuyPage() {
       					  fullWidth 
       					  label="住所" 
       					  name="address" 
-						  required
+						  error={!!errors.address}
+    					  helperText={errors.address}
       					  value={formData.address || ''} 
       					  margin="normal" 
       					  InputProps={{ readOnly: true }} 
@@ -85,7 +88,9 @@ function BuyPage() {
     					<TextField 
       					  fullWidth 
       					  label="詳細住所" 
-      					  name="address_detail" 
+      					  name="address_detail"
+						  error={!!errors.address_detail}
+    					  helperText={errors.address_detail} 
 						  value={formData.address_detail}
       					  margin="normal" 
       					  onChange={handleChange} 
@@ -102,7 +107,8 @@ function BuyPage() {
 								<TextField
 									label="連絡先"
 									name="phone"
-									required
+									error={!!errors.phone}
+    					            helperText={errors.phone}
 									fullWidth
 									value={formData.phone}         
         							onChange={handleChange}
@@ -110,7 +116,7 @@ function BuyPage() {
 							</Stack>
 						</Paper>
 
-						{/* 배송요청사항 입력 상자 */}
+						{/* 配送要求事項入力ボックス */}
 						<Paper sx={{ p: 4 }} elevation={2}>
 							<Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>配送リクエスト選択</Typography>
 							<Divider sx={{ mb: 3 }} />
@@ -133,7 +139,6 @@ function BuyPage() {
 								<TextField
 									label="配送リクエスト直接入力"
 									name="deliveryRequestText"
-									required
 									fullWidth
 									value={deliveryRequestText}
 									onChange={e => setDeliveryRequestText(e.target.value)}
@@ -142,11 +147,11 @@ function BuyPage() {
 							)}
 						</Paper>
 
-						{/* 결제방법 입력 상자 */}
+						{/* 決済方法入力ボックス */}
 						<Paper sx={{ p: 4 }} elevation={2}>
 							<Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>支払い方法選択</Typography>
 							<Divider sx={{ mb: 3 }} />
-							<FormControl fullWidth sx={{ mb: 1 }}>
+							<FormControl fullWidth sx={{ mb: 1 }} error={!!errors.payment_method}>
 								<InputLabel id="payment-method-select-label">支払い方法</InputLabel>
 								<Select
 									labelId="payment-method-select-label"
@@ -157,12 +162,18 @@ function BuyPage() {
 									onChange={e => {
 										setPaymentMethod(e.target.value);
 										setFormData({ ...formData, payment_method: e.target.value });
+										if (errors.payment_method) {
+                    						setErrors(prev => ({ ...prev, payment_method: "" }));
+                						}
 									}}
 								>
 									{paymentOptions.map(option => (
 										<MenuItem key={option} value={option}>{option}</MenuItem>
 									))}
 								</Select>
+								{errors.payment_method && (
+            						<FormHelperText>{errors.payment_method}</FormHelperText>
+        						)}
 							</FormControl>
 						</Paper>
 
@@ -173,6 +184,9 @@ function BuyPage() {
 							color="primary"
 							fullWidth
 							sx={{ mt: 2 }}
+							onClick={(e) => {
+        						handleOrder();
+    						}}
 							disabled={isSubmitting}
 						>
 							支払い
